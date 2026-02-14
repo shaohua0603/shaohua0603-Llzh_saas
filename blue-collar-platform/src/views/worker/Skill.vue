@@ -1,0 +1,456 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+interface Article {
+  id: number
+  title: string
+  summary: string
+  content: string
+  author: string
+  publishDate: string
+  readCount: number
+  category: string
+  type: string
+}
+
+const router = useRouter()
+const activeTab = ref('1')
+const newsArticles = ref<Article[]>([])
+const loading = ref(true)
+
+// 标签页配置
+const tabs = [
+  {
+    label: '技能提升',
+    value: '1'
+  },
+  {
+    label: '学历提升',
+    value: '2'
+  },
+  {
+    label: '岗位介绍',
+    value: '3'
+  },
+  {
+    label: '其他资讯',
+    value: '4'
+  }
+]
+
+// 模拟资讯文章数据
+const mockArticles = [
+  // 技能提升分类
+  {
+    id: 1,
+    title: '制造业数字化技能培训指南',
+    summary: '本指南详细介绍了制造业数字化转型中工人需要掌握的基础数字化操作技能，包括设备操作、数据分析等核心能力。',
+    content: '本指南详细介绍了制造业数字化转型中工人需要掌握的基础数字化操作技能，包括设备操作、数据分析等核心能力。\n\n1. 数字化设备操作技能\n   - 数控机床操作\n   - 工业机器人编程\n   - 智能设备维护\n\n2. 数据分析能力\n   - 生产数据采集\n   - 质量数据分析\n   - 效率优化分析\n\n3. 数字化工具使用\n   - CAD/CAM软件操作\n   - 物联网设备管理\n   - 数字化文档处理\n\n通过本培训指南的学习，工人可以快速适应制造业数字化转型的需求，提高自身的职业竞争力。',
+    author: '技能培训中心',
+    publishDate: '2026-02-10',
+    readCount: 1258,
+    category: '技能提升',
+    type: 'skill'
+  },
+  {
+    id: 7,
+    title: '如何成为一名优秀的电工',
+    summary: '本文介绍了成为一名优秀电工需要具备的技能和素质，包括专业知识、实操能力、安全意识等方面。',
+    content: '本文介绍了成为一名优秀电工需要具备的技能和素质，包括专业知识、实操能力、安全意识等方面。\n\n1. 专业知识\n   - 电工基础理论\n   - 电气设备原理\n   - 电路图识读\n   - 电气安全规范\n\n2. 实操能力\n   - 电气设备安装\n   - 线路故障排查\n   - 设备维护与保养\n   - 应急处理能力\n\n3. 安全意识\n   - 安全操作规范\n   - 个人防护措施\n   - 危险源识别\n   - 事故预防\n\n4. 职业素养\n   - 责任心\n   - 团队合作\n   - 学习能力\n   - 沟通能力\n\n5. 职业发展\n   - 技能等级提升\n   - 专业证书考取\n   - 技术领域深耕\n   - 管理岗位转型\n\n成为一名优秀的电工需要不断学习和实践，只有具备全面的技能和素质，才能在工作中脱颖而出。',
+    author: '张三',
+    publishDate: '2026-01-10',
+    readCount: 890,
+    category: '技能提升',
+    type: 'skill'
+  },
+  {
+    id: 8,
+    title: '数控车床操作技巧',
+    summary: '本文分享了数控车床操作的一些实用技巧，帮助工人提高操作效率和加工精度。',
+    content: '本文分享了数控车床操作的一些实用技巧，帮助工人提高操作效率和加工精度。\n\n1. 编程技巧\n   - 合理安排加工顺序\n   - 优化刀具路径\n   - 减少空行程\n   - 使用宏程序提高编程效率\n\n2. 操作技巧\n   - 刀具安装与对刀\n   - 工件装夹与找正\n   - 切削参数选择\n   - 冷却液使用\n\n3. 精度控制\n   - 刀具磨损补偿\n   - 温度影响控制\n   - 振动抑制\n   - 测量与调整\n\n4. 维护保养\n   - 日常清洁\n   - 定期润滑\n   - 易损件更换\n   - 故障预防\n\n5. 安全操作\n   - 遵守操作规程\n   - 佩戴防护装备\n   - 紧急情况处理\n   - 设备检查\n\n掌握这些数控车床操作技巧，可以显著提高加工效率和产品质量，减少废品率，降低生产成本。',
+    author: '李四',
+    publishDate: '2026-01-08',
+    readCount: 765,
+    category: '技能提升',
+    type: 'skill'
+  },
+  {
+    id: 9,
+    title: '焊接技术进阶指南',
+    summary: '本文介绍了焊接技术的进阶方法和技巧，帮助工人提高焊接质量和效率。',
+    content: '本文介绍了焊接技术的进阶方法和技巧，帮助工人提高焊接质量和效率。\n\n1. 焊接方法选择\n   - 电弧焊\n   - 氩弧焊\n   - 二氧化碳气体保护焊\n   - 等离子弧焊\n\n2. 焊接材料\n   - 焊条选择\n   - 焊丝规格\n   - 保护气体\n   - 焊接辅助材料\n\n3. 焊接参数\n   - 电流调节\n   - 电压控制\n   - 焊接速度\n   - 焊接角度\n\n4. 焊接缺陷与预防\n   - 气孔\n   - 裂纹\n   - 夹渣\n   - 未熔合\n\n5. 焊接质量检验\n   - 外观检查\n   - 无损检测\n   - 力学性能测试\n   - 金相分析\n\n6. 安全防护\n   - 个人防护装备\n   - 工作环境通风\n   - 火灾预防\n   - 有害气体防护\n\n通过不断学习和实践这些焊接技术进阶方法，工人可以逐步提高自己的焊接水平，成为一名优秀的焊接技师。',
+    author: '王师傅',
+    publishDate: '2026-01-06',
+    readCount: 634,
+    category: '技能提升',
+    type: 'skill'
+  },
+  {
+    id: 4,
+    title: '自动化设备操作技能培训',
+    summary: '随着工厂自动化程度提高，掌握自动化设备操作技能成为工人职业发展的重要竞争力。',
+    content: '随着工厂自动化程度提高，掌握自动化设备操作技能成为工人职业发展的重要竞争力。\n\n1. 自动化设备的种类\n   - 自动化生产线\n   - 机器人工作站\n   - 智能检测设备\n\n2. 操作技能要求\n   - 设备编程\n   - 故障排查\n   - 日常维护\n\n3. 培训方法\n   - 理论学习\n   - 实操训练\n   - 案例分析\n\n4. 职业发展\n   - 自动化设备操作员\n   - 自动化设备维护工程师\n   - 自动化系统集成工程师\n\n掌握自动化设备操作技能，不仅可以提高工作效率，还可以为自己的职业发展开辟更广阔的空间。',
+    author: '技能培训中心',
+    publishDate: '2026-02-03',
+    readCount: 654,
+    category: '技能提升',
+    type: 'skill'
+  },
+  {
+    id: 5,
+    title: '职业技能等级证书报考指南',
+    summary: '介绍各类职业技能等级证书的报考条件、考试内容以及对薪资待遇的影响。',
+    content: '介绍各类职业技能等级证书的报考条件、考试内容以及对薪资待遇的影响。\n\n1. 证书等级划分\n   - 初级（五级）\n   - 中级（四级）\n   - 高级（三级）\n   - 技师（二级）\n   - 高级技师（一级）\n\n2. 报考条件\n   - 初级：年满16周岁，初中以上学历\n   - 中级：取得初级证书2年以上或有4年以上工作经验\n   - 高级：取得中级证书2年以上或有8年以上工作经验\n   - 技师：取得高级证书3年以上\n   - 高级技师：取得技师证书3年以上\n\n3. 考试内容\n   - 理论知识\n   - 操作技能\n   - 综合评审（技师及以上）\n\n4. 对薪资的影响\n   - 初级：月薪增加300-500元\n   - 中级：月薪增加500-800元\n   - 高级：月薪增加800-1200元\n   - 技师：月薪增加1200-2000元\n   - 高级技师：月薪增加2000元以上\n\n5. 报考流程\n   - 网上报名\n   - 资格审核\n   - 缴费\n   - 参加考试\n   - 领取证书\n\n职业技能等级证书是工人职业能力的重要证明，也是提高薪资待遇的有效途径。',
+    author: '人力资源和社会保障部',
+    publishDate: '2026-02-01',
+    readCount: 543,
+    category: '技能提升',
+    type: 'skill'
+  },
+  // 学历提升分类
+  {
+    id: 2,
+    title: '2026年成人高考报名指南',
+    summary: '详细介绍2026年成人高考的报名条件、考试科目、复习方法以及学历提升对职业发展的重要性。',
+    content: '详细介绍2026年成人高考的报名条件、考试科目、复习方法以及学历提升对职业发展的重要性。\n\n一、报名条件\n1. 年满18周岁\n2. 具有高中或中专学历\n3. 身体健康，遵纪守法\n\n二、考试科目\n1. 高中起点升专科：语文、数学、英语\n2. 高中起点升本科：语文、数学、英语、史地综合或理化综合\n3. 专科起点升本科：政治、英语、专业课\n\n三、复习方法\n1. 制定合理的学习计划\n2. 选择适合自己的复习资料\n3. 参加考前辅导班\n4. 多做历年真题\n\n四、学历提升的重要性\n1. 提高职业竞争力\n2. 增加薪资待遇\n3. 拓宽职业发展空间\n4. 提升个人综合素质\n\n2026年成人高考报名将于8月份开始，有意向的工人朋友可以提前做好准备。',
+    author: '教育考试院',
+    publishDate: '2026-02-08',
+    readCount: 987,
+    category: '学历提升',
+    type: 'education'
+  },
+  {
+    id: 10,
+    title: '成人高考报名指南',
+    summary: '本文详细介绍了成人高考的报名条件、报名流程、考试科目等信息，帮助工人了解学历提升的途径。',
+    content: '本文详细介绍了成人高考的报名条件、报名流程、考试科目等信息，帮助工人了解学历提升的途径。\n\n1. 报名条件\n   - 年满18周岁\n   - 具有高中或中专学历\n   - 身体健康，遵纪守法\n   - 户籍不限\n\n2. 报名时间\n   - 网上报名：每年8-9月份\n   - 现场确认：网上报名后1周内\n   - 缴费截止：现场确认后3天内\n\n3. 报名流程\n   - 网上注册\n   - 填写报名信息\n   - 上传照片\n   - 网上审核\n   - 现场确认\n   - 缴纳费用\n\n4. 考试科目\n   - 高中起点升专科：语文、数学、英语\n   - 高中起点升本科：语文、数学、英语、史地综合或理化综合\n   - 专科起点升本科：政治、英语、专业课\n\n5. 考试时间\n   - 每年10月份的第三个周末\n   - 上午：9:00-11:30\n   - 下午：14:30-17:00\n\n6. 录取分数\n   - 高中起点升专科：120-150分\n   - 高中起点升本科：180-220分\n   - 专科起点升本科：150-180分\n\n7. 学习方式\n   - 函授：以自学为主，面授为辅\n   - 业余：晚上或周末上课\n   - 脱产：全日制学习\n\n8. 学制\n   - 高中起点升专科：2.5年\n   - 高中起点升本科：5年\n   - 专科起点升本科：2.5年\n\n成人高考是工人提升学历的重要途径，通过系统的学习，可以获得国家承认的大专或本科学历，为职业发展打下坚实的基础。',
+    author: '王五',
+    publishDate: '2026-01-05',
+    readCount: 523,
+    category: '学历提升',
+    type: 'education'
+  },
+  {
+    id: 11,
+    title: '自考本科全攻略',
+    summary: '本文分享了自考本科的学习方法、考试技巧和时间规划，帮助工人顺利通过自考。',
+    content: '本文分享了自考本科的学习方法、考试技巧和时间规划，帮助工人顺利通过自考。\n\n1. 专业选择\n   - 根据职业规划选择\n   - 考虑个人兴趣\n   - 评估课程难度\n   - 了解就业前景\n\n2. 学习方法\n   - 制定学习计划\n   - 合理安排时间\n   - 多做真题\n   - 参加自考辅导班\n   - 利用网络学习资源\n\n3. 考试技巧\n   - 考前复习重点\n   - 答题技巧\n   - 时间管理\n   - 心态调整\n\n4. 时间规划\n   - 每年考几次\n   - 每次报几门\n   - 如何安排考试顺序\n   - 如何平衡工作和学习\n\n5. 注意事项\n   - 报名时间和流程\n   - 考试时间和地点\n   - 成绩查询和复核\n   - 毕业论文和答辩\n   - 毕业申请和学位申请\n\n自考本科需要较强的自律能力和学习毅力，但通过努力，工人可以在工作的同时获得本科学历，提升自己的竞争力。',
+    author: '李老师',
+    publishDate: '2026-01-03',
+    readCount: 412,
+    category: '学历提升',
+    type: 'education'
+  },
+  // 岗位提升/介绍分类
+  {
+    id: 3,
+    title: '从操作工到班组长的晋升路径',
+    summary: '本文详细分析了从普通操作工晋升为班组长的必备条件、能力要求以及职业发展规划建议。',
+    content: '本文详细分析了从普通操作工晋升为班组长的必备条件、能力要求以及职业发展规划建议。\n\n一、必备条件\n1. 工作表现优秀，业绩突出\n2. 具备一定的工作年限\n3. 掌握本岗位的核心技能\n4. 具有良好的团队合作精神\n\n二、能力要求\n1. 管理能力\n   - 人员管理\n   - 生产调度\n   - 团队建设\n\n2. 技术能力\n   - 熟练掌握生产工艺\n   - 解决生产中的技术问题\n   - 指导新员工操作\n\n3. 沟通能力\n   - 与上级领导沟通\n   - 与同事协作\n   - 与其他部门协调\n\n三、晋升准备\n1. 主动学习管理知识\n2. 积极参与团队活动\n3. 勇于承担责任\n4. 建立良好的人际关系\n\n四、职业发展规划\n1. 操作工→高级操作工→班组长\n2. 班组长→生产主管→生产经理\n3. 不断学习，提升自身能力\n4. 制定长期职业目标\n\n通过本文的指导，希望能够帮助更多的操作工朋友实现职业晋升的目标。',
+    author: '职业发展中心',
+    publishDate: '2026-02-05',
+    readCount: 756,
+    category: '岗位提升',
+    type: 'career'
+  },
+  {
+    id: 6,
+    title: '班组长管理技能培训',
+    summary: '针对班组长岗位的管理技能培训，包括团队管理、生产调度、质量管理等核心能力提升。',
+    content: '针对班组长岗位的管理技能培训，包括团队管理、生产调度、质量管理等核心能力提升。\n\n1. 团队管理\n   - 人员招聘与培训\n   - 绩效考核与激励\n   - 团队文化建设\n   - 冲突管理\n\n2. 生产调度\n   - 生产计划制定\n   - 资源合理配置\n   - 进度跟踪与调整\n   - 应急情况处理\n\n3. 质量管理\n   - 质量标准制定\n   - 质量检测与控制\n   - 质量问题分析与解决\n   - 持续质量改进\n\n4. 成本管理\n   - 原材料消耗控制\n   - 能源消耗管理\n   - 生产效率提升\n   - 成本核算与分析\n\n5. 安全管理\n   - 安全制度执行\n   - 安全培训与教育\n   - 安全隐患排查\n   - 安全事故处理\n\n通过本培训，班组长可以全面提升管理能力，更好地履行岗位职责，为企业的发展做出更大的贡献。',
+    author: '企业管理培训中心',
+    publishDate: '2026-01-28',
+    readCount: 432,
+    category: '岗位提升',
+    type: 'career'
+  },
+  {
+    id: 12,
+    title: '电子厂常见岗位介绍',
+    summary: '本文详细介绍了电子厂中常见的岗位类型、工作职责、技能要求和薪资水平，帮助工人了解不同岗位的特点。',
+    content: '本文详细介绍了电子厂中常见的岗位类型、工作职责、技能要求和薪资水平，帮助工人了解不同岗位的特点。\n\n1. 流水线操作员\n   - 工作职责：产品组装、零件加工、质量检查\n   - 技能要求：动手能力强、细心认真、服从安排\n   - 薪资水平：4000-5000元/月\n   - 发展前景：高级操作员、线长\n\n2. 质检员\n   - 工作职责：产品质量检验、缺陷分析、质量报告\n   - 技能要求：责任心强、了解质量标准、会使用检测工具\n   - 薪资水平：4500-5500元/月\n   - 发展前景：质量主管、品质经理\n\n3. 技术员\n   - 工作职责：设备维护、工艺改进、技术支持\n   - 技能要求：具备相关专业知识、动手能力强、解决问题能力\n   - 薪资水平：5500-7000元/月\n   - 发展前景：高级技术员、工程师\n\n4. 仓库管理员\n   - 工作职责：物料收发、库存管理、报表制作\n   - 技能要求：细心认真、会使用仓库管理软件、体力好\n   - 薪资水平：4000-5000元/月\n   - 发展前景：仓库主管、物流经理\n\n5. 生产组长\n   - 工作职责：生产线管理、人员调度、生产计划执行\n   - 技能要求：有管理经验、沟通能力强、了解生产流程\n   - 薪资水平：5000-6500元/月\n   - 发展前景：生产主管、生产经理\n\n6. SMT操作员\n   - 工作职责：贴片机操作、编程、设备维护\n   - 技能要求：了解SMT工艺、会基本编程、细心认真\n   - 薪资水平：4500-6000元/月\n   - 发展前景：SMT技术员、SMT工程师\n\n7. 维修电工\n   - 工作职责：电气设备维护、线路检修、故障排除\n   - 技能要求：持有电工证、了解电气原理、动手能力强\n   - 薪资水平：5000-6500元/月\n   - 发展前景：高级电工、电气工程师\n\n了解电子厂的不同岗位，可以帮助工人根据自己的兴趣和能力选择适合的职业发展方向。',
+    author: '人力资源专员',
+    publishDate: '2026-01-01',
+    readCount: 389,
+    category: '岗位介绍',
+    type: 'career'
+  },
+  {
+    id: 13,
+    title: '工厂岗位晋升通道详解',
+    summary: '本文介绍了工厂中不同岗位的晋升通道、晋升条件和晋升流程，帮助工人了解职业发展路径。',
+    content: '本文介绍了工厂中不同岗位的晋升通道、晋升条件和晋升流程，帮助工人了解职业发展路径。\n\n1. 操作类岗位晋升通道\n   - 操作员→高级操作员→操作技师→高级操作技师\n   - 晋升条件：工作年限、技能水平、工作表现\n   - 薪资增长：每晋升一级，月薪增加500-1000元\n\n2. 技术类岗位晋升通道\n   - 技术员→助理工程师→工程师→高级工程师\n   - 晋升条件：学历、专业技能、项目经验\n   - 薪资增长：每晋升一级，月薪增加1000-2000元\n\n3. 管理类岗位晋升通道\n   - 组长→主管→经理→总监\n   - 晋升条件：管理能力、团队业绩、领导能力\n   - 薪资增长：每晋升一级，月薪增加2000-3000元\n\n4. 晋升条件通用要求\n   - 工作表现优秀，绩效考核良好\n   - 具备一定的工作年限\n   - 掌握本岗位的核心技能\n   - 具有良好的团队合作精神\n   - 符合公司的价值观和企业文化\n\n5. 晋升流程\n   - 个人申请或部门推荐\n   - 资格审核\n   - 能力评估（笔试、面试、实操）\n   - 领导审批\n   - 公示\n   - 任命\n\n6. 晋升准备\n   - 主动学习相关知识和技能\n   - 积极参与公司的培训和项目\n   - 建立良好的人际关系\n   - 制定个人职业发展计划\n   - 定期评估自己的进步和不足\n\n了解工厂的晋升通道，可以帮助工人明确自己的职业发展方向，制定合理的职业规划，为未来的晋升做好准备。',
+    author: '人力资源经理',
+    publishDate: '2025-12-28',
+    readCount: 356,
+    category: '岗位介绍',
+    type: 'career'
+  },
+  {
+    id: 14,
+    title: '热门蓝领岗位薪资待遇分析',
+    summary: '本文分析了当前热门蓝领岗位的薪资水平、福利待遇和发展前景，帮助工人了解就业市场动态。',
+    content: '本文分析了当前热门蓝领岗位的薪资水平、福利待遇和发展前景，帮助工人了解就业市场动态。\n\n1. 电工\n   - 平均月薪：6000-8000元\n   - 福利待遇：五险一金、节日福利、带薪年假\n   - 发展前景：高级电工、电气工程师、项目经理\n   - 技能要求：持有电工证、了解电气原理、动手能力强\n\n2. 焊工\n   - 平均月薪：7000-9000元\n   - 福利待遇：五险一金、高温补贴、劳保用品\n   - 发展前景：高级焊工、焊接工程师、焊接工艺师\n   - 技能要求：持有焊工证、掌握多种焊接方法、经验丰富\n\n3. 数控操作工\n   - 平均月薪：6500-8500元\n   - 福利待遇：五险一金、技术补贴、年终奖\n   - 发展前景：数控编程师、数控工程师、生产主管\n   - 技能要求：会数控编程、熟悉数控系统、责任心强\n\n4. 汽修工\n   - 平均月薪：6000-8000元\n   - 福利待遇：五险一金、提成、包吃住\n   - 发展前景：高级汽修工、汽修技师、汽修店老板\n   - 技能要求：了解汽车构造、动手能力强、学习能力\n\n5. 厨师\n   - 平均月薪：5000-7000元\n   - 福利待遇：包吃住、节日福利、年终奖\n   - 发展前景：主厨、厨师长、餐饮老板\n   - 技能要求：厨艺好、了解食品安全、责任心强\n\n6. 建筑工人\n   - 平均月薪：8000-12000元\n   - 福利待遇：包吃住、高温补贴、意外险\n   - 发展前景：班组长、包工头、项目经理\n   - 技能要求：体力好、能吃苦耐劳、有相关经验\n\n7. 快递员\n   - 平均月薪：5000-8000元\n   - 福利待遇：计件工资、节日福利、年终奖\n   - 发展前景：快递主管、区域经理、物流总监\n   - 技能要求：熟悉路线、责任心强、服务态度好\n\n8. 叉车工\n   - 平均月薪：4500-6000元\n   - 福利待遇：五险一金、节日福利、包吃住\n   - 发展前景：仓库主管、物流经理\n   - 技能要求：持有叉车证、责任心强、安全意识\n\n9. 保安员\n   - 平均月薪：3500-4500元\n   - 福利待遇：包吃住、节日福利、意外险\n   - 发展前景：保安队长、安全主管\n   - 技能要求：责任心强、身体健康、服从安排\n\n10. 保洁员\n    - 平均月薪：3000-4000元\n    - 福利待遇：包吃住、节日福利\n    - 发展前景：保洁主管、物业经理\n    - 技能要求：责任心强、能吃苦耐劳、服从安排\n\n通过了解不同蓝领岗位的薪资待遇和发展前景，工人可以根据自己的兴趣和能力选择适合的职业方向，制定合理的职业规划。',
+    author: '薪资分析师',
+    publishDate: '2025-12-25',
+    readCount: 321,
+    category: '岗位介绍',
+    type: 'career'
+  },
+  // 其他资讯分类
+  {
+    id: 15,
+    title: '工厂生活小贴士',
+    summary: '本文分享了一些工厂生活的实用小贴士，帮助工人更好地适应工厂生活，提高生活质量。',
+    content: '本文分享了一些工厂生活的实用小贴士，帮助工人更好地适应工厂生活，提高生活质量。\n\n1. 宿舍生活\n   - 保持宿舍整洁卫生\n   - 与室友和谐相处\n   - 合理安排作息时间\n   - 注意个人财物安全\n\n2. 饮食健康\n   - 均衡饮食，多吃蔬菜水果\n   - 多喝水，少喝饮料\n   - 注意饮食卫生\n   - 避免暴饮暴食\n\n3. 工作与生活平衡\n   - 合理安排工作时间\n   - 利用业余时间学习技能\n   - 适当参加文体活动\n   - 保持良好的心态\n\n4. 安全常识\n   - 遵守工厂安全规定\n   - 正确使用个人防护装备\n   - 注意用电安全\n   - 掌握基本急救知识\n\n5. 人际关系\n   - 与同事友好相处\n   - 尊重领导和前辈\n   - 学会沟通和表达\n   - 建立良好的社交圈\n\n通过这些小贴士，工人可以更好地适应工厂生活，提高生活质量，保持身心健康。',
+    author: '生活顾问',
+    publishDate: '2025-12-20',
+    readCount: 456,
+    category: '其他资讯',
+    type: 'other'
+  },
+  {
+    id: 16,
+    title: '如何应对工作压力',
+    summary: '本文介绍了一些应对工作压力的方法和技巧，帮助工人保持心理健康，提高工作效率。',
+    content: '本文介绍了一些应对工作压力的方法和技巧，帮助工人保持心理健康，提高工作效率。\n\n1. 认识压力\n   - 了解压力的来源\n   - 识别压力的症状\n   - 正确看待压力\n   - 区分正常压力和过度压力\n\n2. 应对策略\n   - 时间管理：制定合理的工作计划\n   - 任务分解：将大任务分解为小任务\n   - 寻求帮助：向同事和领导寻求支持\n   - 放松技巧：深呼吸、冥想、瑜伽\n\n3. 生活方式调整\n   - 保证充足的睡眠\n   - 坚持适量的运动\n   - 培养兴趣爱好\n   - 保持良好的人际关系\n\n4. 心态调整\n   - 保持积极乐观的心态\n   - 学会感恩和珍惜\n   - 设定合理的目标\n   - 接受自己的不完美\n\n5. 寻求专业帮助\n   - 当压力过大时，寻求心理咨询\n   - 了解心理支持资源\n   - 及时处理心理问题\n\n通过这些方法和技巧，工人可以更好地应对工作压力，保持心理健康，提高工作效率和生活质量。',
+    author: '心理专家',
+    publishDate: '2025-12-15',
+    readCount: 389,
+    category: '其他资讯',
+    type: 'other'
+  },
+  {
+    id: 17,
+    title: '蓝领工人权益保障指南',
+    summary: '本文详细介绍了蓝领工人的合法权益和保障措施，帮助工人了解自己的权益，维护自身利益。',
+    content: '本文详细介绍了蓝领工人的合法权益和保障措施，帮助工人了解自己的权益，维护自身利益。\n\n1. 劳动权益\n   - 劳动合同：签订书面劳动合同\n   - 工资待遇：按时足额支付工资\n   - 工作时间：遵守工时规定，加班应支付加班费\n   - 休息休假：享受法定节假日、年假等\n\n2. 社会保险\n   - 养老保险\n   - 医疗保险\n   - 失业保险\n   - 工伤保险\n   - 生育保险\n\n3. 职业安全\n   - 安全培训\n   - 劳动保护用品\n   - 安全操作规程\n   - 工伤认定和赔偿\n\n4. 权益维护\n   - 协商解决：与用人单位协商\n   - 调解：申请劳动争议调解\n   - 仲裁：申请劳动仲裁\n   - 诉讼：向法院提起诉讼\n\n5. 法律援助\n   - 免费法律咨询\n   - 法律援助申请\n   - 工会维权\n\n通过了解自己的合法权益和保障措施，工人可以更好地维护自身利益，确保工作和生活的稳定。',
+    author: '律师',
+    publishDate: '2025-12-10',
+    readCount: 523,
+    category: '其他资讯',
+    type: 'other'
+  }
+]
+
+// 获取文章列表
+const getArticles = (type: string) => {
+  loading.value = true
+  // 模拟异步请求
+  setTimeout(() => {
+    let filteredArticles = []
+    switch (type) {
+      case '1':
+        filteredArticles = mockArticles.filter(article => article.type === 'skill')
+        break
+      case '2':
+        filteredArticles = mockArticles.filter(article => article.type === 'education')
+        break
+      case '3':
+        filteredArticles = mockArticles.filter(article => article.type === 'career')
+        break
+      case '4':
+        filteredArticles = mockArticles.filter(article => article.type === 'other')
+        break
+      default:
+        filteredArticles = mockArticles
+    }
+    newsArticles.value = filteredArticles
+    loading.value = false
+  }, 500)
+}
+
+// 切换标签页
+const handleTabChange = (tab: any) => {
+  const value = tab.props.name
+  activeTab.value = value
+  getArticles(value)
+}
+
+// 跳转到资讯详情页面
+const goToNewsDetail = (article: Article) => {
+  router.push(`/worker/news-detail/${article.id}`)
+}
+
+// 页面加载时获取数据
+onMounted(() => {
+  getArticles(activeTab.value)
+})
+</script>
+
+<template>
+  <div class="worker-news">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <h2>资讯</h2>
+    </div>
+    
+    <!-- 标签页 -->
+    <div class="news-tabs">
+      <el-tabs v-model="activeTab" @tab-click="handleTabChange">
+        <el-tab-pane
+          v-for="tab in tabs"
+          :key="tab.value"
+          :label="tab.label"
+          :name="tab.value"
+        />
+      </el-tabs>
+    </div>
+    
+    <!-- 文章列表 -->
+    <div class="article-list">
+      <div v-if="loading" class="loading">
+        <el-icon class="is-loading"><i class="el-icon-loading"></i></el-icon>
+        <span>加载中...</span>
+      </div>
+      <div v-else-if="newsArticles.length === 0" class="empty">
+        <el-icon><i class="el-icon-info"></i></el-icon>
+        <span>暂无相关资讯</span>
+      </div>
+      <div v-else class="article-items">
+        <div v-for="article in newsArticles" :key="article.id" class="article-item" @click="goToNewsDetail(article)">
+          <div class="article-category">{{ article.category }}</div>
+          <h3>{{ article.title }}</h3>
+          <p class="summary">{{ article.summary }}</p>
+          <div class="article-footer">
+            <span class="author">{{ article.author }}</span>
+            <span class="publish-date">{{ article.publishDate }}</span>
+            <span class="read-count">{{ article.readCount }} 阅读</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+.worker-news {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.page-header {
+  background-color: #fff;
+  padding: 15px;
+  border-bottom: 1px solid #eaeaea;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.news-tabs {
+  background-color: #fff;
+  margin-bottom: 10px;
+  padding: 0 15px;
+}
+
+.article-list {
+  padding: 0 15px 20px;
+}
+
+.loading,
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+  color: #999;
+}
+
+.loading i,
+.empty i {
+  font-size: 32px;
+  margin-bottom: 10px;
+}
+
+.article-items {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.article-item {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.article-item .article-category {
+  display: inline-block;
+  padding: 2px 8px;
+  background-color: #e6f7ff;
+  color: #1890ff;
+  font-size: 10px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+}
+
+.article-item h3 {
+  margin: 0 0 10px 0;
+  font-size: 16px;
+  font-weight: bold;
+  color: #333;
+}
+
+.summary {
+  margin: 0 0 10px 0;
+  font-size: 13px;
+  color: #666;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.article-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: #999;
+}
+
+.article-footer .read-count {
+  flex: 1;
+  text-align: right;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .page-header {
+    padding: 12px 15px;
+  }
+  
+  .page-header h2 {
+    font-size: 16px;
+  }
+  
+  .article-list {
+    padding: 0 10px 20px;
+  }
+  
+  .article-item {
+    padding: 12px;
+  }
+  
+  .article-item h3 {
+    font-size: 15px;
+  }
+  
+  .summary {
+    font-size: 12px;
+  }
+}
+</style>

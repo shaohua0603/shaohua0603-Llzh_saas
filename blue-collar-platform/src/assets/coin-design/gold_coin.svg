@@ -1,0 +1,52 @@
+<svg width="500" height="500" viewBox="0 0 500 500" xmlns="http://www.w3.org/2000/svg">
+  <!-- 金币背景 -->
+  <defs>
+    <linearGradient id="coinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD700"/>
+      <stop offset="25%" stop-color="#FFA500"/>
+      <stop offset="50%" stop-color="#FFD700"/>
+      <stop offset="75%" stop-color="#FFA500"/>
+      <stop offset="100%" stop-color="#FFD700"/>
+    </linearGradient>
+    <radialGradient id="coinShine" cx="35%" cy="35%" r="50%" fx="35%" fy="35%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.8"/>
+      <stop offset="20%" stop-color="#FFFFFF" stop-opacity="0.4"/>
+      <stop offset="40%" stop-color="#FFFFFF" stop-opacity="0.1"/>
+      <stop offset="60%" stop-color="#FFFFFF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="coinShadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#8B4513" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+  
+  <!-- 金币主体 -->
+  <g filter="url(#coinShadow)">
+    <!-- 金币边缘 -->
+    <circle cx="250" cy="250" r="200" fill="#B8860B" stroke="#8B4513" stroke-width="10"/>
+    <!-- 金币表面 -->
+    <circle cx="250" cy="250" r="190" fill="url(#coinGradient)"/>
+    <!-- 金币光泽 -->
+    <circle cx="250" cy="250" r="190" fill="url(#coinShine)"/>
+    
+    <!-- 金币厚度 -->
+    <path d="M450,250 A190,190 0 0,1 440,270 L430,270 A180,180 0 0,0 440,250 Z" fill="#8B4513"/>
+    <path d="M50,250 A190,190 0 0,0 60,270 L70,270 A180,180 0 0,1 60,250 Z" fill="#DAA520"/>
+    
+    <!-- 中心Logo -->
+    <g transform="translate(200, 200) scale(0.8)">
+      <path d="M120,30 C100,50 80,70 60,90 C40,70 20,50 0,30 C20,10 40,-10 60,10 C80,-10 100,10 120,30 Z" fill="#007FFF"/>
+      <path d="M120,70 C100,90 80,110 60,130 C40,110 20,90 0,70 C20,50 40,30 60,50 C80,30 100,50 120,70 Z" fill="#0066CC"/>
+      <path d="M120,110 C100,130 80,150 60,170 C40,150 20,130 0,110 C20,90 40,70 60,90 C80,70 100,90 120,110 Z" fill="#005299"/>
+      <circle cx="40" cy="40" r="15" fill="#66B2FF"/>
+      <circle cx="80" cy="60" r="20" fill="#3399FF"/>
+      <circle cx="120" cy="80" r="25" fill="#007FFF"/>
+      <circle cx="100" cy="120" r="20" fill="#0066CC"/>
+    </g>
+    
+    <!-- 金币纹理 -->
+    <circle cx="250" cy="250" r="190" fill="none" stroke="#DAA520" stroke-width="2" stroke-dasharray="5,5" opacity="0.3"/>
+    <circle cx="250" cy="250" r="160" fill="none" stroke="#DAA520" stroke-width="1" opacity="0.2"/>
+    <circle cx="250" cy="250" r="130" fill="none" stroke="#DAA520" stroke-width="1" opacity="0.2"/>
+    <circle cx="250" cy="250" r="100" fill="none" stroke="#DAA520" stroke-width="1" opacity="0.2"/>
+  </g>
+</svg>
