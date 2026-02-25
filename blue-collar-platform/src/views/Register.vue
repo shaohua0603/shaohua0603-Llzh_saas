@@ -89,7 +89,7 @@ const downloadApp = () => {
   <div class="register-container">
     <div class="register-box" v-if="!showDownloadApp">
       <div class="register-header">
-        <img src="@/assets/logo.png" alt="蓝领智汇" class="register-logo" />
+        <img src="/assets/logo.jpg" alt="蓝领智汇" class="register-logo" />
       </div>
       
       <el-form :model="{ phone, password, confirmPassword, verifyCode }" class="register-form" label-position="top">
@@ -172,7 +172,7 @@ const downloadApp = () => {
     <!-- 注册成功后显示下载app入口 -->
     <div class="register-box" v-else>
       <div class="register-header">
-        <img src="@/assets/logo.png" alt="蓝领智汇" class="register-logo" />
+        <img src="/assets/logo.jpg" alt="蓝领智汇" class="register-logo" />
       </div>
       
       <div class="download-app-section">
@@ -229,10 +229,12 @@ const downloadApp = () => {
   opacity: 0.5;
 }
 
+
+
 .register-box {
   width: 100%;
   max-width: 400px;
-  background: #F3F1F1;
+  background: #FFFFFF;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   padding: 40px;
@@ -249,9 +251,10 @@ const downloadApp = () => {
 .register-header {
   text-align: center;
   margin-bottom: 35px;
-  background-color: #F3F1F1;
+  background-color: #FFFFFF;
   padding: 10px;
   border-radius: 8px;
+  border: 1px solid #f0f0f0;
 }
 
 .register-logo {
@@ -259,6 +262,14 @@ const downloadApp = () => {
   display: block;
   background-color: transparent;
   border: none;
+  height: 90px;
+  width: auto;
+  max-width: 100%;
+  transition: all 0.3s ease;
+}
+
+.register-logo:hover {
+  transform: scale(1.05);
 }
 
 .register-form {

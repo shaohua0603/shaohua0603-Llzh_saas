@@ -106,15 +106,20 @@ onMounted(() => {
 
 <style scoped>
 .worker-layout {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  background-color: #f5f5f5;
+  background-color: #FFFFFF;
+  overflow: hidden;
 }
 
 .worker-content {
   flex: 1;
   padding-bottom: 60px; /* 为底部导航栏留出空间 */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  height: calc(100vh - 60px);
 }
 
 .worker-footer {

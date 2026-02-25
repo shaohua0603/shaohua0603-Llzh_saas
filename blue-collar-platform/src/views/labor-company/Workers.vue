@@ -1,7 +1,5 @@
 <template>
   <div class="labor-company-workers">
-    <h2 class="page-title">工人管理</h2>
-    
     <!-- 搜索和筛选 -->
     <div class="search-filter">
       <el-input
@@ -274,13 +272,6 @@ onMounted(() => {
   background-color: #fff;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.page-title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 24px;
-  color: #303133;
 }
 
 /* 搜索和筛选 */

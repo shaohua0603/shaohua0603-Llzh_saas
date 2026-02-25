@@ -1,7 +1,5 @@
 <template>
   <div class="labor-company-roles">
-    <h2 class="page-title">角色管理</h2>
-    
     <!-- 搜索和筛选 -->
     <div class="search-filter">
       <el-input
@@ -144,13 +142,6 @@ onMounted(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.page-title {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 24px;
-  color: #303133;
-}
-
 /* 搜索和筛选 */
 .search-filter {
   display: flex;
@@ -182,10 +173,6 @@ onMounted(() => {
   
   .el-input {
     width: 100% !important;
-  }
-  
-  .page-title {
-    font-size: 20px;
   }
 }
 </style>

@@ -491,6 +491,130 @@ Mock.mock('/api/packages', 'get', (options) => {
   };
 });
 
+// 劳务公司仪表盘数据模拟
+const laborCompanyStats = {
+  totalWorkers: 1250,
+  activeWorkers: 1120,
+  recruitmentCount: 35,
+  attendanceRate: 92.5
+};
+
+const laborCompanyRecruitments = [
+  {
+    id: 1,
+    title: '生产操作员',
+    factoryName: '特斯拉上海工厂',
+    requiredWorkers: 50,
+    status: 'active',
+    createdAt: '2026-01-20 10:00:00'
+  },
+  {
+    id: 2,
+    title: '质检员',
+    factoryName: '华为技术有限公司',
+    requiredWorkers: 20,
+    status: 'active',
+    createdAt: '2026-01-19 14:30:00'
+  },
+  {
+    id: 3,
+    title: '装配工',
+    factoryName: '比亚迪股份有限公司',
+    requiredWorkers: 30,
+    status: 'pending',
+    createdAt: '2026-01-18 09:15:00'
+  },
+  {
+    id: 4,
+    title: '仓库管理员',
+    factoryName: '富士康科技集团',
+    requiredWorkers: 15,
+    status: 'active',
+    createdAt: '2026-01-17 16:45:00'
+  },
+  {
+    id: 5,
+    title: '物流操作员',
+    factoryName: '京东物流',
+    requiredWorkers: 40,
+    status: 'completed',
+    createdAt: '2026-01-16 11:20:00'
+  }
+];
+
+const laborCompanyAttendanceStats = [
+  {
+    department: '生产一部',
+    totalWorkers: 320,
+    present: 305,
+    absent: 10,
+    leave: 5,
+    rate: 95.3
+  },
+  {
+    department: '生产二部',
+    totalWorkers: 280,
+    present: 252,
+    absent: 20,
+    leave: 8,
+    rate: 90
+  },
+  {
+    department: '质检部',
+    totalWorkers: 150,
+    present: 145,
+    absent: 3,
+    leave: 2,
+    rate: 96.7
+  },
+  {
+    department: '仓储部',
+    totalWorkers: 200,
+    present: 180,
+    absent: 15,
+    leave: 5,
+    rate: 90
+  },
+  {
+    department: '物流部',
+    totalWorkers: 170,
+    present: 155,
+    absent: 10,
+    leave: 5,
+    rate: 91.2
+  }
+];
+
+// 劳务公司API接口模拟
+// 获取统计数据
+Mock.mock('/api/labor-company/stats', 'get', () => {
+  return {
+    code: 200,
+    message: '获取成功',
+    data: laborCompanyStats
+  };
+});
+
+// 获取最近招聘
+Mock.mock('/api/labor-company/recruitments', 'get', (options) => {
+  const { limit } = options.url.match(/\?limit=(\d+)/)?.[1] || '5';
+  const limitedRecruitments = laborCompanyRecruitments.slice(0, parseInt(limit));
+  return {
+    code: 200,
+    message: '获取成功',
+    data: limitedRecruitments
+  };
+});
+
+// 获取考勤统计
+Mock.mock('/api/labor-company/attendance-stats', 'get', () => {
+  return {
+    code: 200,
+    message: '获取成功',
+    data: laborCompanyAttendanceStats
+  };
+});
+
 // 导出Mock对象
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = Mock;

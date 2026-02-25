@@ -68,10 +68,18 @@ watch(() => route.path, (newPath) => {
 .factory-mobile-layout {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  min-height: 100vh;
   width: 100%;
-  overflow: hidden;
-  background-color: #f5f7fa;
+  background-color: #FFFFFF;
+}
+
+/* 确保主体内容可以滚动 */
+.mobile-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  -webkit-overflow-scrolling: touch; /* 优化移动端滚动体验 */
+  scroll-behavior: smooth; /* 平滑滚动 */
 }
 
 /* 顶部导航栏 */

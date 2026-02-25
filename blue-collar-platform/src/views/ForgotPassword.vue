@@ -63,7 +63,7 @@ const goToLogin = () => {
   <div class="forgot-password-container">
     <div class="forgot-password-box">
       <div class="forgot-password-header">
-        <img src="@/assets/logo.png" alt="蓝领智汇" class="forgot-password-logo" />
+        <img src="/assets/logo.jpg" alt="蓝领智汇" class="forgot-password-logo" />
       </div>
       
       <el-form :model="{ phone, verifyCode, newPassword, confirmPassword }" class="forgot-password-form" label-position="top">
@@ -158,10 +158,12 @@ const goToLogin = () => {
   opacity: 0.5;
 }
 
+
+
 .forgot-password-box {
   width: 100%;
   max-width: 400px;
-  background: #F3F1F1;
+  background: #FFFFFF;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   padding: 40px;
@@ -178,9 +180,10 @@ const goToLogin = () => {
 .forgot-password-header {
   text-align: center;
   margin-bottom: 35px;
-  background-color: #F3F1F1;
+  background-color: #FFFFFF;
   padding: 10px;
   border-radius: 8px;
+  border: 1px solid #f0f0f0;
 }
 
 .forgot-password-logo {
@@ -188,6 +191,14 @@ const goToLogin = () => {
   display: block;
   background-color: transparent;
   border: none;
+  height: 90px;
+  width: auto;
+  max-width: 100%;
+  transition: all 0.3s ease;
+}
+
+.forgot-password-logo:hover {
+  transform: scale(1.05);
 }
 
 .forgot-password-form {

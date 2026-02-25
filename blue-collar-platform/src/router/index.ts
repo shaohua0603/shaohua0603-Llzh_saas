@@ -304,11 +304,29 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../layouts/LaborCompanyLayout.vue'),
     meta: { title: '劳务公司管理', requiresAuth: true, role: 'labor_company' },
     children: [
+      {   
+        path: 'home',
+        name: 'LaborCompanyHome',
+        component: () => import('../views/labor-company/Home.vue'),
+        meta: { title: '首页', hideInMenu: true }
+      },
       {
-        path: 'dashboard',
-        name: 'LaborCompanyDashboard',
-        component: () => import('../views/labor-company/Dashboard.vue'),
-        meta: { title: ' dashboard' }
+        path: 'todo',
+        name: 'LaborCompanyTodo',
+        component: () => import('../views/labor-company/Todo.vue'),
+        meta: { title: '待办任务' }
+      },
+      {
+        path: 'messages',
+        name: 'LaborCompanyMessages',
+        component: () => import('../views/labor-company/Messages.vue'),
+        meta: { title: '消息通知' }
+      },
+      {
+        path: 'warnings',
+        name: 'LaborCompanyWarnings',
+        component: () => import('../views/labor-company/Warnings.vue'),
+        meta: { title: '预警信息' }
       },
       {
         path: 'recruitment',
@@ -345,6 +363,30 @@ const routes: RouteRecordRaw[] = [
         name: 'LaborCompanyRoles',
         component: () => import('../views/labor-company/Roles.vue'),
         meta: { title: '角色管理' }
+      },
+      {
+        path: 'quick-access-settings',
+        name: 'LaborCompanyQuickAccessSettings',
+        component: () => import('../views/labor-company/QuickAccessSettings.vue'),
+        meta: { title: '首页快捷入口设置' }
+      },
+      {
+        path: 'todo-detail/:id',
+        name: 'LaborCompanyTodoDetail',
+        component: () => import('../views/labor-company/TodoDetail.vue'),
+        meta: { title: '待办详情' }
+      },
+      {
+        path: 'message-detail/:id',
+        name: 'LaborCompanyMessageDetail',
+        component: () => import('../views/labor-company/MessageDetail.vue'),
+        meta: { title: '消息详情' }
+      },
+      {
+        path: 'warning-detail/:id',
+        name: 'LaborCompanyWarningDetail',
+        component: () => import('../views/labor-company/WarningDetail.vue'),
+        meta: { title: '预警详情' }
       }
     ]
   },
@@ -390,11 +432,29 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../layouts/FactoryLayout.vue'),
     meta: { title: '工厂管理', requiresAuth: true, role: 'factory' },
     children: [
+      {   
+        path: 'home',
+        name: 'FactoryHome',
+        component: () => import('../views/factory/Home.vue'),
+        meta: { title: '首页', hideInMenu: true }
+      },
       {
-        path: 'dashboard',
-        name: 'FactoryDashboard',
-        component: () => import('../views/factory/Dashboard.vue'),
-        meta: { title: '仪表盘' }
+        path: 'todo',
+        name: 'FactoryTodo',
+        component: () => import('../views/factory/Todo.vue'),
+        meta: { title: '待办任务' }
+      },
+      {
+        path: 'messages',
+        name: 'FactoryMessages',
+        component: () => import('../views/factory/Messages.vue'),
+        meta: { title: '消息通知' }
+      },
+      {
+        path: 'warnings',
+        name: 'FactoryWarnings',
+        component: () => import('../views/factory/Warnings.vue'),
+        meta: { title: '预警信息' }
       },
       {
         path: 'recruitment',
@@ -426,6 +486,30 @@ const routes: RouteRecordRaw[] = [
         name: 'FactoryRoles',
         component: () => import('../views/factory/Roles.vue'),
         meta: { title: '角色管理' }
+      },
+      {
+        path: 'quick-access-settings',
+        name: 'FactoryQuickAccessSettings',
+        component: () => import('../views/factory/QuickAccessSettings.vue'),
+        meta: { title: '首页快捷入口设置' }
+      },
+      {
+        path: 'todo-detail/:id',
+        name: 'FactoryTodoDetail',
+        component: () => import('../views/factory/TodoDetail.vue'),
+        meta: { title: '待办详情' }
+      },
+      {
+        path: 'message-detail/:id',
+        name: 'FactoryMessageDetail',
+        component: () => import('../views/factory/MessageDetail.vue'),
+        meta: { title: '消息详情' }
+      },
+      {
+        path: 'warning-detail/:id',
+        name: 'FactoryWarningDetail',
+        component: () => import('../views/factory/WarningDetail.vue'),
+        meta: { title: '预警详情' }
       }
     ]
   },
@@ -466,11 +550,11 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../layouts/AdminLayout.vue'),
     meta: { title: '平台管理', requiresAuth: true, role: 'platform_admin' },
     children: [
-      {
-        path: 'dashboard',
-        name: 'AdminDashboard',
-        component: () => import('../views/admin/Dashboard.vue'),
-        meta: { title: '仪表盘' }
+      {  
+        path: 'home',
+        name: 'AdminHome',
+        component: () => import('../views/admin/Home.vue'),
+        meta: { title: '首页' }
       },
       {
         path: 'tenants',
@@ -524,6 +608,33 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // 设置页面标题
   document.title = to.meta.title as string || '蓝领智汇'
+  
+  // 检查是否是从登录页跳转
+  if (from.name === 'Login' && to.name === 'Login') {
+    // 从登录页来，检查用户信息
+    const userInfo = localStorage.getItem('userInfo')
+    if (userInfo) {
+      const user = JSON.parse(userInfo)
+      // 根据角色跳转到对应工作中心，默认选中工作中心菜单
+      switch (user.role) {
+        case 'labor_company':
+          next({ name: 'LaborCompanyTodo' })
+          return
+        case 'factory':
+          next({ name: 'FactoryTodo' })
+          return
+        case 'platform_admin':
+          next({ name: 'AdminHome' })
+          return
+        case 'worker':
+          next({ name: 'WorkerHome' })
+          return
+        default:
+          next()
+          return
+      }
+    }
+  }
   
   // 检查是否需要认证
   if (to.meta.requiresAuth) {

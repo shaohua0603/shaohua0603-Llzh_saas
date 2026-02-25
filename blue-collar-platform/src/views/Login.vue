@@ -167,7 +167,7 @@ const handleLogin = () => {
         // 检测设备类型，跳转到PC端或移动端
         console.log('跳转到劳务公司页面，设备宽度:', window.innerWidth)
         if (window.innerWidth > 768) {
-          router.push('/labor-company/dashboard')
+          router.push('/labor-company/home')
         } else {
           router.push('/labor-company-mobile/home')
         }
@@ -176,14 +176,14 @@ const handleLogin = () => {
         // 检测设备类型，跳转到PC端或移动端
         console.log('跳转到工厂页面，设备宽度:', window.innerWidth)
         if (window.innerWidth > 768) {
-          router.push('/factory/dashboard')
+          router.push('/factory/home')
         } else {
           router.push('/factory-mobile/home')
         }
         break
       case 'platform_admin':
         console.log('跳转到平台管理员页面')
-        router.push('/admin/dashboard')
+        router.push('/admin/home')
         break
       default:
         console.log('未知用户角色:', user.role)
@@ -213,7 +213,7 @@ const goToForgotPassword = () => {
   <div class="login-container">
     <div class="login-box">
       <div class="login-header">
-        <img src="@/assets/logo.png" alt="蓝领智汇" class="login-logo" />
+        <img src="/assets/logo.jpg" alt="蓝领智汇" class="login-logo" />
       </div>
       
       <el-form :model="{ phone, password }" class="login-form" label-position="top">
@@ -293,7 +293,7 @@ const goToForgotPassword = () => {
 .login-box {
   width: 100%;
   max-width: 400px;
-  background: #F3F1F1;
+  background: #FFFFFF;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
   padding: 40px;
@@ -310,9 +310,10 @@ const goToForgotPassword = () => {
 .login-header {
   text-align: center;
   margin-bottom: 35px;
-  background-color: #F3F1F1;
+  background-color: #FFFFFF;
   padding: 10px;
   border-radius: 8px;
+  border: 1px solid #f0f0f0;
 }
 
 .login-logo {
@@ -320,6 +321,13 @@ const goToForgotPassword = () => {
   display: block;
   background-color: transparent;
   border: none;
+  height: 90px;
+  width: auto;
+  transition: all 0.3s ease;
+}
+
+.login-header:hover .login-logo {
+  transform: scale(1.05);
 }
 
 .login-form {
