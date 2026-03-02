@@ -1,310 +1,643 @@
 <template>
-  <div class="labor-company-workers">
-    <!-- 搜索和筛选 -->
-    <div class="search-filter">
-      <el-input
-        v-model="searchQuery"
-        placeholder="搜索工人姓名或身份证号"
-        prefix-icon="Search"
-        style="width: 300px; margin-right: 16px"
-      />
-      <el-select
-        v-model="statusFilter"
-        placeholder="筛选状态"
-        style="width: 150px; margin-right: 16px"
+  <div class="workers-page">
+    <!-- 筛选区域 -->
+    <el-card class="filter-card" shadow="never">
+      <div class="filter-default">
+        <div class="filter-toggle-container">
+          <el-form :model="filterForm" inline>
+            <el-form-item label="关键词">
+              <el-input
+                v-model="filterForm.keyword"
+                placeholder="姓名/手机号/身份证号"
+                clearable
+                style="width: 240px"
+              />
+            </el-form-item>
+            <el-form-item label="工人状态">
+              <el-select
+                v-model="filterForm.status"
+                placeholder="工人状态"
+                clearable
+                style="width: 150px"
+              >
+                <el-option
+                  v-for="status in statusOptions"
+                  :key="status.value"
+                  :label="status.label"
+                  :value="status.value"
+                />
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleSearch">
+                <el-icon><Search /></el-icon>
+                搜索
+              </el-button>
+              <el-button @click="handleReset">
+                <el-icon><RefreshLeft /></el-icon>
+                重置
+              </el-button>
+            </el-form-item>
+          </el-form>
+          <el-button type="text" class="filter-toggle" @click="filterVisible = !filterVisible">
+            {{ filterVisible ? '收起' : '展开' }}
+            <el-icon>
+              <component :is="filterVisible ? 'ArrowUp' : 'ArrowDown'" />
+            </el-icon>
+          </el-button>
+        </div>
+      </div>
+      <!-- 展开后显示的全部查询条件 -->
+      <el-collapse-transition>
+        <div v-show="filterVisible" class="filter-expanded">
+          <el-form :model="filterForm" inline>
+            <el-form-item label="工厂">
+              <el-select
+                v-model="filterForm.factoryId"
+                placeholder="请选择工厂"
+                clearable
+                style="width: 180px"
+              >
+                <el-option label="富士康科技集团" value="1" />
+                <el-option label="华为技术有限公司" value="2" />
+                <el-option label="比亚迪股份有限公司" value="3" />
+              </el-select>
+            </el-form-item>
+            <el-form-item label="岗位类别">
+              <el-select
+                v-model="filterForm.positionType"
+                placeholder="请选择岗位类别"
+                clearable
+                style="width: 150px"
+              >
+                <el-option label="普工" value="普工" />
+                <el-option label="质检员" value="质检员" />
+                <el-option label="技术工" value="技术工" />
+                <el-option label="操作工" value="操作工" />
+              </el-select>
+            </el-form-item>
+          </el-form>
+        </div>
+      </el-collapse-transition>
+    </el-card>
+
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleCreate">
+        <el-icon><Plus /></el-icon>
+        新增工人
+      </el-button>
+      <el-button @click="handleExport">
+        <el-icon><Download /></el-icon>
+        导出
+      </el-button>
+      <el-dropdown
+        v-if="selectedRows.length > 0"
+        @command="handleBatchCommand"
       >
-        <el-option label="全部" value="" />
-        <el-option label="在职" value="active" />
-        <el-option label="离职" value="inactive" />
-        <el-option label="待入职" value="pending" />
-      </el-select>
-      <el-button type="primary" @click="handleSearch">搜索</el-button>
-      <el-button type="success" @click="handleAddWorker">添加工人</el-button>
+        <el-button>
+          批量操作
+          <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+        </el-button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="export">批量导出</el-dropdown-item>
+            <el-dropdown-item command="delete" divided>批量删除</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
     </div>
-    
+
     <!-- 工人列表 -->
-    <el-table :data="workersList" style="width: 100%; margin-top: 16px">
-      <el-table-column type="index" label="序号" width="80" />
-      <el-table-column prop="name" label="姓名" width="120" />
-      <el-table-column prop="idCard" label="身份证号" width="180" />
-      <el-table-column prop="phone" label="手机号" width="150" />
-      <el-table-column prop="department" label="部门" width="120" />
-      <el-table-column prop="position" label="职位" width="120" />
-      <el-table-column prop="status" label="状态" width="100">
-        <template #default="scope">
-          <el-tag :type="getStatusType(scope.row.status)">
-            {{ getStatusText(scope.row.status) }}
+    <el-card class="table-card" shadow="never">
+      <!-- 数据统计信息 -->
+      <div class="table-stats">
+        <span>共 {{ totalWorkers }} 名工人，其中进厂 {{ workersList.filter(item => item.lifecycleStatus === 'ENTERED').length }} 人，合同签订 {{ workersList.filter(item => item.lifecycleStatus === 'CONTRACT_SIGNED').length }} 人，面试中 {{ workersList.filter(item => item.lifecycleStatus === 'FIRST_INTERVIEW' || item.lifecycleStatus === 'FACTORY_INTERVIEW').length }} 人</span>
+      </div>
+      <CommonTable
+        :data="workersList"
+        :columns="tableColumns"
+        table-id="labor-company-workers"
+        :total="totalWorkers"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :loading="loading"
+        :show-selection="true"
+        :show-actions="true"
+        @update:current-page="handleCurrentChange"
+        @update:page-size="handleSizeChange"
+        @sort-change="handleSortChange"
+        @global-search="handleGlobalSearch"
+        @row-click="handleRowClick"
+        @selection-change="handleSelectionChange"
+      >
+        <template #column-lifecycleStatus="{ row }">
+          <el-tag :type="getStatusType(row.lifecycleStatus)">
+            {{ getStatusText(row.lifecycleStatus) }}
           </el-tag>
         </template>
-      </el-table-column>
-      <el-table-column prop="hireDate" label="入职日期" width="150" />
-      <el-table-column label="操作" width="200" fixed="right">
-        <template #default="scope">
-          <el-button size="small" type="primary" @click="handleViewWorker(scope.row)">
+
+        <template #column-entryDate="{ row }">
+          {{ row.entryDate || '-' }}
+        </template>
+
+        <template #actions="{ row }">
+          <el-button
+            size="small"
+            type="primary"
+            link
+            @click="handleViewDetail(row)"
+          >
+            <el-icon><View /></el-icon>
             查看
           </el-button>
-          <el-button size="small" type="success" @click="handleEditWorker(scope.row)">
+          <el-button
+            size="small"
+            type="success"
+            link
+            @click="handleEdit(row)"
+          >
+            <el-icon><Edit /></el-icon>
             编辑
           </el-button>
-          <el-button size="small" type="danger" @click="handleDeleteWorker(scope.row.id)">
+          <el-button
+            size="small"
+            type="warning"
+            link
+            @click="handleTransfer(row)"
+          >
+            <el-icon><SwitchButton /></el-icon>
+            调动
+          </el-button>
+          <el-button
+            size="small"
+            type="danger"
+            link
+            @click="handleDelete(row)"
+          >
+            <el-icon><Delete /></el-icon>
             删除
           </el-button>
         </template>
-      </el-table-column>
-    </el-table>
-    
-    <!-- 分页 -->
-    <div class="pagination" style="margin-top: 16px">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :page-sizes="[10, 20, 50, 100]"
-        layout="total, sizes, prev, pager, next, jumper"
-        :total="totalWorkers"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
-    </div>
-    
-    <!-- 添加/编辑工人对话框 -->
-    <el-dialog
-      v-model="workerDialogVisible"
-      :title="isEditing ? '编辑工人' : '添加工人'"
-      width="500px"
-    >
-      <el-form :model="workerForm" label-width="100px">
-        <el-form-item label="姓名">
-          <el-input v-model="workerForm.name" placeholder="请输入姓名" />
-        </el-form-item>
-        <el-form-item label="身份证号">
-          <el-input v-model="workerForm.idCard" placeholder="请输入身份证号" />
-        </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="workerForm.phone" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item label="部门">
-          <el-select v-model="workerForm.department" placeholder="请选择部门">
-            <el-option label="生产部" value="production" />
-            <el-option label="质检部" value="quality" />
-            <el-option label="物流部" value="logistics" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="职位">
-          <el-input v-model="workerForm.position" placeholder="请输入职位" />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="workerForm.status" placeholder="请选择状态">
-            <el-option label="在职" value="active" />
-            <el-option label="离职" value="inactive" />
-            <el-option label="待入职" value="pending" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="入职日期">
-          <el-date-picker
-            v-model="workerForm.hireDate"
-            type="date"
-            placeholder="选择日期"
-            style="width: 100%"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <span class="dialog-footer">
-          <el-button @click="workerDialogVisible = false">取消</el-button>
-          <el-button type="primary" @click="handleSaveWorker">保存</el-button>
-        </span>
-      </template>
-    </el-dialog>
+      </CommonTable>
+    </el-card>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
+import { ref, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Plus, Download, ArrowDown, ArrowUp, RefreshLeft, View, Edit, SwitchButton, Delete } from '@element-plus/icons-vue'
+import CommonTable from '@/components/CommonTable.vue'
 
-// 搜索和筛选
-const searchQuery = ref('')
-const statusFilter = ref('')
+const router = useRouter()
 
-// 分页
+interface WorkerItem {
+  id: string
+  name: string
+  gender: string
+  age: number
+  phone: string
+  idCard: string
+  laborCompany: string
+  factoryName: string
+  factoryArea: string
+  productionLine: string
+  positionType: string
+  positionName: string
+  lifecycleStatus: string
+  entryDate?: string
+}
+
+interface StatusOption {
+  label: string
+  value: string
+}
+
+const filterForm = ref({
+  keyword: '',
+  status: '',
+  factoryId: '',
+  positionType: ''
+})
+const filterVisible = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const totalWorkers = ref(0)
+const loading = ref(false)
+const workersList = ref<WorkerItem[]>([])
+const selectedRows = ref<WorkerItem[]>([])
 
-// 工人列表
-const workersList = ref<any[]>([])
+const statusOptions: StatusOption[] = [
+  { label: '全部', value: '' },
+  { label: '注册', value: 'REGISTERED' },
+  { label: '接送', value: 'PICKUP' },
+  { label: '劳务运维人员', value: 'STAFF_LABOR' },
+  { label: '工厂正式人员', value: 'STAFF_FACTORY' },
+  { label: '初次面试', value: 'FIRST_INTERVIEW' },
+  { label: '合同签订', value: 'CONTRACT_SIGNED' },
+  { label: '面试邀约', value: 'INTERVIEW_INVITATION' },
+  { label: '工厂面试', value: 'FACTORY_INTERVIEW' },
+  { label: '进厂', value: 'ENTERED' },
+  { label: '离职', value: 'RESIGNED' }
+]
 
-// 对话框
-const workerDialogVisible = ref(false)
-const isEditing = ref(false)
+const tableColumns = computed(() => [
+  { prop: 'name', label: '姓名', width: 100, sortable: true },
+  { prop: 'gender', label: '性别', width: 70, sortable: true },
+  { prop: 'age', label: '年龄', width: 70, sortable: true },
+  { prop: 'phone', label: '手机号', width: 130 },
+  { prop: 'idCard', label: '身份证号', width: 170 },
+  { prop: 'laborCompany', label: '劳务公司', minWidth: 180 },
+  { prop: 'factoryName', label: '工厂名称', minWidth: 150 },
+  { prop: 'factoryArea', label: '区域', width: 100 },
+  { prop: 'productionLine', label: '产线', width: 120 },
+  { prop: 'positionType', label: '岗位类别', width: 100 },
+  { prop: 'positionName', label: '岗位名称', width: 120 },
+  { prop: 'lifecycleStatus', label: '工人状态', width: 120, sortable: true },
+  { prop: 'entryDate', label: '入职日期', width: 120, sortable: true }
+])
 
-// 工人表单
-const workerForm = ref({
-  id: '',
-  name: '',
-  idCard: '',
-  phone: '',
-  department: '',
-  position: '',
-  status: 'active',
-  hireDate: ''
-})
-
-// 获取状态类型
-const getStatusType = (status: string) => {
+const getStatusType = (status: string): string => {
   const typeMap: Record<string, string> = {
-    'active': 'success',
-    'inactive': 'danger',
-    'pending': 'warning'
+    'REGISTERED': 'info',
+    'PICKUP': 'warning',
+    'STAFF_LABOR': 'primary',
+    'STAFF_FACTORY': 'primary',
+    'FIRST_INTERVIEW': 'warning',
+    'CONTRACT_SIGNED': 'success',
+    'INTERVIEW_INVITATION': 'warning',
+    'FACTORY_INTERVIEW': 'warning',
+    'ENTERED': 'success',
+    'RESIGNED': 'danger'
   }
-  return typeMap[status] || 'default'
+  return typeMap[status] || 'info'
 }
 
-// 获取状态文本
-const getStatusText = (status: string) => {
+const getStatusText = (status: string): string => {
   const textMap: Record<string, string> = {
-    'active': '在职',
-    'inactive': '离职',
-    'pending': '待入职'
+    'REGISTERED': '注册',
+    'PICKUP': '接送',
+    'STAFF_LABOR': '劳务运维人员',
+    'STAFF_FACTORY': '工厂正式人员',
+    'FIRST_INTERVIEW': '初次面试',
+    'CONTRACT_SIGNED': '合同签订',
+    'INTERVIEW_INVITATION': '面试邀约',
+    'FACTORY_INTERVIEW': '工厂面试',
+    'ENTERED': '进厂',
+    'RESIGNED': '离职'
   }
-  return textMap[status] || status
+  return textMap[status] || '未知'
 }
 
-// 搜索
-const handleSearch = async () => {
+const handleSearch = () => {
   currentPage.value = 1
-  await fetchWorkers()
+  fetchWorkers()
 }
 
-// 添加工人
-const handleAddWorker = () => {
-  isEditing.value = false
-  workerForm.value = {
-    id: '',
-    name: '',
-    idCard: '',
-    phone: '',
-    department: '',
-    position: '',
-    status: 'active',
-    hireDate: ''
+const handleReset = () => {
+  filterForm.value = {
+    keyword: '',
+    status: '',
+    factoryId: '',
+    positionType: ''
   }
-  workerDialogVisible.value = true
+  currentPage.value = 1
+  fetchWorkers()
 }
 
-// 编辑工人
-const handleEditWorker = (worker: any) => {
-  isEditing.value = true
-  workerForm.value = { ...worker }
-  workerDialogVisible.value = true
+const handleCurrentChange = (page: number) => {
+  currentPage.value = page
+  fetchWorkers()
 }
 
-// 查看工人
-const handleViewWorker = (worker: any) => {
-  console.log('查看工人:', worker)
-  // 这里可以跳转到工人详情页
-}
-
-// 删除工人
-const handleDeleteWorker = async (id: string) => {
-  try {
-    await axios.delete(`/api/labor-company/workers/${id}`)
-    await fetchWorkers()
-  } catch (error) {
-    console.error('删除工人失败:', error)
-  }
-}
-
-// 保存工人
-const handleSaveWorker = async () => {
-  try {
-    if (isEditing.value) {
-      await axios.put(`/api/labor-company/workers/${workerForm.value.id}`, workerForm.value)
-    } else {
-      await axios.post('/api/labor-company/workers', workerForm.value)
-    }
-    workerDialogVisible.value = false
-    await fetchWorkers()
-  } catch (error) {
-    console.error('保存工人失败:', error)
-  }
-}
-
-// 分页大小变化
 const handleSizeChange = (size: number) => {
   pageSize.value = size
   fetchWorkers()
 }
 
-// 当前页变化
-const handleCurrentChange = (current: number) => {
-  currentPage.value = current
+const handleSortChange = (sort: any) => {
+  // 排序逻辑
+  console.log('排序变化:', sort)
   fetchWorkers()
 }
 
-// 获取工人列表
-const fetchWorkers = async () => {
-  try {
-    const response = await axios.get('/api/labor-company/workers', {
-      params: {
-        page: currentPage.value,
-        pageSize: pageSize.value,
-        search: searchQuery.value,
-        status: statusFilter.value
-      }
-    })
-    workersList.value = response.data.items
-    totalWorkers.value = response.data.total
-  } catch (error) {
-    console.error('获取工人列表失败:', error)
+const handleGlobalSearch = (keyword: string) => {
+  filterForm.value.keyword = keyword
+  currentPage.value = 1
+  fetchWorkers()
+}
+
+const handleRowClick = (row: WorkerItem) => {
+  // 行点击逻辑
+  console.log('行点击:', row)
+}
+
+const handleSelectionChange = (selection: WorkerItem[]) => {
+  selectedRows.value = selection
+}
+
+const handleCreate = () => {
+  router.push('/labor-company/workers/create')
+}
+
+const handleViewDetail = (row: WorkerItem) => {
+  router.push(`/labor-company/workers/${row.id}`)
+}
+
+const handleEdit = (row: WorkerItem) => {
+  router.push(`/labor-company/workers/${row.id}/edit`)
+}
+
+const handleTransfer = (row: WorkerItem) => {
+  router.push(`/labor-company/workers/${row.id}/transfer`)
+}
+
+const handleDelete = (row: WorkerItem) => {
+  ElMessageBox.confirm(
+    `确定要删除工人"${row.name}"吗？此操作不可恢复。`,
+    '删除确认',
+    {
+      confirmButtonText: '确定删除',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(async () => {
+    try {
+      loading.value = true
+      await new Promise(resolve => setTimeout(resolve, 500))
+      ElMessage.success('删除成功')
+      await fetchWorkers()
+    } catch (error) {
+      console.error('删除工人失败:', error)
+      ElMessage.error('删除失败，请重试')
+    } finally {
+      loading.value = false
+    }
+  }).catch(() => {})
+}
+
+const handleExport = () => {
+  ElMessage.info('导出功能开发中')
+}
+
+const handleBatchCommand = (command: string) => {
+  switch (command) {
+    case 'export':
+      ElMessage.info('批量导出功能开发中')
+      break
+    case 'delete':
+      handleBatchDelete()
+      break
   }
 }
 
-// 初始化数据
+const handleBatchDelete = () => {
+  if (selectedRows.value.length === 0) {
+    ElMessage.warning('请先选择要删除的工人')
+    return
+  }
+
+  const names = selectedRows.value.map(row => row.name).join('、')
+  ElMessageBox.confirm(
+    `确定要删除选中的 ${selectedRows.value.length} 名工人吗？${names}`,
+    '批量删除确认',
+    {
+      confirmButtonText: '确定删除',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }
+  ).then(async () => {
+    try {
+      loading.value = true
+      await new Promise(resolve => setTimeout(resolve, 500))
+      ElMessage.success('批量删除成功')
+      selectedRows.value = []
+      await fetchWorkers()
+    } catch (error) {
+      console.error('批量删除失败:', error)
+      ElMessage.error('删除失败，请重试')
+    } finally {
+      loading.value = false
+    }
+  }).catch(() => {})
+}
+
+const fetchWorkers = async () => {
+  loading.value = true
+  try {
+    await new Promise(resolve => setTimeout(resolve, 500))
+
+    const mockData: WorkerItem[] = [
+      {
+        id: '1',
+        name: '张三',
+        gender: '男',
+        age: 34,
+        phone: '138****8001',
+        idCard: '410101199005151234',
+        laborCompany: '南通富民劳务服务有限公司',
+        factoryName: '富士康科技集团',
+        factoryArea: 'A区',
+        productionLine: '智能手机组装',
+        positionType: '普工',
+        positionName: '操作工',
+        lifecycleStatus: 'ENTERED',
+        entryDate: '2023-01-15'
+      },
+      {
+        id: '2',
+        name: '李四',
+        gender: '女',
+        age: 28,
+        phone: '139****8002',
+        idCard: '410102199010201234',
+        laborCompany: '南通富民劳务服务有限公司',
+        factoryName: '华为技术有限公司',
+        factoryArea: 'B区',
+        productionLine: '电子产品测试',
+        positionType: '质检员',
+        positionName: '质检员',
+        lifecycleStatus: 'ENTERED',
+        entryDate: '2023-03-20'
+      },
+      {
+        id: '3',
+        name: '王五',
+        gender: '男',
+        age: 42,
+        phone: '137****8003',
+        idCard: '410103198506101234',
+        laborCompany: '南通富民劳务服务有限公司',
+        factoryName: '比亚迪股份有限公司',
+        factoryArea: 'C区',
+        productionLine: '汽车配件制造',
+        positionType: '技术工',
+        positionName: '焊工',
+        lifecycleStatus: 'RESIGNED',
+        entryDate: '2022-06-01'
+      },
+      {
+        id: '4',
+        name: '赵六',
+        gender: '女',
+        age: 25,
+        phone: '136****8004',
+        idCard: '410104199512301234',
+        laborCompany: '南通富民劳务服务有限公司',
+        factoryName: '富士康科技集团',
+        factoryArea: 'D区',
+        productionLine: '电子产品组装',
+        positionType: '普工',
+        positionName: '包装工',
+        lifecycleStatus: 'CONTRACT_SIGNED',
+        entryDate: ''
+      },
+      {
+        id: '5',
+        name: '钱七',
+        gender: '男',
+        age: 31,
+        phone: '135****8005',
+        idCard: '410105199208201234',
+        laborCompany: '南通富民劳务服务有限公司',
+        factoryName: '立讯精密工业股份有限公司',
+        factoryArea: 'E区',
+        productionLine: '连接器生产',
+        positionType: '操作工',
+        positionName: '操作工',
+        lifecycleStatus: 'FIRST_INTERVIEW',
+        entryDate: ''
+      }
+    ]
+
+    let filteredData = mockData
+
+    if (filterForm.value.keyword) {
+      const keyword = filterForm.value.keyword.toLowerCase()
+      filteredData = filteredData.filter(
+        worker =>
+          worker.name.toLowerCase().includes(keyword) ||
+          worker.phone.includes(keyword) ||
+          worker.idCard.includes(keyword)
+      )
+    }
+
+    if (filterForm.value.status) {
+      filteredData = filteredData.filter(
+        worker => worker.lifecycleStatus === filterForm.value.status
+      )
+    }
+
+    if (filterForm.value.factoryId) {
+      filteredData = filteredData.filter(
+        worker => worker.factoryName === filterForm.value.factoryId
+      )
+    }
+
+    if (filterForm.value.positionType) {
+      filteredData = filteredData.filter(
+        worker => worker.positionType === filterForm.value.positionType
+      )
+    }
+
+    const start = (currentPage.value - 1) * pageSize.value
+    const end = start + pageSize.value
+    workersList.value = filteredData.slice(start, end)
+    totalWorkers.value = filteredData.length
+  } catch (error) {
+    console.error('获取工人列表失败:', error)
+    ElMessage.error('获取工人列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
 onMounted(() => {
   fetchWorkers()
 })
 </script>
 
 <style scoped>
-.labor-company-workers {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
+.workers-page {
+  padding: 16px;
+  background-color: #f5f7fa;
+}
+
+.filter-card {
+  margin-bottom: 16px;
+  border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 搜索和筛选 */
-.search-filter {
+.filter-default {
+  margin-bottom: 12px;
+}
+
+.filter-toggle-container {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-/* 分页 */
-.pagination {
+.filter-toggle {
+  white-space: nowrap;
+}
+
+.filter-expanded {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e4e7ed;
+}
+
+.action-bar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* 响应式设计 */
+.table-card {
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table-stats {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  border-left: 4px solid #409eff;
+  font-size: 14px;
+  color: #606266;
+}
+
+.table-stats p {
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* 响应式适配 */
 @media screen and (max-width: 768px) {
-  .labor-company-workers {
-    padding: 16px;
-  }
-  
-  .search-filter {
+  .filter-toggle-container {
     flex-direction: column;
     align-items: flex-start;
   }
   
-  .search-filter > * {
-    margin-bottom: 12px;
-    margin-right: 0 !important;
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
   }
   
-  .el-input {
-    width: 100% !important;
+  .action-bar .el-button {
+    width: 100%;
   }
 }
 </style>

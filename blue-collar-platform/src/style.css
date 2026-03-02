@@ -150,8 +150,13 @@
   /* 布局尺寸 */
   --header-height: 60px;
   --sidebar-width: 200px;
-  --sidebar-width-collapsed: 64px;
+  --sidebar-collapsed-width: 60px;
   --page-tabs-height: 40px;
+
+  /* PC端布局特定变量 */
+  --bg-color-sidebar: #ffffff;
+  --bg-color-hover: #f5f7fa;
+  --bg-color-active: #ecf5ff;
 }
 
 /* 全局基础样式 */

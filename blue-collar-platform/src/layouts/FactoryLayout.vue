@@ -120,14 +120,74 @@
               <el-icon><Money /></el-icon>
               <span>结算管理</span>
             </el-menu-item>
-            <el-menu-item index="/factory/departments">
-              <el-icon><OfficeBuilding /></el-icon>
-              <span>部门管理</span>
-            </el-menu-item>
-            <el-menu-item index="/factory/roles">
-              <el-icon><Key /></el-icon>
-              <span>角色管理</span>
-            </el-menu-item>
+            <el-sub-menu index="system">
+              <template #title>
+                <el-icon><Setting /></el-icon>
+                <span>系统管理</span>
+              </template>
+              <el-sub-menu index="company-introduction">
+                <template #title>
+                  <el-icon><OfficeBuilding /></el-icon>
+                  <span>企业介绍</span>
+                </template>
+                <el-menu-item index="/factory/company-culture">
+                  <el-icon><Document /></el-icon>
+                  <span>企业文化介绍</span>
+                </el-menu-item>
+                <el-menu-item index="/factory/position-culture">
+                  <el-icon><Position /></el-icon>
+                  <span>岗位文化介绍</span>
+                </el-menu-item>
+              </el-sub-menu>
+              <el-menu-item index="/factory/departments">
+                <el-icon><OfficeBuilding /></el-icon>
+                <span>部门管理</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/employees">
+                <el-icon><UserFilled /></el-icon>
+                <span>正式员工</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/positions">
+                <el-icon><Position /></el-icon>
+                <span>岗位管理</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/rules">
+                <el-icon><Document /></el-icon>
+                <span>规则配置</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/menu-config">
+                <el-icon><Menu /></el-icon>
+                <span>菜单配置</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/dictionary">
+                <el-icon><Notebook /></el-icon>
+                <span>字典管理</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/system-params">
+                <el-icon><Cpu /></el-icon>
+                <span>系统参数</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/processes">
+                <el-icon><RefreshLeft /></el-icon>
+                <span>流程管理</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/process-config">
+                <el-icon><Operation /></el-icon>
+                <span>流程配置</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/attachments">
+                <el-icon><Paperclip /></el-icon>
+                <span>附件管理</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/print">
+                <el-icon><Printer /></el-icon>
+                <span>打印管理</span>
+              </el-menu-item>
+              <el-menu-item index="/factory/roles">
+                <el-icon><Key /></el-icon>
+                <span>角色管理</span>
+              </el-menu-item>
+            </el-sub-menu>
           </el-menu>
         </aside>
       </div>
@@ -193,7 +253,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowDown, Position, User, Reading, Money, OfficeBuilding, Key, ArrowLeft, ArrowRight, Refresh, Close, Menu, House, HomeFilled, Bell } from '@element-plus/icons-vue'
+import { ArrowDown, Position, User, Reading, Money, OfficeBuilding, Key, ArrowLeft, ArrowRight, Refresh, Close, Menu, House, HomeFilled, Bell, Setting, Document, UserFilled, Notebook, Cpu, RefreshLeft, Operation, Paperclip, Printer } from '@element-plus/icons-vue'
 
 // 路由实例
 const router = useRouter()
@@ -218,7 +278,19 @@ const menuItems = [
   { path: '/factory/workers', label: '工人管理', icon: User },
   { path: '/factory/training', label: '岗前培训', icon: Reading },
   { path: '/factory/salary', label: '结算管理', icon: Money },
+  { path: '/factory/company-culture', label: '企业文化介绍', icon: Document },
+  { path: '/factory/position-culture', label: '岗位文化介绍', icon: Position },
   { path: '/factory/departments', label: '部门管理', icon: OfficeBuilding },
+  { path: '/factory/employees', label: '正式员工', icon: UserFilled },
+  { path: '/factory/positions', label: '岗位管理', icon: Position },
+  { path: '/factory/rules', label: '规则配置', icon: Document },
+  { path: '/factory/menu-config', label: '菜单配置', icon: Menu },
+  { path: '/factory/dictionary', label: '字典管理', icon: Notebook },
+  { path: '/factory/system-params', label: '系统参数', icon: Cpu },
+  { path: '/factory/processes', label: '流程管理', icon: RefreshLeft },
+  { path: '/factory/process-config', label: '流程配置', icon: Operation },
+  { path: '/factory/attachments', label: '附件管理', icon: Paperclip },
+  { path: '/factory/print', label: '打印管理', icon: Printer },
   { path: '/factory/roles', label: '角色管理', icon: Key }
 ]
 
@@ -337,13 +409,81 @@ const getTabTitle = (path) => {
     '/factory/messages': '消息通知',
     '/factory/warnings': '预警消息',
     '/factory/recruitment': '招聘管理',
+    '/factory/recruitment/detail': '招聘需求详情',
     '/factory/workers': '工人管理',
+    '/factory/workers/detail': '工人详情',
     '/factory/training': '岗前培训',
+    '/factory/training/detail': '培训详情',
     '/factory/salary': '结算管理',
+    '/factory/salary/detail': '结算详情',
+    '/factory/company-culture': '企业文化介绍',
+    '/factory/position-culture': '岗位文化介绍',
     '/factory/departments': '部门管理',
-    '/factory/roles': '角色管理'
+    '/factory/departments/detail': '部门详情',
+    '/factory/employees': '正式员工',
+    '/factory/employees/detail': '员工详情',
+    '/factory/positions': '岗位管理',
+    '/factory/positions/detail': '岗位详情',
+    '/factory/rules': '规则配置',
+    '/factory/menu-config': '菜单配置',
+    '/factory/dictionary': '字典管理',
+    '/factory/system-params': '系统参数',
+    '/factory/processes': '流程管理',
+    '/factory/processes/detail': '流程详情',
+    '/factory/process-config': '流程配置',
+    '/factory/attachments': '附件管理',
+    '/factory/print': '打印管理',
+    '/factory/roles': '角色管理',
+    '/factory/roles/detail': '角色详情'
   }
-  return titleMap[path] || '页面'
+  
+  // 首先尝试精确匹配
+  if (titleMap[path]) {
+    return titleMap[path]
+  }
+  
+  // 处理带动态参数的路径
+  for (const key in titleMap) {
+    if (key.includes(':')) {
+      const pathPattern = key.replace(/:\w+/g, '[^/]+')
+      const regex = new RegExp(`^${pathPattern}$`)
+      if (regex.test(path)) {
+        return titleMap[key]
+      }
+    }
+  }
+  
+  // 处理详情页面路径（如 /path/id）
+  const pathParts = path.split('/')
+  if (pathParts.length > 2) {
+    // 首先尝试匹配父路径 + /detail
+    const parentPath = pathParts.slice(0, -1).join('/')
+    const detailPath = `${parentPath}/detail`
+    if (titleMap[detailPath]) {
+      return titleMap[detailPath]
+    }
+    
+    // 检查是否是详情页面（路径最后部分是数字ID或包含detail）
+    const lastPart = pathParts[pathParts.length - 1]
+    if (!isNaN(lastPart) || lastPart === 'detail') {
+      // 尝试从titleMap中找到对应的详情页面标题
+      for (const key in titleMap) {
+        if (key.includes('/detail')) {
+          const keyParentPath = key.substring(0, key.lastIndexOf('/detail'))
+          if (parentPath === keyParentPath) {
+            return titleMap[key]
+          }
+        }
+      }
+    }
+    
+    // 尝试匹配父路径
+    if (titleMap[parentPath]) {
+      return titleMap[parentPath]
+    }
+  }
+  
+  return '页面'
 }
 
 // 切换页面标签
@@ -453,10 +593,15 @@ onUnmounted(() => {
   min-height: 100vh;
   width: 100%;
   background-color: #FFFFFF;
+  overflow: hidden;
 }
 
 /* 顶部导航栏 */
 .layout-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -561,13 +706,19 @@ onUnmounted(() => {
 .layout-body {
   display: flex;
   flex: 1;
+  margin-top: var(--header-height);
+  min-height: calc(100vh - var(--header-height));
   overflow: hidden;
   background-color: var(--color-bg-page);
 }
 
 /* 侧边栏容器 */
 .sidebar-container {
-  position: relative;
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  bottom: 0;
+  z-index: var(--z-index-fixed);
   display: flex;
   align-items: flex-start;
   background: linear-gradient(180deg, var(--color-bg-page) 0%, #f0f2f5 100%);
@@ -576,12 +727,12 @@ onUnmounted(() => {
 /* 左侧导航栏 */
 .layout-sidebar {
   width: var(--sidebar-width);
+  height: 100%;
   background-color: var(--bg-color-sidebar);
   border-right: 1px solid var(--color-border-light);
   overflow-y: auto;
   overflow-x: hidden;
   transition: all var(--transition-base);
-  min-height: 100%;
   box-shadow: var(--shadow-xs);
 }
 
@@ -613,7 +764,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: var(--z-index-dropdown);
+  z-index: 9999;
   box-shadow: var(--shadow-md);
   transition: all var(--transition-base);
 }
@@ -722,14 +873,23 @@ onUnmounted(() => {
 /* 内容容器 */
 .content-container {
   flex: 1;
+  margin-left: var(--sidebar-width);
+  margin-top: var(--page-tabs-height);
+  min-height: calc(100% - var(--page-tabs-height));
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background-color: var(--color-bg-page);
+  transition: margin-left var(--transition-base);
 }
 
 /* 四级导航栏 (页面标签) */
 .page-tabs {
+  position: fixed;
+  top: var(--header-height);
+  left: var(--sidebar-width);
+  right: 0;
+  z-index: var(--z-index-dropdown);
   height: var(--page-tabs-height);
   background: linear-gradient(180deg, #ffffff 0%, var(--color-bg-page) 100%);
   border-bottom: 1px solid var(--color-border-light);
@@ -738,6 +898,7 @@ onUnmounted(() => {
   padding: 0 var(--spacing-md);
   overflow: hidden;
   box-shadow: var(--shadow-xs);
+  transition: left var(--transition-base);
 }
 
 .page-tabs-scroll {
@@ -825,8 +986,17 @@ onUnmounted(() => {
 .layout-content {
   flex: 1;
   padding: var(--spacing-xl);
-  overflow-y: auto;
   background-color: var(--color-bg-page);
+}
+
+/* 侧边栏收起时的内容容器 */
+.layout-sidebar.collapsed ~ .content-container {
+  margin-left: 60px;
+}
+
+/* 侧边栏收起时的页面标签栏 */
+.layout-sidebar.collapsed ~ .content-container .page-tabs {
+  left: 60px;
 }
 
 .layout-content::-webkit-scrollbar {

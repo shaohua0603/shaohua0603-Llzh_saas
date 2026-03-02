@@ -11,6 +11,15 @@ export default defineConfig({
     }
   },
   server: {
-    host: '0.0.0.0' // 允许外网访问
+    host: '0.0.0.0', // 允许外网访问
+    port: 5173,
+    // 开发阶段使用Mock.js，暂不配置代理
+    // proxy: {
+    //   '/api': {
+    //     target: 'http://localhost:3002',
+    //     changeOrigin: true,
+    //     secure: false
+    //   }
+    // }
   }
 })

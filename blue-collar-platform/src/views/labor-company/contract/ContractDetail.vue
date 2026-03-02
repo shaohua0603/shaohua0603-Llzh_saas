@@ -1,0 +1,488 @@
+<template>
+  <div class="contract-detail-page">
+    <div class="detail-content">
+      <el-card class="info-card" shadow="never">
+        <template #header>
+          <div class="card-header">
+            <span class="card-title">基本信息</span>
+            <el-tag :type="getStatusType(contractDetail.contractStatus)">
+              {{ getStatusText(contractDetail.contractStatus) }}
+            </el-tag>
+          </div>
+        </template>
+        <el-descriptions :column="2" border>
+          <el-descriptions-item label="合同编号">
+            {{ contractDetail.contractNo }}
+          </el-descriptions-item>
+          <el-descriptions-item label="结算方式">
+            {{ getSettlementMethodText(contractDetail.settlementMethod) }}
+          </el-descriptions-item>
+          <el-descriptions-item label="甲方">
+            {{ contractDetail.partyA }}
+          </el-descriptions-item>
+          <el-descriptions-item label="乙方姓名">
+            {{ contractDetail.partyBName }}
+          </el-descriptions-item>
+          <el-descriptions-item label="乙方手机号">
+            {{ contractDetail.partyBPhone }}
+          </el-descriptions-item>
+          <el-descriptions-item label="合同签订日期">
+            {{ contractDetail.contractSignDate || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="合同生效日期">
+            {{ contractDetail.contractEffectiveDate || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="合同过期日期">
+            {{ contractDetail.contractExpiryDate || '-' }}
+          </el-descriptions-item>
+          <el-descriptions-item label="合同金额" :span="2">
+            <span class="amount-text">¥{{ formatAmount(contractDetail.contractAmount) }}</span>
+          </el-descriptions-item>
+          <el-descriptions-item v-if="contractDetail.remark" label="备注" :span="2">
+            {{ contractDetail.remark }}
+          </el-descriptions-item>
+        </el-descriptions>
+      </el-card>
+
+      <el-card class="info-card" shadow="never">
+        <template #header>
+          <span class="card-title">合同内容</span>
+        </template>
+        <div class="contract-content" v-html="contractDetail.contractContent"></div>
+      </el-card>
+
+      <el-card v-if="contractDetail.attachments && contractDetail.attachments.length > 0" class="info-card" shadow="never">
+        <template #header>
+          <span class="card-title">合同附件</span>
+        </template>
+        <div class="attachment-list">
+          <div
+            v-for="(file, index) in contractDetail.attachments"
+            :key="index"
+            class="attachment-item"
+          >
+            <el-icon class="attachment-icon"><Document /></el-icon>
+            <span class="attachment-name">{{ file.name }}</span>
+            <div class="attachment-actions">
+              <el-button link type="primary" size="small" @click="handlePreview(file)">
+                预览
+              </el-button>
+              <el-button link type="primary" size="small" @click="handleDownload(file)">
+                下载
+              </el-button>
+            </div>
+          </div>
+        </div>
+      </el-card>
+
+      <el-card class="info-card" shadow="never">
+        <template #header>
+          <span class="card-title">操作记录</span>
+        </template>
+        <el-timeline v-if="operationRecords.length > 0">
+          <el-timeline-item
+            v-for="(record, index) in operationRecords"
+            :key="index"
+            :timestamp="record.createTime"
+            placement="top"
+          >
+            <div class="record-content">
+              <div class="record-action">{{ record.actionText }}</div>
+              <div class="record-operator">操作人：{{ record.operatorName }}</div>
+              <div v-if="record.remark" class="record-remark">备注：{{ record.remark }}</div>
+            </div>
+          </el-timeline-item>
+        </el-timeline>
+        <el-empty v-else description="暂无操作记录" />
+      </el-card>
+    </div>
+
+    <div class="detail-footer">
+      <el-button @click="handleBack">
+        <el-icon><ArrowLeft /></el-icon>
+        返回
+      </el-button>
+      <el-button
+        v-if="contractDetail.contractStatus === 'UNSIGNED' || contractDetail.contractStatus === 'SIGNING'"
+        @click="handleEdit"
+      >
+        <el-icon><Edit /></el-icon>
+        编辑
+      </el-button>
+      <el-button
+        v-if="contractDetail.contractStatus === 'UNSIGNED' || contractDetail.contractStatus === 'SIGNING'"
+        type="danger"
+        @click="handleDelete"
+      >
+        <el-icon><Delete /></el-icon>
+        删除
+      </el-button>
+      <el-button @click="handlePrint">
+        <el-icon><Printer /></el-icon>
+        打印
+      </el-button>
+    </div>
+
+    <el-dialog
+      v-model="showPreview"
+      title="文件预览"
+      width="800px"
+      :close-on-click-modal="true"
+    >
+      <div class="preview-container">
+        <img v-if="isImage(previewFile)" :src="previewFile.url" alt="预览" />
+        <iframe v-else-if="isPDF(previewFile)" :src="previewFile.url" frameborder="0"></iframe>
+        <div v-else class="preview-placeholder">
+          <el-icon :size="64"><Document /></el-icon>
+          <p>该文件类型不支持预览</p>
+        </div>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowLeft, Edit, Delete, Printer, Document } from '@element-plus/icons-vue'
+import { useContractStore } from '@/stores/contract'
+import type { Contract, ContractRecord } from '@/types/contract'
+import { ContractStatusConfig, SettlementMethodConfig } from '@/types/contract'
+
+const router = useRouter()
+const route = useRoute()
+const contractStore = useContractStore()
+
+const loading = ref(false)
+const contractDetail = reactive<Contract>({
+  id: '',
+  contractNo: '',
+  partyA: '',
+  partyAId: '',
+  partyB: '',
+  partyBId: '',
+  partyBName: '',
+  partyBPhone: '',
+  settlementMethod: '',
+  settlementMethodText: '',
+  contractStatus: '',
+  contractStatusText: '',
+  contractSignDate: '',
+  contractEffectiveDate: '',
+  contractExpiryDate: '',
+  contractAmount: 0,
+  contractContent: '',
+  attachments: [],
+  approvalStatus: '',
+  approvalStatusText: '',
+  dataScope: '',
+  departmentId: '',
+  departmentName: '',
+  tenantId: '',
+  tenantName: '',
+  creatorId: '',
+  creatorName: '',
+  createTime: '',
+  updaterId: '',
+  updaterName: '',
+  updateTime: '',
+  remark: ''
+})
+
+const operationRecords = ref<ContractRecord[]>([])
+const showPreview = ref(false)
+const previewFile = ref<any>(null)
+
+const getStatusType = (status: string) => {
+  const config = Object.values(ContractStatusConfig).find(c => c.code === status)
+  return config?.color || 'info'
+}
+
+const getStatusText = (status: string) => {
+  const config = Object.values(ContractStatusConfig).find(c => c.code === status)
+  return config?.name || status
+}
+
+const getSettlementMethodText = (method: string) => {
+  const config = Object.values(SettlementMethodConfig).find(c => c.code === method)
+  return config?.name || method
+}
+
+const formatAmount = (amount: number) => {
+  return amount ? amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'
+}
+
+const loadContractDetail = async (id: string) => {
+  loading.value = true
+  try {
+    await contractStore.fetchContractDetail(id)
+    if (contractStore.contractDetail) {
+      Object.assign(contractDetail, contractStore.contractDetail)
+    }
+  } catch (error) {
+    ElMessage.error('加载合同详情失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const handleEdit = () => {
+  router.push({ name: 'LaborCompanyContractEdit', params: { id: contractDetail.id } })
+}
+
+const handleDelete = () => {
+  ElMessageBox.confirm('确定要删除该合同吗？删除后无法恢复', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(async () => {
+    try {
+      await contractStore.deleteContract(contractDetail.id)
+      ElMessage.success('删除成功')
+      router.push({ name: 'LaborCompanyContract' })
+    } catch (error) {
+      console.error(error)
+    }
+  }).catch(() => {})
+}
+
+const handlePrint = () => {
+  window.print()
+}
+
+const handlePreview = (file: any) => {
+  previewFile.value = file
+  showPreview.value = true
+}
+
+const handleDownload = (file: any) => {
+  const link = document.createElement('a')
+  link.href = file.url
+  link.download = file.name
+  link.click()
+}
+
+const isImage = (file: any) => {
+  return file.name?.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/i)
+}
+
+const isPDF = (file: any) => {
+  return file.name?.match(/\.pdf$/i)
+}
+
+const handleBack = () => {
+  router.push({ name: 'LaborCompanyContract' })
+}
+
+onMounted(() => {
+  const id = route.params.id as string
+  if (id) {
+    loadContractDetail(id)
+  } else {
+    ElMessage.error('合同ID不存在')
+    router.push({ name: 'LaborCompanyContract' })
+  }
+})
+</script>
+
+<style scoped>
+.contract-detail-page {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.detail-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 80px;
+}
+
+.info-card {
+  margin-bottom: 16px;
+}
+
+.info-card:last-child {
+  margin-bottom: 0;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
+}
+
+.amount-text {
+  font-size: 18px;
+  font-weight: 600;
+  color: #f56c6c;
+}
+
+.contract-content {
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  min-height: 200px;
+  line-height: 1.8;
+}
+
+.contract-content :deep(p) {
+  margin-bottom: 12px;
+}
+
+.contract-content :deep(strong) {
+  color: #303133;
+}
+
+.attachment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.attachment-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.attachment-item:hover {
+  background-color: #e6f7ff;
+}
+
+.attachment-icon {
+  font-size: 24px;
+  color: #909399;
+}
+
+.attachment-name {
+  flex: 1;
+  font-size: 14px;
+  color: #303133;
+}
+
+.attachment-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.record-content {
+  padding: 8px 0;
+}
+
+.record-action {
+  font-size: 14px;
+  font-weight: 500;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.record-operator {
+  font-size: 12px;
+  color: #909399;
+  margin-bottom: 4px;
+}
+
+.record-remark {
+  font-size: 12px;
+  color: #606266;
+}
+
+.preview-container {
+  text-align: center;
+  min-height: 400px;
+}
+
+.preview-container img {
+  max-width: 100%;
+  max-height: 600px;
+  border-radius: 4px;
+}
+
+.preview-container iframe {
+  width: 100%;
+  height: 600px;
+  border: none;
+}
+
+.preview-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #909399;
+}
+
+.preview-placeholder .el-icon {
+  margin-bottom: 16px;
+}
+
+.preview-placeholder p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.detail-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-top: 1px solid #e4e7ed;
+  z-index: 100;
+  transition: left var(--transition-base);
+}
+
+@media screen and (max-width: 768px) {
+  .detail-content {
+    padding: 12px;
+  }
+
+  :deep(.el-descriptions) {
+    --el-descriptions-table-border: 1px solid #ebeef5;
+  }
+
+  :deep(.el-descriptions__cell) {
+    padding: 8px;
+  }
+
+  .detail-footer {
+    left: 0;
+    flex-direction: column;
+  }
+
+  .detail-footer .el-button {
+    width: 100%;
+  }
+}
+
+@media print {
+  .detail-footer {
+    display: none !important;
+  }
+
+  .info-card {
+    box-shadow: none !important;
+    border: 1px solid #ebeef5 !important;
+  }
+}
+</style>

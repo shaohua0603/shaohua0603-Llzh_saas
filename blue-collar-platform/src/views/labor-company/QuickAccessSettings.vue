@@ -118,10 +118,6 @@ onMounted(() => {
 <template>
   <div class="quick-access-settings">
     <div class="page-header">
-      <div class="header-left" @click="cancelSettings">
-        <el-icon><Setting /></el-icon>
-        <h2>首页快捷入口设置</h2>
-      </div>
       <div class="header-right">
         <div class="action-buttons">
           <el-button @click="cancelSettings">取消</el-button>

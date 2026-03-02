@@ -13,6 +13,46 @@
         <div class="logo-container">
           <img src="/assets/logo.jpg" alt="蓝领智汇" class="logo-image" />
         </div>
+
+        <!-- 顶部一级菜单 -->
+        <div class="top-menu-container" v-show="!isMobile">
+          <el-menu
+            :default-active="activeFirstMenu"
+            class="top-menu"
+            mode="horizontal"
+            @select="handleFirstMenuSelect"
+            :ellipsis="true"
+          >
+            <el-menu-item index="work-center">
+              <el-icon><Bell /></el-icon>
+              <span>工作中心</span>
+            </el-menu-item>
+            <el-menu-item index="packages">
+              <el-icon><Present /></el-icon>
+              <span>套餐管理</span>
+            </el-menu-item>
+            <el-menu-item index="tenants">
+              <el-icon><OfficeBuilding /></el-icon>
+              <span>租户管理</span>
+            </el-menu-item>
+            <el-menu-item index="recruitment">
+              <el-icon><Position /></el-icon>
+              <span>招聘管理</span>
+            </el-menu-item>
+            <el-menu-item index="settlement">
+              <el-icon><Wallet /></el-icon>
+              <span>结算管理</span>
+            </el-menu-item>
+            <el-menu-item index="operation">
+              <el-icon><Operation /></el-icon>
+              <span>运营管理</span>
+            </el-menu-item>
+            <el-menu-item index="system">
+              <el-icon><Tools /></el-icon>
+              <span>系统管理</span>
+            </el-menu-item>
+          </el-menu>
+        </div>
       </div>
       <div class="header-right">
         <div class="user-info">
@@ -88,30 +128,147 @@
             :collapse="isSidebarCollapsed"
             @select="handleMenuSelect"
           >
-            <el-menu-item index="/admin/home">
-              <el-icon><House /></el-icon>
-              <span>首页</span>
-            </el-menu-item>
-            <el-menu-item index="/admin/tenants">
-              <el-icon><OfficeBuilding /></el-icon>
-              <span>租户管理</span>
-            </el-menu-item>
-            <el-menu-item index="/admin/packages">
-              <el-icon><Present /></el-icon>
-              <span>套餐配置</span>
-            </el-menu-item>
-            <el-menu-item index="/admin/recruitment">
-              <el-icon><Position /></el-icon>
-              <span>招聘管理</span>
-            </el-menu-item>
-            <el-menu-item index="/admin/users">
-              <el-icon><User /></el-icon>
-              <span>注册用户</span>
-            </el-menu-item>
-            <el-menu-item index="/admin/idle-workers">
-              <el-icon><Warning /></el-icon>
-              <span>空闲工人</span>
-            </el-menu-item>
+            <!-- 工作中心二级菜单 -->
+            <template v-if="selectedFirstMenu === 'work-center'">
+              <el-menu-item index="/admin/todo">
+                <el-icon><List /></el-icon>
+                <span>待办任务</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/messages">
+                <el-icon><Message /></el-icon>
+                <span>消息中心</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/warnings">
+                <el-icon><Warning /></el-icon>
+                <span>预警消息</span>
+              </el-menu-item>
+            </template>
+            
+            <!-- 套餐管理二级菜单 -->
+            <template v-else-if="selectedFirstMenu === 'packages'">
+              <el-menu-item index="/admin/packages">
+                <el-icon><Present /></el-icon>
+                <span>套餐信息</span>
+              </el-menu-item>
+            </template>
+            
+            <!-- 租户管理二级菜单 -->
+            <template v-else-if="selectedFirstMenu === 'tenants'">
+              <el-menu-item index="/admin/tenants">
+                <el-icon><OfficeBuilding /></el-icon>
+                <span>租户信息</span>
+              </el-menu-item>
+            </template>
+            
+            <!-- 招聘管理二级菜单 -->
+            <template v-else-if="selectedFirstMenu === 'recruitment'">
+              <el-menu-item index="/admin/recruitment/demand">
+                <el-icon><Document /></el-icon>
+                <span>招聘需求</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/recruitment/resume">
+                <el-icon><User /></el-icon>
+                <span>简历管理</span>
+              </el-menu-item>
+            </template>
+            
+            <!-- 结算管理二级菜单 -->
+            <template v-else-if="selectedFirstMenu === 'settlement'">
+              <el-menu-item index="/admin/settlement/referral">
+                <el-icon><Connection /></el-icon>
+                <span>工作转介绍</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/settlement/commission">
+                <el-icon><Coin /></el-icon>
+                <span>佣金发放</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/settlement/pull-new-reward">
+                <el-icon><Star /></el-icon>
+                <span>拉新奖励</span>
+              </el-menu-item>
+            </template>
+            
+            <!-- 运营管理二级/三级菜单 -->
+            <template v-else-if="selectedFirstMenu === 'operation'">
+              <el-menu-item index="/admin/operation/expense-query">
+                <el-icon><Ticket /></el-icon>
+                <span>费用查询</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/operation/idle-workers">
+                <el-icon><UserFilled /></el-icon>
+                <span>空闲工人</span>
+              </el-menu-item>
+              <el-sub-menu index="activity">
+                <template #title>
+                  <el-icon><Calendar /></el-icon>
+                  <span>活动管理</span>
+                </template>
+                <el-menu-item index="/admin/operation/activity">
+                  <el-icon><Document /></el-icon>
+                  <span>活动信息</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/operation/activity-registration">
+                  <el-icon><List /></el-icon>
+                  <span>报名信息</span>
+                </el-menu-item>
+              </el-sub-menu>
+              <el-sub-menu index="ranking">
+                <template #title>
+                  <el-icon><TrendCharts /></el-icon>
+                  <span>榜单管理</span>
+                </template>
+                <el-menu-item index="/admin/operation/ranking/work-duration">
+                  <span>在岗时长排名</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/operation/ranking/turnover-rate">
+                  <span>离职率排名</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/operation/ranking/punishment-rate">
+                  <span>惩罚率排名</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/operation/ranking/dismissal-rate">
+                  <span>开除率排名</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/operation/ranking/transfer-rate">
+                  <span>调岗率排名</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/operation/ranking/complaint-rate">
+                  <span>投诉率排名</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/operation/ranking/leave-rate">
+                  <span>请假率排名</span>
+                </el-menu-item>
+                <el-menu-item index="/admin/operation/ranking/overtime">
+                  <span>加班时长排名</span>
+                </el-menu-item>
+              </el-sub-menu>
+            </template>
+            
+            <!-- 系统管理二级菜单 -->
+            <template v-else-if="selectedFirstMenu === 'system'">
+              <el-menu-item index="/admin/users">
+                <el-icon><User /></el-icon>
+                <span>注册用户</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/system/tenant-tag">
+                <el-icon><PriceTag /></el-icon>
+                <span>租户标签</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/system/warning-template">
+                <el-icon><Document /></el-icon>
+                <span>预警消息模版</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/system/education-job">
+                <el-icon><Reading /></el-icon>
+                <span>学历对应岗位</span>
+              </el-menu-item>
+              <el-menu-item index="/admin/system/platform-account">
+                <el-icon><Avatar /></el-icon>
+                <span>平台账号管理</span>
+              </el-menu-item>
+            </template>
+            
+
           </el-menu>
         </aside>
       </div>
@@ -177,7 +334,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ArrowDown, OfficeBuilding, Present, Position, User, Warning, ArrowLeft, ArrowRight, Refresh, Close, Menu, House, HomeFilled } from '@element-plus/icons-vue'
+import { ArrowDown, OfficeBuilding, Present, Position, User, Warning, ArrowLeft, ArrowRight, Refresh, Close, Menu, House, HomeFilled, Setting, Document, UserFilled, Notebook, Cpu, RefreshLeft, Operation, Paperclip, Printer, Key, Bell, Wallet, Tools, List, Message, Coin, Star, Ticket, Connection, Calendar, TrendCharts, PriceTag, Reading, Avatar } from '@element-plus/icons-vue'
 
 // 路由实例
 const router = useRouter()
@@ -190,6 +347,7 @@ const userInfo = ref<any>(null)
 const isSidebarCollapsed = ref(false)
 const isMobile = ref(false)
 const mobileMenuVisible = ref(false)
+const selectedFirstMenu = ref('work-center')
 
 // 菜单项配置
 const menuItems = [
@@ -198,8 +356,54 @@ const menuItems = [
   { path: '/admin/packages', label: '套餐配置', icon: Present },
   { path: '/admin/recruitment', label: '招聘管理', icon: Position },
   { path: '/admin/users', label: '注册用户', icon: User },
-  { path: '/admin/idle-workers', label: '空闲工人', icon: Warning }
+  { path: '/admin/idle-workers', label: '空闲工人', icon: Warning },
+  { path: '/admin/company-culture', label: '企业文化介绍', icon: Document },
+  { path: '/admin/position-culture', label: '岗位文化介绍', icon: Position },
+  { path: '/admin/departments', label: '部门管理', icon: OfficeBuilding },
+  { path: '/admin/employees', label: '正式员工', icon: UserFilled },
+  { path: '/admin/positions', label: '岗位管理', icon: Position },
+  { path: '/admin/rules', label: '规则配置', icon: Document },
+  { path: '/admin/menu-config', label: '菜单配置', icon: Menu },
+  { path: '/admin/dictionary', label: '字典管理', icon: Notebook },
+  { path: '/admin/system-params', label: '系统参数', icon: Cpu },
+  { path: '/admin/processes', label: '流程管理', icon: RefreshLeft },
+  { path: '/admin/process-config', label: '流程配置', icon: Operation },
+  { path: '/admin/attachments', label: '附件管理', icon: Paperclip },
+  { path: '/admin/print', label: '打印管理', icon: Printer },
+  { path: '/admin/roles', label: '角色管理', icon: Key }
 ]
+
+// 计算当前激活的一级菜单
+const activeFirstMenu = computed(() => {
+  // 优先使用手动选择的一级菜单
+  if (selectedFirstMenu.value) return selectedFirstMenu.value
+  
+  const path = route.path
+  if (path.startsWith('/admin/todo') || path.startsWith('/admin/messages') || path.startsWith('/admin/warnings')) return 'work-center'
+  if (path.startsWith('/admin/packages')) return 'packages'
+  if (path.startsWith('/admin/tenants')) return 'tenants'
+  if (path.startsWith('/admin/recruitment')) return 'recruitment'
+  if (path.startsWith('/admin/settlement')) return 'settlement'
+  if (path.startsWith('/admin/operation')) return 'operation'
+  if (path.startsWith('/admin/users') || path.startsWith('/admin/system')) return 'system'
+  return 'work-center'
+})
+
+// 处理一级菜单选择
+const handleFirstMenuSelect = (key) => {
+  selectedFirstMenu.value = key
+  // 根据新规范：选中一级菜单时只显示对应的二级菜单，不默认展示内容页面
+  // 移除导航到默认页面的逻辑
+}
+
+// 监听路由变化，更新选中的一级菜单
+import { watch } from 'vue'
+watch(
+  () => route.path,
+  (newPath) => {
+    selectedFirstMenu.value = activeFirstMenu.value
+  }
+)
 
 // 切换移动端菜单
 const toggleMobileMenu = () => {
@@ -287,13 +491,108 @@ const handleMenuSelect = (key) => {
 const getTabTitle = (path) => {
   const titleMap = {
     '/admin/home': '首页',
+    '/admin/todo': '待办任务',
+    '/admin/messages': '消息中心',
+    '/admin/warnings': '预警消息',
     '/admin/tenants': '租户管理',
-    '/admin/packages': '套餐配置',
-    '/admin/recruitment': '招聘管理',
+    '/admin/tenants/detail': '租户详情',
+    '/admin/packages': '套餐管理',
+    '/admin/packages/detail': '套餐详情',
+    '/admin/recruitment/demand': '招聘需求',
+    '/admin/recruitment/demand/detail': '招聘需求详情',
+    '/admin/recruitment/resume': '简历管理',
+    '/admin/recruitment/resume/detail': '简历详情',
+    '/admin/settlement/referral': '工作转介绍',
+    '/admin/settlement/commission': '佣金发放',
+    '/admin/settlement/pull-new-reward': '拉新奖励',
+    '/admin/operation/expense-query': '费用查询',
+    '/admin/operation/idle-workers': '空闲工人',
+    '/admin/operation/activity': '活动信息',
+    '/admin/operation/activity/detail': '活动详情',
+    '/admin/operation/activity-registration': '报名信息',
+    '/admin/operation/activity-registration/detail': '报名详情',
+    '/admin/operation/ranking/work-duration': '在岗时长排名',
+    '/admin/operation/ranking/turnover-rate': '离职率排名',
+    '/admin/operation/ranking/punishment-rate': '惩罚率排名',
+    '/admin/operation/ranking/dismissal-rate': '开除率排名',
+    '/admin/operation/ranking/transfer-rate': '调岗率排名',
+    '/admin/operation/ranking/complaint-rate': '投诉率排名',
+    '/admin/operation/ranking/leave-rate': '请假率排名',
+    '/admin/operation/ranking/overtime': '加班时长排名',
     '/admin/users': '注册用户',
-    '/admin/idle-workers': '空闲工人'
+    '/admin/users/detail': '用户详情',
+    '/admin/system/tenant-tag': '租户标签',
+    '/admin/system/warning-template': '预警消息模版',
+    '/admin/system/education-job': '学历对应岗位',
+    '/admin/system/platform-account': '平台账号管理',
+    '/admin/system/platform-account/detail': '账号详情',
+    '/admin/system/company-culture': '企业文化介绍',
+    '/admin/system/job-culture': '岗位文化介绍',
+    '/admin/system/department': '部门管理',
+    '/admin/system/department/detail': '部门详情',
+    '/admin/system/employee': '正式员工',
+    '/admin/system/employee/detail': '员工详情',
+    '/admin/system/role': '岗位管理',
+    '/admin/system/role/detail': '岗位详情',
+    '/admin/system/rule-config': '规则配置',
+    '/admin/system/menu-config': '菜单配置',
+    '/admin/system/dictionary': '字典管理',
+    '/admin/system/system-param': '系统参数',
+    '/admin/system/process': '流程管理',
+    '/admin/system/process/detail': '流程详情',
+    '/admin/system/process-config': '流程配置',
+    '/admin/system/attachment': '附件管理',
+    '/admin/system/print-template': '模版配置',
+    '/admin/system/print-config': '打印配置'
   }
-  return titleMap[path] || '页面'
+  
+  // 首先尝试精确匹配
+  if (titleMap[path]) {
+    return titleMap[path]
+  }
+  
+  // 处理带动态参数的路径
+  for (const key in titleMap) {
+    if (key.includes(':')) {
+      const pathPattern = key.replace(/:\w+/g, '[^/]+')
+      const regex = new RegExp(`^${pathPattern}$`)
+      if (regex.test(path)) {
+        return titleMap[key]
+      }
+    }
+  }
+  
+  // 处理详情页面路径（如 /path/id）
+  const pathParts = path.split('/')
+  if (pathParts.length > 2) {
+    // 首先尝试匹配父路径 + /detail
+    const parentPath = pathParts.slice(0, -1).join('/')
+    const detailPath = `${parentPath}/detail`
+    if (titleMap[detailPath]) {
+      return titleMap[detailPath]
+    }
+    
+    // 检查是否是详情页面（路径最后部分是数字ID或包含detail）
+    const lastPart = pathParts[pathParts.length - 1]
+    if (!isNaN(lastPart) || lastPart === 'detail') {
+      // 尝试从titleMap中找到对应的详情页面标题
+      for (const key in titleMap) {
+        if (key.includes('/detail')) {
+          const keyParentPath = key.substring(0, key.lastIndexOf('/detail'))
+          if (parentPath === keyParentPath) {
+            return titleMap[key]
+          }
+        }
+      }
+    }
+    
+    // 尝试匹配父路径
+    if (titleMap[parentPath]) {
+      return titleMap[parentPath]
+    }
+  }
+  
+  return '页面'
 }
 
 // 切换页面标签
@@ -388,10 +687,15 @@ onUnmounted(() => {
   min-height: 100vh;
   width: 100%;
   background-color: #FFFFFF;
+  overflow: hidden;
 }
 
 /* 顶部导航栏 */
 .layout-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -408,6 +712,67 @@ onUnmounted(() => {
   display: flex;
   align-items: center;
   gap: var(--spacing-xl);
+}
+
+/* 顶部一级菜单容器 */
+.top-menu-container {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 顶部一级菜单 */
+.top-menu {
+  border-bottom: none;
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.top-menu :deep(.el-menu-item) {
+  height: 100%;
+  line-height: 60px;
+  margin: 0;
+  padding: 0 var(--spacing-xl);
+  border-radius: 0;
+  transition: all var(--transition-fast);
+  color: var(--color-text-regular);
+  font-weight: var(--font-weight-medium);
+  font-size: var(--font-size-base);
+}
+
+.top-menu :deep(.el-menu-item:hover) {
+  background-color: var(--bg-color-hover);
+  color: var(--color-primary);
+}
+
+.top-menu :deep(.el-menu-item.is-active) {
+  background: linear-gradient(135deg, var(--bg-color-active) 0%, var(--color-primary-extra-light) 100%);
+  color: var(--color-primary);
+  font-weight: var(--font-weight-bold);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.top-menu :deep(.el-menu-item.is-active::after) {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 3px;
+  background: linear-gradient(90deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-radius: var(--radius-round);
+}
+
+.top-menu :deep(.el-menu-item .el-icon) {
+  margin-right: var(--spacing-sm);
+  font-size: 16px;
+  transition: transform var(--transition-fast);
+}
+
+.top-menu :deep(.el-menu-item:hover .el-icon) {
+  transform: scale(1.1);
 }
 
 /* 移动端汉堡菜单按钮 */
@@ -496,13 +861,19 @@ onUnmounted(() => {
 .layout-body {
   display: flex;
   flex: 1;
+  margin-top: var(--header-height);
+  min-height: calc(100vh - var(--header-height));
   overflow: hidden;
   background-color: var(--color-bg-page);
 }
 
 /* 侧边栏容器 */
 .sidebar-container {
-  position: relative;
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  bottom: 0;
+  z-index: var(--z-index-fixed);
   display: flex;
   align-items: flex-start;
   background: linear-gradient(180deg, var(--color-bg-page) 0%, #f0f2f5 100%);
@@ -511,12 +882,12 @@ onUnmounted(() => {
 /* 左侧导航栏 */
 .layout-sidebar {
   width: var(--sidebar-width);
+  height: 100%;
   background-color: var(--bg-color-sidebar);
   border-right: 1px solid var(--color-border-light);
   overflow-y: auto;
   overflow-x: hidden;
   transition: all var(--transition-base);
-  min-height: 100%;
   box-shadow: var(--shadow-xs);
 }
 
@@ -591,7 +962,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: var(--z-index-dropdown);
+  z-index: 9999;
   box-shadow: var(--shadow-md);
   transition: all var(--transition-base);
 }
@@ -659,14 +1030,23 @@ onUnmounted(() => {
 /* 内容容器 */
 .content-container {
   flex: 1;
+  margin-left: var(--sidebar-width);
+  margin-top: var(--page-tabs-height);
+  min-height: calc(100% - var(--page-tabs-height));
   display: flex;
   flex-direction: column;
   overflow: hidden;
   background-color: var(--color-bg-page);
+  transition: margin-left var(--transition-base);
 }
 
 /* 四级导航栏 (页面标签) */
 .page-tabs {
+  position: fixed;
+  top: var(--header-height);
+  left: var(--sidebar-width);
+  right: 0;
+  z-index: var(--z-index-dropdown);
   height: var(--page-tabs-height);
   background: linear-gradient(180deg, #ffffff 0%, var(--color-bg-page) 100%);
   border-bottom: 1px solid var(--color-border-light);
@@ -675,6 +1055,7 @@ onUnmounted(() => {
   padding: 0 var(--spacing-md);
   overflow: hidden;
   box-shadow: var(--shadow-xs);
+  transition: left var(--transition-base);
 }
 
 .page-tabs-scroll {
@@ -762,8 +1143,17 @@ onUnmounted(() => {
 .layout-content {
   flex: 1;
   padding: var(--spacing-xl);
-  overflow-y: auto;
   background-color: var(--color-bg-page);
+}
+
+/* 侧边栏收起时的内容容器 */
+.layout-sidebar.collapsed ~ .content-container {
+  margin-left: 60px;
+}
+
+/* 侧边栏收起时的页面标签栏 */
+.layout-sidebar.collapsed ~ .content-container .page-tabs {
+  left: 60px;
 }
 
 .layout-content::-webkit-scrollbar {

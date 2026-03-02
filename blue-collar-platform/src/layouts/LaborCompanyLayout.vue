@@ -21,7 +21,7 @@
             class="top-menu"
             mode="horizontal"
             @select="handleFirstMenuSelect"
-            :collapse="!showMenuText"
+            :ellipsis="true"
           >
             <el-menu-item index="work-center">
               <el-icon><Bell /></el-icon>
@@ -31,25 +31,33 @@
               <el-icon><Position /></el-icon>
               <span>招聘管理</span>
             </el-menu-item>
+            <el-menu-item index="interview">
+              <el-icon><ChatDotRound /></el-icon>
+              <span>面试管理</span>
+            </el-menu-item>
             <el-menu-item index="workers">
               <el-icon><User /></el-icon>
               <span>工人管理</span>
             </el-menu-item>
-            <el-menu-item index="attendance">
-              <el-icon><Timer /></el-icon>
-              <span>考勤管理</span>
+            <el-menu-item index="contract">
+              <el-icon><Document /></el-icon>
+              <span>合同管理</span>
             </el-menu-item>
-            <el-menu-item index="salary">
-              <el-icon><Money /></el-icon>
+            <el-menu-item index="employment">
+              <el-icon><Management /></el-icon>
+              <span>在职管理</span>
+            </el-menu-item>
+            <el-menu-item index="resignation">
+              <el-icon><RemoveFilled /></el-icon>
+              <span>离职管理</span>
+            </el-menu-item>
+            <el-menu-item index="settlement">
+              <el-icon><Wallet /></el-icon>
               <span>结算管理</span>
             </el-menu-item>
-            <el-menu-item index="departments">
-              <el-icon><OfficeBuilding /></el-icon>
-              <span>部门管理</span>
-            </el-menu-item>
-            <el-menu-item index="roles">
-              <el-icon><Key /></el-icon>
-              <span>角色管理</span>
+            <el-menu-item index="system">
+              <el-icon><Tools /></el-icon>
+              <span>系统管理</span>
             </el-menu-item>
           </el-menu>
         </div>
@@ -127,8 +135,8 @@
     
     <!-- 主体内容 -->
     <div class="layout-body">
-      <!-- 左侧导航栏 (二级和三级菜单) -->
-      <div class="sidebar-container">
+      <!-- 侧边栏容器 -->
+      <div class="sidebar-container" :class="{ 'collapsed': isSidebarCollapsed }">
         <!-- 收起展开按钮 (位于菜单栏外面) -->
         <div class="sidebar-toggle" @click="toggleSidebar" :class="{ 'collapsed': isSidebarCollapsed }">
           <el-icon>
@@ -140,7 +148,6 @@
         <el-menu
           :default-active="activeSubMenu"
           class="sidebar-menu"
-          router
           :collapse-transition="false"
           :collapse="isSidebarCollapsed"
           @select="handleMenuSelect"
@@ -167,13 +174,29 @@
               <el-icon><Connection /></el-icon>
               <span>招聘需求</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/recruitment/applications">
+            <el-menu-item index="/labor-company/recruitment/resume">
               <el-icon><Document /></el-icon>
-              <span>申请管理</span>
+              <span>简历管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/recruitment/history">
-              <el-icon><Timer /></el-icon>
-              <span>招聘历史</span>
+          </template>
+          
+          <!-- 面试管理二级菜单 -->
+          <template v-if="activeFirstMenu === 'interview'">
+            <el-menu-item index="/labor-company/interview/pickup">
+              <el-icon><Van /></el-icon>
+              <span>接送管理</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/interview/initial-interview">
+              <el-icon><ChatDotRound /></el-icon>
+              <span>初步面试</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/interview/invitation">
+              <el-icon><Bell /></el-icon>
+              <span>面试邀约</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/interview/factory-interview">
+              <el-icon><OfficeBuilding /></el-icon>
+              <span>工厂面试</span>
             </el-menu-item>
           </template>
           
@@ -183,77 +206,235 @@
               <el-icon><List /></el-icon>
               <span>工人列表</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/workers/profile">
-              <el-icon><Avatar /></el-icon>
-              <span>工人档案</span>
-            </el-menu-item>
-            <el-menu-item index="/labor-company/workers/transfer">
-              <el-icon><SwitchButton /></el-icon>
-              <span>调动管理</span>
+          </template>
+          
+          <!-- 合同管理二级菜单 -->
+          <template v-if="activeFirstMenu === 'contract'">
+            <el-menu-item index="/labor-company/contract">
+              <el-icon><Document /></el-icon>
+              <span>签订合同</span>
             </el-menu-item>
           </template>
           
-          <!-- 考勤管理二级菜单 -->
-          <template v-if="activeFirstMenu === 'attendance'">
+          <!-- 在职管理二级菜单 -->
+          <template v-if="activeFirstMenu === 'employment'">
+            <el-sub-menu index="work-and-life">
+              <template #title>
+                <el-icon><Coffee /></el-icon>
+                <span>工作与生活</span>
+              </template>
+              <el-menu-item index="/labor-company/on-duty/living-expense">
+                <el-icon><Wallet /></el-icon>
+                <span>生活费管理</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/salary">
+                <el-icon><Money /></el-icon>
+                <span>工资管理</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/claim">
+                <el-icon><DocumentChecked /></el-icon>
+                <span>理赔管理</span>
+              </el-menu-item>
+            </el-sub-menu>
+            <el-sub-menu index="management-and-care">
+              <template #title>
+                <el-icon><Management /></el-icon>
+                <span>管理与关怀</span>
+              </template>
+              <el-menu-item index="/labor-company/on-duty/communication">
+                <el-icon><ChatLineSquare /></el-icon>
+                <span>沟通管理</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/entertainment">
+                <el-icon><Trophy /></el-icon>
+                <span>文娱活动</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/registration">
+                <el-icon><Edit /></el-icon>
+                <span>报名管理</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/news">
+                <el-icon><Promotion /></el-icon>
+                <span>发布资讯</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/community">
+                <el-icon><UserFilled /></el-icon>
+                <span>社团管理</span>
+              </el-menu-item>
+            </el-sub-menu>
+            <el-menu-item index="/labor-company/on-duty/special-case">
+              <el-icon><WarningFilled /></el-icon>
+              <span>特殊情况管理</span>
+            </el-menu-item>
+            <el-sub-menu index="insurance">
+              <template #title>
+                <el-icon><Document /></el-icon>
+                <span>保险管理</span>
+              </template>
+              <el-menu-item index="/labor-company/on-duty/insurance">
+                <el-icon><Document /></el-icon>
+                <span>保险管理</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/insurance-record">
+                <el-icon><EditPen /></el-icon>
+                <span>参保登记</span>
+              </el-menu-item>
+            </el-sub-menu>
             <el-menu-item index="/labor-company/attendance">
               <el-icon><Check /></el-icon>
-              <span>考勤记录</span>
+              <span>考勤管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/attendance/statistics">
-              <el-icon><DataAnalysis /></el-icon>
-              <span>考勤统计</span>
-            </el-menu-item>
-            <el-menu-item index="/labor-company/attendance/leave">
+            <el-menu-item index="/labor-company/on-duty/leave">
               <el-icon><Calendar /></el-icon>
               <span>请假管理</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/on-duty/transfer">
+              <el-icon><Sort /></el-icon>
+              <span>调岗管理</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/on-duty/reward-punishment">
+              <el-icon><Medal /></el-icon>
+              <span>奖惩管理</span>
+            </el-menu-item>
+            <el-sub-menu index="business-classroom">
+              <template #title>
+                <el-icon><Reading /></el-icon>
+                <span>业务课堂</span>
+              </template>
+              <el-menu-item index="/labor-company/on-duty/learning-material">
+                <el-icon><Document /></el-icon>
+                <span>学习材料</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/question-bank">
+                <el-icon><Notebook /></el-icon>
+                <span>题库管理</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/learning-time">
+                <el-icon><Clock /></el-icon>
+                <span>学习时长管理</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/exam">
+                <el-icon><EditPen /></el-icon>
+                <span>考试管理</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/on-duty/exam-result">
+                <el-icon><DataAnalysis /></el-icon>
+                <span>考试成绩</span>
+              </el-menu-item>
+            </el-sub-menu>
+            <el-menu-item index="/labor-company/on-duty/abnormal">
+              <el-icon><Warning /></el-icon>
+              <span>异常管理</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/on-duty/complaint">
+              <el-icon><ChatDotRound /></el-icon>
+              <span>投诉/建议</span>
+            </el-menu-item>
+          </template>
+          
+          <!-- 离职管理二级菜单 -->
+          <template v-if="activeFirstMenu === 'resignation'">
+            <el-menu-item index="/labor-company/resignation">
+              <el-icon><RemoveFilled /></el-icon>
+              <span>离职管理</span>
             </el-menu-item>
           </template>
           
           <!-- 结算管理二级菜单 -->
-          <template v-if="activeFirstMenu === 'salary'">
-            <el-menu-item index="/labor-company/salary">
-              <el-icon><Coin /></el-icon>
-              <span>工资结算</span>
-            </el-menu-item>
-            <el-menu-item index="/labor-company/salary/history">
-              <el-icon><DocumentCopy /></el-icon>
-              <span>结算历史</span>
-            </el-menu-item>
-            <el-menu-item index="/labor-company/salary/settings">
-              <el-icon><Setting /></el-icon>
-              <span>结算设置</span>
+          <template v-if="activeFirstMenu === 'settlement'">
+            <el-sub-menu index="work-referral">
+              <template #title>
+                <el-icon><Share /></el-icon>
+                <span>工作转介绍</span>
+              </template>
+              <el-menu-item index="/labor-company/referral">
+                <el-icon><Share /></el-icon>
+                <span>工作转介绍</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/commission">
+                <el-icon><Wallet /></el-icon>
+                <span>佣金发放</span>
+              </el-menu-item>
+            </el-sub-menu>
+            <el-menu-item index="/labor-company/settlement">
+              <el-icon><Money /></el-icon>
+              <span>结算管理</span>
             </el-menu-item>
           </template>
           
-          <!-- 部门管理二级菜单 -->
-          <template v-if="activeFirstMenu === 'departments'">
+          <!-- 系统管理二级菜单 -->
+          <template v-if="activeFirstMenu === 'system'">
+            <el-sub-menu index="company-introduction">
+              <template #title>
+                <el-icon><OfficeBuilding /></el-icon>
+                <span>企业介绍</span>
+              </template>
+              <el-menu-item index="/labor-company/company-culture">
+                <el-icon><Document /></el-icon>
+                <span>企业文化介绍</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/position-culture">
+                <el-icon><PositionIcon /></el-icon>
+                <span>岗位文化介绍</span>
+              </el-menu-item>
+            </el-sub-menu>
             <el-menu-item index="/labor-company/departments">
-              <el-icon><Grid /></el-icon>
-              <span>部门列表</span>
+              <el-icon><FolderOpened /></el-icon>
+              <span>部门管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/departments/create">
-              <el-icon><Plus /></el-icon>
-              <span>创建部门</span>
+            <el-menu-item index="/labor-company/employees">
+              <el-icon><UserSolid /></el-icon>
+              <span>正式员工</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/departments/staff">
-              <el-icon><UserFilled /></el-icon>
-              <span>部门人员</span>
+            <el-menu-item index="/labor-company/positions">
+              <el-icon><PositionIcon /></el-icon>
+              <span>岗位管理</span>
             </el-menu-item>
-          </template>
-          
-          <!-- 角色管理二级菜单 -->
-          <template v-if="activeFirstMenu === 'roles'">
+            <el-menu-item index="/labor-company/rules">
+              <el-icon><DocumentIcon /></el-icon>
+              <span>规则配置</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/menu-config">
+              <el-icon><MenuIcon /></el-icon>
+              <span>菜单配置</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/dictionary">
+              <el-icon><ListIcon /></el-icon>
+              <span>字典管理</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/system-parameter">
+              <el-icon><Parameter /></el-icon>
+              <span>系统参数</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/process">
+              <el-icon><Operation /></el-icon>
+              <span>流程管理</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/process-config">
+              <el-icon><SettingIcon /></el-icon>
+              <span>流程配置</span>
+            </el-menu-item>
+            <el-menu-item index="/labor-company/attachment">
+              <el-icon><File /></el-icon>
+              <span>附件管理</span>
+            </el-menu-item>
+            <el-sub-menu index="print-management">
+              <template #title>
+                <el-icon><Printer /></el-icon>
+                <span>打印管理</span>
+              </template>
+              <el-menu-item index="/labor-company/template-config">
+                <el-icon><DocumentIcon /></el-icon>
+                <span>模版配置</span>
+              </el-menu-item>
+              <el-menu-item index="/labor-company/print-config">
+                <el-icon><Printer /></el-icon>
+                <span>打印配置</span>
+              </el-menu-item>
+            </el-sub-menu>
             <el-menu-item index="/labor-company/roles">
-              <el-icon><Position /></el-icon>
-              <span>角色列表</span>
-            </el-menu-item>
-            <el-menu-item index="/labor-company/roles/create">
-              <el-icon><Edit /></el-icon>
-              <span>创建角色</span>
-            </el-menu-item>
-            <el-menu-item index="/labor-company/roles/permissions">
-              <el-icon><Lock /></el-icon>
-              <span>权限管理</span>
+              <el-icon><Key /></el-icon>
+              <span>角色管理</span>
             </el-menu-item>
           </template>
         </el-menu>
@@ -353,7 +534,39 @@ import {
   More,
   House,
   HomeFilled,
-  Bell
+  Bell,
+  Van,
+  ChatDotRound,
+  Management,
+  RemoveFilled,
+  Wallet,
+  Tools,
+  DocumentChecked,
+  ChatLineSquare,
+  Trophy,
+  Promotion,
+  WarningFilled,
+  EditPen,
+  Sort,
+  Medal,
+  Notebook,
+  Clock,
+  Warning,
+  Share,
+  FolderOpened,
+  Coffee,
+  Cpu,
+  Reading,
+  UserFilled as UserSolid,
+  Position as PositionIcon,
+  Document as DocumentIcon,
+  Setting as SettingIcon,
+  Menu as MenuIcon,
+  List as ListIcon,
+  Cpu as Parameter,
+  Operation,
+  Document as File,
+  Printer
 } from '@element-plus/icons-vue'
 
 // 路由实例
@@ -375,11 +588,13 @@ const selectedFirstMenu = ref('work-center')
 const firstMenus = [
   { key: 'work-center', label: '工作中心', icon: Bell },
   { key: 'recruitment', label: '招聘管理', icon: Position },
+  { key: 'interview', label: '面试管理', icon: ChatDotRound },
   { key: 'workers', label: '工人管理', icon: User },
-  { key: 'attendance', label: '考勤管理', icon: Timer },
-  { key: 'salary', label: '结算管理', icon: Money },
-  { key: 'departments', label: '部门管理', icon: OfficeBuilding },
-  { key: 'roles', label: '角色管理', icon: Key }
+  { key: 'contract', label: '合同管理', icon: Document },
+  { key: 'employment', label: '在职管理', icon: Management },
+  { key: 'resignation', label: '离职管理', icon: RemoveFilled },
+  { key: 'settlement', label: '结算管理', icon: Wallet },
+  { key: 'system', label: '系统管理', icon: Tools }
 ]
 
 // 二级菜单配置
@@ -394,33 +609,69 @@ const secondMenus = {
   ],
   recruitment: [
     { path: '/labor-company/recruitment', label: '招聘需求', icon: Connection },
-    { path: '/labor-company/recruitment/applications', label: '申请管理', icon: Document },
-    { path: '/labor-company/recruitment/history', label: '招聘历史', icon: Timer }
+    { path: '/labor-company/recruitment/resume', label: '简历管理', icon: Document }
+  ],
+  interview: [
+    { path: '/labor-company/interview/pickup', label: '接送管理', icon: Van },
+    { path: '/labor-company/interview/initial-interview', label: '初步面试', icon: ChatDotRound },
+    { path: '/labor-company/interview/invitation', label: '面试邀约', icon: Bell },
+    { path: '/labor-company/interview/factory-interview', label: '工厂面试', icon: OfficeBuilding }
   ],
   workers: [
     { path: '/labor-company/workers', label: '工人列表', icon: List },
-    { path: '/labor-company/workers/profile', label: '工人档案', icon: Avatar },
-    { path: '/labor-company/workers/transfer', label: '调动管理', icon: SwitchButton }
+    { path: '/labor-company/workers/:id', label: '工人信息详情', icon: Avatar }
   ],
-  attendance: [
-    { path: '/labor-company/attendance', label: '考勤记录', icon: Check },
-    { path: '/labor-company/attendance/statistics', label: '考勤统计', icon: DataAnalysis },
-    { path: '/labor-company/attendance/leave', label: '请假管理', icon: Calendar }
+  contract: [
+    { path: '/labor-company/contract', label: '签订合同', icon: Document }
   ],
-  salary: [
-    { path: '/labor-company/salary', label: '工资结算', icon: Coin },
-    { path: '/labor-company/salary/history', label: '结算历史', icon: DocumentCopy },
-    { path: '/labor-company/salary/settings', label: '结算设置', icon: Setting }
+  employment: [
+    { path: '/labor-company/on-duty/living-expense', label: '生活费管理', icon: Wallet },
+    { path: '/labor-company/on-duty/salary', label: '工资管理', icon: Money },
+    { path: '/labor-company/on-duty/claim', label: '理赔管理', icon: DocumentChecked },
+    { path: '/labor-company/on-duty/communication', label: '沟通管理', icon: ChatLineSquare },
+    { path: '/labor-company/on-duty/entertainment', label: '文娱活动', icon: Trophy },
+    { path: '/labor-company/on-duty/registration', label: '报名管理', icon: Edit },
+    { path: '/labor-company/on-duty/news', label: '发布资讯', icon: Promotion },
+    { path: '/labor-company/on-duty/community', label: '社团管理', icon: UserFilled },
+    { path: '/labor-company/on-duty/special-case', label: '特殊情况管理', icon: WarningFilled },
+    { path: '/labor-company/on-duty/insurance', label: '保险管理', icon: Document },
+    { path: '/labor-company/on-duty/insurance-record', label: '参保登记', icon: EditPen },
+    { path: '/labor-company/attendance', label: '考勤管理', icon: Check },
+    { path: '/labor-company/on-duty/leave', label: '请假管理', icon: Calendar },
+    { path: '/labor-company/on-duty/transfer', label: '调岗管理', icon: Sort },
+    { path: '/labor-company/on-duty/reward-punishment', label: '奖惩管理', icon: Medal },
+    { path: '/labor-company/on-duty/learning-material', label: '学习材料', icon: Document },
+    { path: '/labor-company/on-duty/question-bank', label: '题库管理', icon: Notebook },
+    { path: '/labor-company/on-duty/learning-time', label: '学习时长管理', icon: Clock },
+    { path: '/labor-company/on-duty/exam', label: '考试管理', icon: EditPen },
+    { path: '/labor-company/on-duty/exam-result', label: '考试成绩', icon: DataAnalysis },
+    { path: '/labor-company/on-duty/abnormal', label: '异常管理', icon: Warning },
+    { path: '/labor-company/on-duty/complaint', label: '投诉/建议', icon: ChatDotRound }
   ],
-  departments: [
-    { path: '/labor-company/departments', label: '部门列表', icon: Grid },
-    { path: '/labor-company/departments/create', label: '创建部门', icon: Plus },
-    { path: '/labor-company/departments/staff', label: '部门人员', icon: UserFilled }
+  resignation: [
+    { path: '/labor-company/resignation', label: '离职管理', icon: RemoveFilled }
   ],
-  roles: [
-    { path: '/labor-company/roles', label: '角色列表', icon: Position },
-    { path: '/labor-company/roles/create', label: '创建角色', icon: Edit },
-    { path: '/labor-company/roles/permissions', label: '权限管理', icon: Lock }
+  settlement: [
+    { path: '/labor-company/referral', label: '工作转介绍', icon: Share },
+    { path: '/labor-company/commission', label: '佣金发放', icon: Wallet },
+    { path: '/labor-company/settlement', label: '结算管理', icon: Money }
+  ],
+  system: [
+    { path: '/labor-company/company-culture', label: '企业文化介绍', icon: Document },
+    { path: '/labor-company/position-culture', label: '岗位文化介绍', icon: PositionIcon },
+    { path: '/labor-company/departments', label: '部门管理', icon: FolderOpened },
+    { path: '/labor-company/employees', label: '正式员工', icon: UserSolid },
+    { path: '/labor-company/positions', label: '岗位管理', icon: PositionIcon },
+    { path: '/labor-company/rules', label: '规则配置', icon: DocumentIcon },
+    { path: '/labor-company/menu-config', label: '菜单配置', icon: MenuIcon },
+    { path: '/labor-company/dictionary', label: '字典管理', icon: ListIcon },
+    { path: '/labor-company/system-parameter', label: '系统参数', icon: Parameter },
+    { path: '/labor-company/process', label: '流程管理', icon: Operation },
+    { path: '/labor-company/process-config', label: '流程配置', icon: SettingIcon },
+    { path: '/labor-company/attachment', label: '附件管理', icon: File },
+    { path: '/labor-company/template-config', label: '模版配置', icon: DocumentIcon },
+    { path: '/labor-company/print-config', label: '打印配置', icon: Printer },
+    { path: '/labor-company/roles', label: '角色管理', icon: Key }
   ]
 }
 
@@ -450,12 +701,13 @@ const checkScreenSize = () => {
   const width = window.innerWidth
   isMobile.value = width < 768
 
+  // 简化逻辑：在非移动设备上始终显示菜单文本
+  // 只在移动设备上隐藏文本
+  showMenuText.value = !isMobile.value
+
   const headerElement = document.querySelector('.layout-header')
   if (headerElement) {
     headerWidth.value = headerElement.clientWidth
-    // 计算所需的最小宽度(每个菜单项约120px,7个菜单项)
-    const minRequiredWidth = 7 * 120 + 200 // 菜单项宽度 + logo宽度
-    showMenuText.value = headerWidth.value >= minRequiredWidth && !isMobile.value
   }
 }
 
@@ -464,23 +716,27 @@ const checkHeaderWidth = () => {
   const headerElement = document.querySelector('.layout-header')
   if (headerElement) {
     headerWidth.value = headerElement.clientWidth
-    // 计算所需的最小宽度(每个菜单项约120px,7个菜单项)
-    const minRequiredWidth = 7 * 120 + 200 // 菜单项宽度 + logo宽度
-    showMenuText.value = headerWidth.value >= minRequiredWidth && !isMobile.value
   }
 }
 
 // 计算当前激活的一级菜单
 const activeFirstMenu = computed(() => {
-  // 根据路径自动匹配，确保路由变化时菜单能正确切换
+  // 优先使用手动选择的一级菜单
+  if (selectedFirstMenu.value) return selectedFirstMenu.value
+  
+  // 否则根据路径自动匹配，确保路由变化时菜单能正确切换
   const path = route.path
+  console.log('Current path:', path)
   if (path.includes('/todo') || path.includes('/messages') || path.includes('/warnings') || path.includes('/home')) return 'work-center'
   if (path.includes('/recruitment')) return 'recruitment'
+  if (path.includes('/interview')) return 'interview'
   if (path.includes('/workers')) return 'workers'
-  if (path.includes('/attendance')) return 'attendance'
-  if (path.includes('/salary')) return 'salary'
-  if (path.includes('/departments')) return 'departments'
-  if (path.includes('/roles')) return 'roles'
+  if (path.includes('/contract')) return 'contract'
+  if (path.includes('/on-duty') || path.includes('/attendance')) return 'employment'
+  if (path.includes('/resignation')) return 'resignation'
+  if (path.includes('/referral') || path.includes('/commission') || path.includes('/settlement')) return 'settlement'
+  if (path.includes('/departments') || path.includes('/roles') || path.includes('/company-culture') || path.includes('/position-culture') || path.includes('/employees') || path.includes('/positions') || path.includes('/rules') || path.includes('/menu-config') || path.includes('/dictionary') || path.includes('/system-parameter') || path.includes('/process') || path.includes('/process-config') || path.includes('/attachment') || path.includes('/template-config') || path.includes('/print-config')) return 'system'
+  console.log('Defaulting to work-center')
   return 'work-center'
 })
 
@@ -496,9 +752,10 @@ const toggleSidebar = () => {
 
 // 处理一级菜单选择
 const handleFirstMenuSelect = (key: string) => {
-  // 更新选中的一级菜单，联动左侧菜单栏
+  // 设置当前选中的一级菜单
   selectedFirstMenu.value = key
-  // 保持当前页面不变，不跳转内容页
+  // 根据新规范：选中一级菜单时只显示对应的二级菜单，不默认展示内容页面
+  // 移除导航到默认页面的逻辑
 }
 
 // 退出登录
@@ -541,7 +798,7 @@ const contextMenuTop = ref(0)
 const contextMenuLeft = ref(0)
 const currentTab = ref(null)
 
-// 处理菜单选择，添加页面标签
+// 处理菜单选择，添加页面标签并跳转
 const handleMenuSelect = (key) => {
   const path = key
   const title = getTabTitle(path)
@@ -554,6 +811,9 @@ const handleMenuSelect = (key) => {
       title
     })
   }
+  
+  // 执行路由跳转
+  router.push(path)
 }
 
 // 根据路径获取页面标题
@@ -564,9 +824,27 @@ const getTabTitle = (path) => {
     '/labor-company/messages': '消息通知',
     '/labor-company/warnings': '预警消息',
     '/labor-company/recruitment': '招聘需求',
-    '/labor-company/recruitment/applications': '申请管理',
-    '/labor-company/recruitment/history': '招聘历史',
+    '/labor-company/recruitment/detail': '招聘需求详情',
+    '/labor-company/recruitment/resume': '简历管理',
+    '/labor-company/recruitment/resume/detail': '简历详情',
+    '/labor-company/interview/pickup': '接送管理',
+    '/labor-company/interview/pickup/add': '新增接送',
+    '/labor-company/interview/pickup/edit': '编辑接送',
+    '/labor-company/interview/pickup/detail': '接送详情',
+    '/labor-company/interview/initial-interview': '初步面试',
+    '/labor-company/interview/initial-interview/add': '新增初步面试',
+    '/labor-company/interview/initial-interview/edit': '编辑初步面试',
+    '/labor-company/interview/initial-interview/detail': '初步面试详情',
+    '/labor-company/interview/invitation': '面试邀约',
+    '/labor-company/interview/invitation/add': '新增面试邀约',
+    '/labor-company/interview/invitation/edit': '编辑面试邀约',
+    '/labor-company/interview/invitation/detail': '面试邀约详情',
+    '/labor-company/interview/factory-interview': '工厂面试',
+    '/labor-company/interview/factory-interview/add': '新增工厂面试',
+    '/labor-company/interview/factory-interview/edit': '编辑工厂面试',
+    '/labor-company/interview/factory-interview/detail': '工厂面试详情',
     '/labor-company/workers': '工人列表',
+    '/labor-company/workers/:id': '工人信息详情',
     '/labor-company/workers/profile': '工人档案',
     '/labor-company/workers/transfer': '调动管理',
     '/labor-company/attendance': '考勤记录',
@@ -580,9 +858,69 @@ const getTabTitle = (path) => {
     '/labor-company/departments/staff': '部门人员',
     '/labor-company/roles': '角色列表',
     '/labor-company/roles/create': '创建角色',
-    '/labor-company/roles/permissions': '权限管理'
+    '/labor-company/roles/permissions': '权限管理',
+    '/labor-company/company-culture': '企业文化介绍',
+    '/labor-company/position-culture': '岗位文化介绍',
+    '/labor-company/employees': '正式员工',
+    '/labor-company/positions': '岗位管理',
+    '/labor-company/rules': '规则配置',
+    '/labor-company/menu-config': '菜单配置',
+    '/labor-company/dictionary': '字典管理',
+    '/labor-company/system-parameter': '系统参数',
+    '/labor-company/process': '流程管理',
+    '/labor-company/process-config': '流程配置',
+    '/labor-company/attachment': '附件管理',
+    '/labor-company/template-config': '模版配置',
+    '/labor-company/print-config': '打印配置'
   }
-  return titleMap[path] || '页面'
+  
+  // 首先尝试精确匹配
+  if (titleMap[path]) {
+    return titleMap[path]
+  }
+  
+  // 处理带动态参数的路径
+  for (const key in titleMap) {
+    if (key.includes(':')) {
+      const pathPattern = key.replace(/:\w+/g, '[^/]+')
+      const regex = new RegExp(`^${pathPattern}$`)
+      if (regex.test(path)) {
+        return titleMap[key]
+      }
+    }
+  }
+  
+  // 处理详情页面路径（如 /path/id）
+  const pathParts = path.split('/')
+  if (pathParts.length > 2) {
+    // 首先尝试匹配父路径 + /detail
+    const parentPath = pathParts.slice(0, -1).join('/')
+    const detailPath = `${parentPath}/detail`
+    if (titleMap[detailPath]) {
+      return titleMap[detailPath]
+    }
+    
+    // 检查是否是详情页面（路径最后部分是数字ID或包含detail）
+    const lastPart = pathParts[pathParts.length - 1]
+    if (!isNaN(lastPart) || lastPart === 'detail') {
+      // 尝试从titleMap中找到对应的详情页面标题
+      for (const key in titleMap) {
+        if (key.includes('/detail')) {
+          const keyParentPath = key.substring(0, key.lastIndexOf('/detail'))
+          if (parentPath === keyParentPath) {
+            return titleMap[key]
+          }
+        }
+      }
+    }
+    
+    // 尝试匹配父路径
+    if (titleMap[parentPath]) {
+      return titleMap[parentPath]
+    }
+  }
+  
+  return '页面'
 }
 
 // 切换页面标签
@@ -695,6 +1033,10 @@ onUnmounted(() => {
 
 /* 顶部导航栏 */
 .layout-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -705,20 +1047,27 @@ onUnmounted(() => {
   z-index: var(--z-index-fixed);
   border-bottom: 1px solid var(--color-border-lighter);
   transition: all var(--transition-base);
+  width: 100%;
+  overflow: visible;
 }
 
 .header-left {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--spacing-xl);
   flex: 1;
+  overflow: visible;
+  min-width: 0;
 }
 
 /* 顶部菜单容器 */
 .top-menu-container {
   flex: 1;
   min-width: 0;
-  overflow: hidden;
+  overflow: visible;
+  display: flex;
+  justify-content: center;
 }
 
 /* 移动端汉堡菜单按钮 */
@@ -777,18 +1126,8 @@ onUnmounted(() => {
   border-bottom: none !important;
   flex: 1;
   min-width: 0;
-  overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
-}
-
-.top-menu::-webkit-scrollbar {
-  display: none;
-}
-
-.top-menu {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  width: auto;
+  overflow: visible;
 }
 
 .top-menu :deep(.el-menu-item) {
@@ -881,15 +1220,21 @@ onUnmounted(() => {
 .layout-body {
   display: flex;
   flex: 1;
+  margin-top: var(--header-height);
   background-color: var(--color-bg-page);
+  min-height: calc(100vh - var(--header-height));
 }
 
 /* 侧边栏容器 */
 .sidebar-container {
-  position: relative;
+  position: fixed;
+  top: var(--header-height);
+  left: 0;
+  bottom: 0;
   display: flex;
   align-items: flex-start;
   background: linear-gradient(180deg, var(--color-bg-page) 0%, #f0f2f5 100%);
+  z-index: var(--z-index-fixed);
 }
 
 /* 左侧导航栏 */
@@ -900,7 +1245,7 @@ onUnmounted(() => {
   overflow-y: auto;
   overflow-x: hidden;
   transition: all var(--transition-base);
-  min-height: 100%;
+  height: 100%;
   box-shadow: var(--shadow-xs);
 }
 
@@ -932,7 +1277,7 @@ onUnmounted(() => {
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  z-index: var(--z-index-dropdown);
+  z-index: 9999;
   box-shadow: var(--shadow-md);
   transition: all var(--transition-base);
 }
@@ -1031,9 +1376,19 @@ onUnmounted(() => {
   background: linear-gradient(135deg, var(--bg-color-active) 0%, var(--color-primary-extra-light) 100%);
 }
 
-/* 确保收起状态下的侧边栏有足够空间显示图标 */
+/* 收起状态下的侧边栏有足够空间显示图标 */
 .layout-sidebar.collapsed {
   overflow: hidden;
+}
+
+/* 侧边栏收起时调整内容容器的margin-left */
+.sidebar-container.collapsed + .content-container {
+  margin-left: 60px;
+}
+
+/* 侧边栏收起时的页面标签栏 */
+.sidebar-container.collapsed + .content-container .page-tabs {
+  left: 60px;
 }
 
 .layout-sidebar.collapsed .sidebar-menu {
@@ -1051,10 +1406,18 @@ onUnmounted(() => {
   flex-direction: column;
   background-color: var(--color-bg-page);
   overflow: hidden;
+  margin-left: var(--sidebar-width);
+  margin-top: var(--page-tabs-height);
+  min-height: calc(100% - var(--page-tabs-height));
+  transition: margin-left var(--transition-base);
 }
 
 /* 四级导航栏 (页面标签) */
 .page-tabs {
+  position: fixed;
+  top: var(--header-height);
+  left: var(--sidebar-width);
+  right: 0;
   height: var(--page-tabs-height);
   background: linear-gradient(180deg, #ffffff 0%, var(--color-bg-page) 100%);
   border-bottom: 1px solid var(--color-border-light);
@@ -1063,6 +1426,8 @@ onUnmounted(() => {
   padding: 0 var(--spacing-md);
   overflow: hidden;
   box-shadow: var(--shadow-xs);
+  z-index: var(--z-index-dropdown);
+  transition: left var(--transition-base);
 }
 
 .page-tabs-scroll {
@@ -1149,8 +1514,7 @@ onUnmounted(() => {
 /* 内容区域 */
 .layout-content {
   flex: 1;
-  padding: var(--spacing-xl);
-  overflow-y: auto;
+  padding: var(--spacing-sm);
   background-color: var(--color-bg-page);
 }
 

@@ -143,10 +143,12 @@ const handleLogin = () => {
       }),
       ...(user.role === 'labor_company' && {
         laborCompany: '南通富民劳务服务有限公司',
+        companyName: '南通富民劳务服务有限公司',
         position: '招聘经理'
       }),
       ...(user.role === 'factory' && {
         factory: '富士康科技集团',
+        companyName: '富士康科技集团',
         position: '人事主管'
       })
     }
@@ -156,6 +158,7 @@ const handleLogin = () => {
     localStorage.setItem('token', 'test-token-' + Math.random().toString(36).substring(2))
     
     console.log('本地存储已设置')
+    console.log('localStorage.userInfo:', localStorage.getItem('userInfo'))
     
     // 根据用户角色跳转到对应页面
     switch (user.role) {
@@ -166,11 +169,8 @@ const handleLogin = () => {
       case 'labor_company':
         // 检测设备类型，跳转到PC端或移动端
         console.log('跳转到劳务公司页面，设备宽度:', window.innerWidth)
-        if (window.innerWidth > 768) {
-          router.push('/labor-company/home')
-        } else {
-          router.push('/labor-company-mobile/home')
-        }
+        console.log('准备跳转到:', window.innerWidth > 768 ? '/labor-company/home' : '/labor-company-mobile/home')
+        router.push('/labor-company/home')
         break
       case 'factory':
         // 检测设备类型，跳转到PC端或移动端

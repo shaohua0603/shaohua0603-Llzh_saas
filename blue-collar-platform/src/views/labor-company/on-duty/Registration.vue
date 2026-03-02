@@ -1,0 +1,849 @@
+<template>
+  <div class="registration-management">
+    <!-- 搜索和筛选区域 -->
+    <div class="search-filter-section">
+      <el-row :gutter="16" align="middle">
+        <el-col :span="6">
+          <el-input
+            v-model="searchKeyword"
+            placeholder="搜索姓名或手机号"
+            clearable
+            @input="handleSearch"
+          >
+            <template #prefix>
+              <el-icon><Search /></el-icon>
+            </template>
+          </el-input>
+        </el-col>
+        <el-col :span="4">
+          <el-input
+            v-model="activityFilter"
+            placeholder="搜索活动/社团标题"
+            clearable
+            @input="handleSearch"
+          />
+        </el-col>
+        <el-col :span="4">
+          <el-select
+            v-model="statusFilter"
+            placeholder="审核状态"
+            clearable
+            @change="handleSearch"
+          >
+            <el-option label="全部" value="" />
+            <el-option label="待审核" value="pending" />
+            <el-option label="审核中" value="processing" />
+            <el-option label="已通过" value="approved" />
+            <el-option label="已驳回" value="rejected" />
+          </el-select>
+        </el-col>
+        <el-col :span="4">
+          <el-select
+            v-model="typeFilter"
+            placeholder="报名类型"
+            clearable
+            @change="handleSearch"
+          >
+            <el-option label="全部" value="" />
+            <el-option label="活动报名" value="activity" />
+            <el-option label="社团报名" value="community" />
+          </el-select>
+        </el-col>
+        <el-col :span="6">
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>
+            搜索
+          </el-button>
+          <el-button @click="handleReset">
+            <el-icon><Refresh /></el-icon>
+            重置
+          </el-button>
+        </el-col>
+      </el-row>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-cards">
+      <el-card class="stat-card">
+        <div class="stat-content">
+          <div class="stat-number">{{ stats.pendingCount }}</div>
+          <div class="stat-label">待审核</div>
+        </div>
+      </el-card>
+      <el-card class="stat-card">
+        <div class="stat-content">
+          <div class="stat-number">{{ stats.processingCount }}</div>
+          <div class="stat-label">审核中</div>
+        </div>
+      </el-card>
+      <el-card class="stat-card">
+        <div class="stat-content">
+          <div class="stat-number">{{ stats.approvedCount }}</div>
+          <div class="stat-label">已通过</div>
+        </div>
+      </el-card>
+      <el-card class="stat-card">
+        <div class="stat-content">
+          <div class="stat-number">{{ stats.rejectedCount }}</div>
+          <div class="stat-label">已驳回</div>
+        </div>
+      </el-card>
+    </div>
+
+    <!-- 通用表格 -->
+    <CommonTable
+      ref="tableRef"
+      :data="tableData"
+      :columns="columns"
+      table-id="registration-table"
+      :total="total"
+      :current-page="currentPage"
+      :page-size="pageSize"
+      :loading="loading"
+      :show-selection="true"
+      :show-toolbar="false"
+      @update:current-page="handlePageChange"
+      @update:page-size="handleSizeChange"
+      @selection-change="handleSelectionChange"
+      @global-search="handleGlobalSearch"
+    >
+      <template #toolbar-right>
+        <el-button
+          type="success"
+          :disabled="selectedRows.length === 0"
+          @click="handleBatchApprove"
+        >
+          <el-icon><Check /></el-icon>
+          批量通过
+        </el-button>
+        <el-button
+          type="danger"
+          :disabled="selectedRows.length === 0"
+          @click="handleBatchReject"
+        >
+          <el-icon><Close /></el-icon>
+          批量驳回
+        </el-button>
+      </template>
+
+      <template #column-registrationType="{ row }">
+        <el-tag :type="row.registrationType === 'activity' ? 'primary' : 'success'">
+          {{ row.registrationType === 'activity' ? '活动报名' : '社团报名' }}
+        </el-tag>
+      </template>
+
+      <template #column-status="{ row }">
+        <el-tag :type="getStatusType(row.status)">
+          {{ getStatusText(row.status) }}
+        </el-tag>
+      </template>
+
+      <template #column-submitTime="{ row }">
+        {{ formatDateTime(row.submitTime) }}
+      </template>
+
+      <template #actions="{ row }">
+        <el-button type="primary" link @click="handleView(row)">
+          <el-icon><View /></el-icon>
+          查看
+        </el-button>
+        <el-button
+          v-if="row.status === 'pending' || row.status === 'processing'"
+          type="success"
+          link
+          @click="handleApprove(row)"
+        >
+          <el-icon><Check /></el-icon>
+          通过
+        </el-button>
+        <el-button
+          v-if="row.status === 'pending' || row.status === 'processing'"
+          type="danger"
+          link
+          @click="handleReject(row)"
+        >
+          <el-icon><Close /></el-icon>
+          驳回
+        </el-button>
+      </template>
+    </CommonTable>
+
+    <!-- 详情对话框 -->
+    <el-dialog
+      v-model="detailDialogVisible"
+      title="报名详情"
+      width="900px"
+      :close-on-click-modal="false"
+    >
+      <div v-if="currentRow" class="detail-content">
+        <!-- 业务基本信息 -->
+        <el-card class="detail-card" shadow="never">
+          <template #header>
+            <div class="card-header">
+              <span>基本信息</span>
+              <el-tag :type="getStatusType(currentRow.status)">
+                {{ getStatusText(currentRow.status) }}
+              </el-tag>
+            </div>
+          </template>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item label="姓名">
+              {{ currentRow.workerName }}
+            </el-descriptions-item>
+            <el-descriptions-item label="手机号">
+              {{ currentRow.phone }}
+            </el-descriptions-item>
+            <el-descriptions-item label="报名类型">
+              <el-tag :type="currentRow.registrationType === 'activity' ? 'primary' : 'success'">
+                {{ currentRow.registrationType === 'activity' ? '活动报名' : '社团报名' }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="活动/社团标题">
+              {{ currentRow.activityTitle }}
+            </el-descriptions-item>
+            <el-descriptions-item label="提交报名时间">
+              {{ formatDateTime(currentRow.submitTime) }}
+            </el-descriptions-item>
+            <el-descriptions-item label="是否需要审核">
+              <el-tag :type="currentRow.needsApproval ? 'warning' : 'info'">
+                {{ currentRow.needsApproval ? '是' : '否' }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="报名说明" :span="2">
+              {{ currentRow.description || '-' }}
+            </el-descriptions-item>
+            <el-descriptions-item v-if="currentRow.rejectReason" label="驳回原因" :span="2">
+              {{ currentRow.rejectReason }}
+            </el-descriptions-item>
+          </el-descriptions>
+        </el-card>
+
+        <!-- 审批记录时间线 -->
+        <el-card v-if="currentRow.needsApproval" class="detail-card" shadow="never">
+          <template #header>
+            <div class="card-header">
+              <span>审批记录</span>
+            </div>
+          </template>
+          <ApprovalRecordTimeline
+            :records="currentRow.approvalRecords || []"
+            :show-header="false"
+            :show-expand-button="true"
+          />
+        </el-card>
+
+        <!-- 审批操作 -->
+        <el-card
+          v-if="currentRow.needsApproval && (currentRow.status === 'pending' || currentRow.status === 'processing')"
+          class="detail-card"
+          shadow="never"
+        >
+          <template #header>
+            <div class="card-header">
+              <span>审批操作</span>
+            </div>
+          </template>
+          <ApprovalOperation
+            :business-id="currentRow.id"
+            business-type="REGISTRATION"
+            :business-data="currentRow"
+            :business-fields="getBusinessFields()"
+            :approval-records="currentRow.approvalRecords || []"
+            :show-business-detail="false"
+            :can-approve="true"
+            :show-view-history="false"
+            :show-transfer-button="true"
+            :show-delegate-button="true"
+            @approve="handleApproveSubmit"
+            @reject="handleRejectSubmit"
+            @transfer="handleTransferSubmit"
+            @delegate="handleDelegateSubmit"
+            @refresh="handleRefreshApproval"
+          />
+        </el-card>
+      </div>
+      <template #footer>
+        <el-button @click="detailDialogVisible = false">关闭</el-button>
+      </template>
+    </el-dialog>
+
+
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref, reactive, onMounted, computed } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Refresh, Check, Close, View } from '@element-plus/icons-vue'
+import CommonTable from '@/components/CommonTable.vue'
+import ApprovalOperation from '@/components/ApprovalOperation.vue'
+import ApprovalRecordTimeline from '@/components/ApprovalRecordTimeline.vue'
+import type { ColumnConfig } from '../../types/common-table'
+import type { FormInstance, FormRules } from 'element-plus'
+import {
+  approveApproval,
+  rejectApproval,
+  transferApproval,
+  delegateApproval,
+  getApprovalRecords,
+  getApprovalStatus
+} from '@/api/approvalApi'
+import type { ApprovalRecord } from '@/types/approval-flow'
+
+// 类型定义
+interface RegistrationRecord {
+  id: string
+  workerName: string
+  phone: string
+  registrationType: 'activity' | 'community'
+  activityTitle: string
+  status: 'pending' | 'processing' | 'approved' | 'rejected'
+  submitTime: string
+  description?: string
+  rejectReason?: string
+  approvalRecords?: ApprovalRecord[]
+  needsApproval?: boolean
+}
+
+// 响应式数据
+const searchKeyword = ref('')
+const activityFilter = ref('')
+const statusFilter = ref('')
+const typeFilter = ref('')
+const tableData = ref<RegistrationRecord[]>([])
+const total = ref(0)
+const currentPage = ref(1)
+const pageSize = ref(10)
+const loading = ref(false)
+const selectedRows = ref<RegistrationRecord[]>([])
+const currentRow = ref<RegistrationRecord | null>(null)
+
+// 对话框控制
+const detailDialogVisible = ref(false)
+
+// 获取业务字段配置
+const getBusinessFields = () => {
+  return [
+    { field: 'workerName', label: '姓名', type: 'text' },
+    { field: 'phone', label: '手机号', type: 'text' },
+    { field: 'registrationType', label: '报名类型', type: 'enum', options: [
+      { label: '活动报名', value: 'activity' },
+      { label: '社团报名', value: 'community' }
+    ]},
+    { field: 'activityTitle', label: '活动/社团标题', type: 'text' },
+    { field: 'status', label: '审核状态', type: 'enum', options: [
+      { label: '待审核', value: 'pending', color: 'warning' },
+      { label: '审核中', value: 'processing', color: 'primary' },
+      { label: '已通过', value: 'approved', color: 'success' },
+      { label: '已驳回', value: 'rejected', color: 'danger' }
+    ]},
+    { field: 'submitTime', label: '提交时间', type: 'datetime' },
+    { field: 'description', label: '报名说明', type: 'text', span: 2 }
+  ]
+}
+
+// 表格列配置
+const columns: ColumnConfig[] = [
+  { prop: 'workerName', label: '姓名', minWidth: 100, sortable: true },
+  { prop: 'phone', label: '手机号', minWidth: 120, sortable: true },
+  { prop: 'registrationType', label: '报名类型', minWidth: 100 },
+  { prop: 'activityTitle', label: '活动/社团标题', minWidth: 200 },
+  { prop: 'status', label: '审核状态', minWidth: 100 },
+  { prop: 'submitTime', label: '提交时间', minWidth: 160, sortable: true }
+]
+
+// 统计数据
+const stats = reactive({
+  pendingCount: 0,
+  processingCount: 0,
+  approvedCount: 0,
+  rejectedCount: 0
+})
+
+// 模拟数据存储
+const allData = ref<RegistrationRecord[]>([])
+
+// 获取状态类型
+const getStatusType = (status: string): string => {
+  const typeMap: Record<string, string> = {
+    pending: 'warning',
+    processing: 'primary',
+    approved: 'success',
+    rejected: 'danger'
+  }
+  return typeMap[status] || 'info'
+}
+
+// 获取状态文本
+const getStatusText = (status: string): string => {
+  const textMap: Record<string, string> = {
+    pending: '待审核',
+    processing: '审核中',
+    approved: '已通过',
+    rejected: '已驳回'
+  }
+  return textMap[status] || status
+}
+
+// 格式化日期时间
+const formatDateTime = (dateStr: string): string => {
+  if (!dateStr) return '-'
+  const date = new Date(dateStr)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  const hours = String(date.getHours()).padStart(2, '0')
+  const minutes = String(date.getMinutes()).padStart(2, '0')
+  const seconds = String(date.getSeconds()).padStart(2, '0')
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+}
+
+// 生成模拟数据
+const generateMockData = (): RegistrationRecord[] => {
+  const names = ['张三', '李四', '王五', '赵六', '孙七', '周八', '吴九', '郑十', '钱十一', '陈十二']
+  const activityTitles = [
+    '周末篮球比赛',
+    '中秋相亲派对',
+    '技能培训班',
+    '国庆文艺晚会',
+    '羽毛球友谊赛',
+    '读书分享会',
+    '摄影外拍活动',
+    '舞蹈教学课程',
+    '歌手大赛',
+    '趣味运动会',
+    '篮球社招募',
+    '足球社招募',
+    '羽毛球社招募',
+    '读书会社团',
+    '摄影会社团'
+  ]
+  const types: RegistrationRecord['registrationType'][] = ['activity', 'community']
+  const statuses: RegistrationRecord['status'][] = ['pending', 'processing', 'approved', 'rejected']
+  const data: RegistrationRecord[] = []
+
+  for (let i = 0; i < 50; i++) {
+    const status = statuses[Math.floor(Math.random() * statuses.length)]
+    const registrationType = types[Math.floor(Math.random() * types.length)]
+    const submitTime = new Date()
+    submitTime.setDate(submitTime.getDate() - Math.floor(Math.random() * 15))
+
+    // 随机决定是否需要审核
+    const needsApproval = Math.random() > 0.3
+
+    const approvalRecords: ApprovalRecord[] = []
+    if (needsApproval && (status === 'approved' || status === 'rejected')) {
+      const approvalTime = new Date(submitTime)
+      approvalTime.setHours(approvalTime.getHours() + Math.floor(Math.random() * 48) + 1)
+      approvalRecords.push({
+        nodeId: 'node-1',
+        nodeName: '管理员审批',
+        nodeType: 'approval',
+        approver: '管理员',
+        approvalTime: approvalTime,
+        approvalResult: status as 'approved' | 'rejected',
+        approvalComment: status === 'approved' ? '材料齐全，同意通过' : '信息不完整，请补充',
+        rejectReason: status === 'rejected' ? '信息不完整，请补充后再提交' : undefined
+      })
+    }
+
+    data.push({
+      id: `REG${String(i + 1).padStart(6, '0')}`,
+      workerName: names[Math.floor(Math.random() * names.length)],
+      phone: `138${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
+      registrationType,
+      activityTitle: activityTitles[Math.floor(Math.random() * activityTitles.length)],
+      status,
+      submitTime: submitTime.toISOString(),
+      description: registrationType === 'activity' ? '自愿报名参加此活动' : '自愿申请加入此社团',
+      rejectReason: status === 'rejected' ? '信息不完整，请补充后再提交' : undefined,
+      approvalRecords: needsApproval ? approvalRecords : undefined,
+      needsApproval
+    })
+  }
+
+  return data
+}
+
+// 搜索处理
+const handleSearch = () => {
+  currentPage.value = 1
+  fetchData()
+}
+
+// 重置搜索
+const handleReset = () => {
+  searchKeyword.value = ''
+  activityFilter.value = ''
+  statusFilter.value = ''
+  typeFilter.value = ''
+  handleSearch()
+}
+
+// 分页变化
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+  fetchData()
+}
+
+// 每页条数变化
+const handleSizeChange = (size: number) => {
+  pageSize.value = size
+  fetchData()
+}
+
+// 选择变化
+const handleSelectionChange = (selection: RegistrationRecord[]) => {
+  selectedRows.value = selection
+}
+
+// 全局搜索
+const handleGlobalSearch = (keyword: string) => {
+  searchKeyword.value = keyword
+  handleSearch()
+}
+
+// 获取数据
+const fetchData = () => {
+  loading.value = true
+
+  let filteredData = [...allData.value]
+
+  if (searchKeyword.value) {
+    const keyword = searchKeyword.value.toLowerCase()
+    filteredData = filteredData.filter(
+      item =>
+        item.workerName.toLowerCase().includes(keyword) ||
+        item.phone.includes(keyword)
+    )
+  }
+
+  if (activityFilter.value) {
+    filteredData = filteredData.filter(item =>
+      item.activityTitle.toLowerCase().includes(activityFilter.value.toLowerCase())
+    )
+  }
+
+  if (statusFilter.value) {
+    filteredData = filteredData.filter(item => item.status === statusFilter.value)
+  }
+
+  if (typeFilter.value) {
+    filteredData = filteredData.filter(item => item.registrationType === typeFilter.value)
+  }
+
+  // 更新统计
+  stats.pendingCount = filteredData.filter(item => item.status === 'pending').length
+  stats.processingCount = filteredData.filter(item => item.status === 'processing').length
+  stats.approvedCount = filteredData.filter(item => item.status === 'approved').length
+  stats.rejectedCount = filteredData.filter(item => item.status === 'rejected').length
+
+  // 分页
+  const start = (currentPage.value - 1) * pageSize.value
+  const end = start + pageSize.value
+  tableData.value = filteredData.slice(start, end)
+  total.value = filteredData.length
+
+  loading.value = false
+}
+
+// 查看详情
+const handleView = (row: RegistrationRecord) => {
+  currentRow.value = row
+  // 如果需要审批，加载审批记录
+  if (row.needsApproval) {
+    loadApprovalRecords(row.id)
+  }
+  detailDialogVisible.value = true
+}
+
+// 加载审批记录
+const loadApprovalRecords = async (businessId: string) => {
+  try {
+    const response = await getApprovalRecords({
+      businessId,
+      businessType: 'REGISTRATION'
+    })
+    if (response.data && currentRow.value) {
+      currentRow.value.approvalRecords = response.data
+    }
+  } catch (error) {
+    console.error('加载审批记录失败:', error)
+    ElMessage.error('加载审批记录失败')
+  }
+}
+
+// 审批通过提交
+const handleApproveSubmit = async (data: any) => {
+  try {
+    await approveApproval({
+      businessId: data.businessId,
+      businessType: data.businessType,
+      result: data.result,
+      comment: data.comment,
+      rejectReason: data.rejectReason,
+      attachments: data.attachments
+    })
+    ElMessage.success('审批通过成功')
+    await loadApprovalRecords(data.businessId)
+    fetchData()
+  } catch (error) {
+    console.error('审批通过失败:', error)
+    ElMessage.error('审批通过失败')
+  }
+}
+
+// 审批驳回提交
+const handleRejectSubmit = async (data: any) => {
+  try {
+    await rejectApproval({
+      businessId: data.businessId,
+      businessType: data.businessType,
+      result: data.result,
+      comment: data.comment,
+      rejectReason: data.rejectReason,
+      attachments: data.attachments
+    })
+    ElMessage.success('审批驳回成功')
+    await loadApprovalRecords(data.businessId)
+    fetchData()
+  } catch (error) {
+    console.error('审批驳回失败:', error)
+    ElMessage.error('审批驳回失败')
+  }
+}
+
+// 转办提交
+const handleTransferSubmit = async (data: any) => {
+  try {
+    await transferApproval({
+      businessId: data.businessId,
+      businessType: data.businessType,
+      toUser: data.toUser,
+      remark: data.remark
+    })
+    ElMessage.success('转办成功')
+    await loadApprovalRecords(data.businessId)
+    fetchData()
+  } catch (error) {
+    console.error('转办失败:', error)
+    ElMessage.error('转办失败')
+  }
+}
+
+// 委派提交
+const handleDelegateSubmit = async (data: any) => {
+  try {
+    await delegateApproval({
+      businessId: data.businessId,
+      businessType: data.businessType,
+      toUser: data.toUser,
+      remark: data.remark
+    })
+    ElMessage.success('委派成功')
+    await loadApprovalRecords(data.businessId)
+    fetchData()
+  } catch (error) {
+    console.error('委派失败:', error)
+    ElMessage.error('委派失败')
+  }
+}
+
+// 刷新审批信息
+const handleRefreshApproval = async () => {
+  if (currentRow.value && currentRow.value.needsApproval) {
+    await loadApprovalRecords(currentRow.value.id)
+  }
+}
+
+// 审核通过（列表页快速操作）
+const handleApprove = (row: RegistrationRecord) => {
+  if (!row.needsApproval) {
+    ElMessage.warning('该报名不需要审核')
+    return
+  }
+  currentRow.value = row
+  detailDialogVisible.value = true
+}
+
+// 审核驳回（列表页快速操作）
+const handleReject = (row: RegistrationRecord) => {
+  if (!row.needsApproval) {
+    ElMessage.warning('该报名不需要审核')
+    return
+  }
+  currentRow.value = row
+  detailDialogVisible.value = true
+}
+
+// 批量通过
+const handleBatchApprove = async () => {
+  if (selectedRows.value.length === 0) return
+
+  const pendingRows = selectedRows.value.filter(
+    row => row.needsApproval && (row.status === 'pending' || row.status === 'processing')
+  )
+
+  if (pendingRows.length === 0) {
+    ElMessage.warning('没有待审核的记录')
+    return
+  }
+
+  try {
+    ElMessageBox.confirm(
+      `确定要通过选中的 ${pendingRows.length} 条报名记录吗？`,
+      '批量审核',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    ).then(async () => {
+      // 调用批量审批API
+      await approveApproval({
+        businessId: pendingRows.map(row => row.id).join(','),
+        businessType: 'REGISTRATION',
+        result: 'approved',
+        comment: '批量审核通过'
+      })
+      ElMessage.success('批量审核通过成功')
+      fetchData()
+    }).catch(() => {})
+  } catch (error) {
+    console.error('批量审核通过失败:', error)
+    ElMessage.error('批量审核通过失败')
+  }
+}
+
+// 批量驳回
+const handleBatchReject = async () => {
+  if (selectedRows.value.length === 0) return
+
+  const pendingRows = selectedRows.value.filter(
+    row => row.needsApproval && (row.status === 'pending' || row.status === 'processing')
+  )
+
+  if (pendingRows.length === 0) {
+    ElMessage.warning('没有待审核的记录')
+    return
+  }
+
+  try {
+    ElMessageBox.prompt('请输入驳回原因', '批量审核', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning',
+      inputPattern: /.{5,}/,
+      inputErrorMessage: '驳回原因至少5个字符'
+    }).then(async ({ value }) => {
+      // 调用批量驳回API
+      await rejectApproval({
+        businessId: pendingRows.map(row => row.id).join(','),
+        businessType: 'REGISTRATION',
+        result: 'rejected',
+        rejectReason: value,
+        comment: '批量审核驳回'
+      })
+      ElMessage.success('批量驳回成功')
+      fetchData()
+    }).catch(() => {})
+  } catch (error) {
+    console.error('批量驳回失败:', error)
+    ElMessage.error('批量驳回失败')
+  }
+}
+
+// 生命周期
+onMounted(() => {
+  allData.value = generateMockData()
+  fetchData()
+})
+</script>
+
+<style scoped>
+.registration-management {
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.search-filter-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  text-align: center;
+}
+
+.stat-content {
+  padding: 10px 0;
+}
+
+.stat-number {
+  font-size: 24px;
+  font-weight: bold;
+  color: #409eff;
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #606266;
+}
+
+.detail-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.detail-card {
+  margin-bottom: 0;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 600;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 1200px) {
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .search-filter-section :deep(.el-row) {
+    flex-direction: column;
+  }
+
+  .search-filter-section :deep(.el-col) {
+    width: 100%;
+    margin-bottom: 12px;
+  }
+
+  .stats-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .detail-content {
+    padding: 5px;
+  }
+}
+</style>
