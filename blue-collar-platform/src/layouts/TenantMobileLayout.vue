@@ -17,16 +17,16 @@
     <!-- 底部导航栏 -->
     <footer class="mobile-footer">
       <el-tabbar v-model="activeTab" class="footer-tabbar">
-        <el-tabbar-item :to="'/labor-company-mobile/home'" icon="HomeFilled" label="首页">
+        <el-tabbar-item :to="'/tenant-mobile/home'" icon="HomeFilled" label="首页">
           首页
         </el-tabbar-item>
-        <el-tabbar-item :to="'/labor-company-mobile/workers'" icon="UserFilled" label="工人">
+        <el-tabbar-item :to="'/tenant-mobile/workers'" icon="UserFilled" label="工人">
           工人
         </el-tabbar-item>
-        <el-tabbar-item :to="'/labor-company-mobile/attendance'" icon="TimerFilled" label="考勤">
+        <el-tabbar-item :to="'/tenant-mobile/attendance'" icon="TimerFilled" label="考勤">
           考勤
         </el-tabbar-item>
-        <el-tabbar-item :to="'/labor-company-mobile/profile'" icon="SettingFilled" label="我的">
+        <el-tabbar-item :to="'/tenant-mobile/profile'" icon="SettingFilled" label="我的">
           我的
         </el-tabbar-item>
       </el-tabbar>

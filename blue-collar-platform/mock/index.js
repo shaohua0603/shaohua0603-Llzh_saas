@@ -110,27 +110,16 @@ const users = [
     employmentType: '月结',
     status: '在职'
   },
-  // 劳务公司用户
+  // 租户用户
   {
     id: 2,
     phone: '13800138002',
     password: '123456',
     name: '李四',
-    role: 'labor_company',
+    role: 'tenant',
     avatar: defaultAvatar,
-    laborCompany: '三鼎劳务有限公司',
+    companyName: '三鼎劳务有限公司',
     position: '招聘经理'
-  },
-  // 工厂用户
-  {
-    id: 3,
-    phone: '13800138003',
-    password: '123456',
-    name: '王五',
-    role: 'factory',
-    avatar: defaultAvatar,
-    factory: '富士康科技集团',
-    position: '人事主管'
   },
   // 平台管理员
   {
@@ -392,7 +381,7 @@ const factories = [
 const packages = [
   {
     id: 1,
-    type: 'labor_company',
+    type: 'tenant',
     name: '基础版',
     price: 1999,
     maxUsers: 10,
@@ -400,7 +389,7 @@ const packages = [
   },
   {
     id: 2,
-    type: 'labor_company',
+    type: 'tenant',
     name: '高级版',
     price: 3999,
     maxUsers: 30,
@@ -408,19 +397,11 @@ const packages = [
   },
   {
     id: 3,
-    type: 'factory',
-    name: '标准版',
-    price: 2999,
-    maxUsers: 20,
-    features: ['招聘需求发布', '面试管理', '工人管理', '奖励惩罚管理', '结算管理']
-  },
-  {
-    id: 4,
-    type: 'factory',
+    type: 'tenant',
     name: '企业版',
     price: 5999,
     maxUsers: 50,
-    features: ['招聘需求发布', '面试管理', '工人管理', '奖励惩罚管理', '结算管理', '业务课堂', '数据分析']
+    features: ['招聘管理', '工人管理', '考勤管理', '工资结算', '培训管理', '福利管理', '业务课堂', '数据分析']
   }
 ];
 
@@ -448,12 +429,8 @@ Mock.mock('/api/login', 'post', (options) => {
             factorySection: user.factorySection,
             position: user.position
           }),
-          ...(user.role === 'labor_company' && {
-            laborCompany: user.laborCompany,
-            position: user.position
-          }),
-          ...(user.role === 'factory' && {
-            factory: user.factory,
+          ...(user.role === 'tenant' && {
+            companyName: user.companyName,
             position: user.position
           })
         }
@@ -669,7 +646,7 @@ const laborCompanyAttendanceStats = [
 
 // 劳务公司API接口模拟
 // 获取统计数据
-Mock.mock('/api/labor-company/stats', 'get', () => {
+Mock.mock('/api/tenant/stats', 'get', () => {
   return {
     code: 200,
     message: '获取成功',
@@ -678,7 +655,7 @@ Mock.mock('/api/labor-company/stats', 'get', () => {
 });
 
 // 获取最近招聘
-Mock.mock('/api/labor-company/recruitments', 'get', (options) => {
+Mock.mock('/api/tenant/recruitments', 'get', (options) => {
   const { limit } = options.url.match(/\?limit=(\d+)/)?.[1] || '5';
   const limitedRecruitments = laborCompanyRecruitments.slice(0, parseInt(limit));
   return {
@@ -689,7 +666,7 @@ Mock.mock('/api/labor-company/recruitments', 'get', (options) => {
 });
 
 // 获取考勤统计
-Mock.mock('/api/labor-company/attendance-stats', 'get', () => {
+Mock.mock('/api/tenant/attendance-stats', 'get', () => {
   return {
     code: 200,
     message: '获取成功',
@@ -793,7 +770,7 @@ const resignationApprovalRecords = [
 ];
 
 // 获取离职列表
-Mock.mock('/api/labor-company/resignations', 'get', () => {
+Mock.mock('/api/tenant/resignations', 'get', () => {
   return {
     code: 200,
     message: '获取成功',
@@ -817,7 +794,7 @@ Mock.mock(/\/api\/labor-company\/resignations\/\d+/, 'get', (options) => {
 });
 
 // 创建离职
-Mock.mock('/api/labor-company/resignations', 'post', (options) => {
+Mock.mock('/api/tenant/resignations', 'post', (options) => {
   return {
     code: 200,
     message: '创建成功',
@@ -944,7 +921,7 @@ const commissionRecords = [
 ];
 
 // 获取转介绍列表
-Mock.mock('/api/labor-company/referrals', 'get', () => {
+Mock.mock('/api/tenant/referrals', 'get', () => {
   return {
     code: 200,
     message: '获取成功',
@@ -968,7 +945,7 @@ Mock.mock(/\/api\/labor-company\/referrals\/\d+/, 'get', (options) => {
 });
 
 // 创建转介绍
-Mock.mock('/api/labor-company/referrals', 'post', () => {
+Mock.mock('/api/tenant/referrals', 'post', () => {
   return {
     code: 200,
     message: '创建成功',
@@ -1059,7 +1036,7 @@ const commissions = [
 ];
 
 // 获取佣金发放列表
-Mock.mock('/api/labor-company/commissions', 'get', () => {
+Mock.mock('/api/tenant/commissions', 'get', () => {
   return {
     code: 200,
     message: '获取成功',
@@ -1077,7 +1054,7 @@ Mock.mock(/\/api\/labor-company\/commissions\/\d+\/issue/, 'post', () => {
 });
 
 // 批量佣金发放
-Mock.mock('/api/labor-company/commissions/batch-issue', 'post', () => {
+Mock.mock('/api/tenant/commissions/batch-issue', 'post', () => {
   return {
     code: 200,
     message: '批量发放成功',
@@ -1106,7 +1083,7 @@ const commissionRules = {
 };
 
 // 获取佣金规则
-Mock.mock('/api/labor-company/commission-rules', 'get', () => {
+Mock.mock('/api/tenant/commission-rules', 'get', () => {
   return {
     code: 200,
     message: '获取成功',
@@ -1115,7 +1092,7 @@ Mock.mock('/api/labor-company/commission-rules', 'get', () => {
 });
 
 // 保存佣金规则
-Mock.mock('/api/labor-company/commission-rules', 'post', () => {
+Mock.mock('/api/tenant/commission-rules', 'post', () => {
   return {
     code: 200,
     message: '保存成功',
@@ -1215,7 +1192,7 @@ const settlementWorkerList = [
 ];
 
 // 获取结算列表
-Mock.mock('/api/labor-company/settlements', 'get', () => {
+Mock.mock('/api/tenant/settlements', 'get', () => {
   return {
     code: 200,
     message: '获取成功',
@@ -1239,7 +1216,7 @@ Mock.mock(/\/api\/labor-company\/settlements\/\d+/, 'get', (options) => {
 });
 
 // 创建结算
-Mock.mock('/api/labor-company/settlements', 'post', () => {
+Mock.mock('/api/tenant/settlements', 'post', () => {
   return {
     code: 200,
     message: '创建成功',
@@ -1420,7 +1397,7 @@ const adminWarnings = [
 const platformPackages = [
   {
     id: 1,
-    type: 'labor_company',
+    type: 'tenant',
     name: '基础版',
     code: 'BASIC',
     price: 1999,
@@ -1429,14 +1406,14 @@ const platformPackages = [
     maxUsers: 10,
     maxWorkers: 500,
     features: ['招聘管理', '工人管理', '考勤管理', '工资结算', '基础报表'],
-    description: '适合小型劳务公司的基础套餐,包含核心功能。',
+    description: '适合小型租户的基础套餐,包含核心功能。',
     status: 'active',
     sortOrder: 1,
     createTime: '2026-01-01 10:00:00'
   },
   {
     id: 2,
-    type: 'labor_company',
+    type: 'tenant',
     name: '高级版',
     code: 'ADVANCED',
     price: 3999,
@@ -1445,14 +1422,14 @@ const platformPackages = [
     maxUsers: 30,
     maxWorkers: 2000,
     features: ['招聘管理', '工人管理', '考勤管理', '工资结算', '培训管理', '福利管理', '高级报表', '数据导出'],
-    description: '适合中型劳务公司的高级套餐,功能更全面。',
+    description: '适合中型租户的高级套餐,功能更全面。',
     status: 'active',
     sortOrder: 2,
     createTime: '2026-01-01 10:00:00'
   },
   {
     id: 3,
-    type: 'labor_company',
+    type: 'tenant',
     name: '企业版',
     code: 'ENTERPRISE',
     price: 7999,
@@ -1461,41 +1438,9 @@ const platformPackages = [
     maxUsers: 100,
     maxWorkers: 10000,
     features: ['招聘管理', '工人管理', '考勤管理', '工资结算', '培训管理', '福利管理', '高级报表', '数据导出', 'API接口', '专属客服'],
-    description: '适合大型劳务公司的企业套餐,支持定制化服务。',
+    description: '适合大型租户的企业套餐,支持定制化服务。',
     status: 'active',
     sortOrder: 3,
-    createTime: '2026-01-01 10:00:00'
-  },
-  {
-    id: 4,
-    type: 'factory',
-    name: '标准版',
-    code: 'STANDARD',
-    price: 2999,
-    originalPrice: 3999,
-    period: 'month',
-    maxUsers: 20,
-    maxWorkers: 1000,
-    features: ['招聘需求发布', '面试管理', '工人管理', '奖励惩罚管理', '结算管理', '基础报表'],
-    description: '适合小型工厂的标准套餐,包含核心功能。',
-    status: 'active',
-    sortOrder: 1,
-    createTime: '2026-01-01 10:00:00'
-  },
-  {
-    id: 5,
-    type: 'factory',
-    name: '企业版',
-    code: 'FACTORY_ENTERPRISE',
-    price: 5999,
-    originalPrice: 7999,
-    period: 'month',
-    maxUsers: 50,
-    maxWorkers: 5000,
-    features: ['招聘需求发布', '面试管理', '工人管理', '奖励惩罚管理', '结算管理', '业务课堂', '数据分析', '高级报表', '数据导出'],
-    description: '适合中型工厂的企业套餐,功能更全面。',
-    status: 'active',
-    sortOrder: 2,
     createTime: '2026-01-01 10:00:00'
   }
 ];
@@ -1504,7 +1449,7 @@ const platformPackages = [
 const tenants = [
   {
     id: 1,
-    type: 'labor_company',
+    type: 'tenant',
     name: '南通富民劳务服务有限公司',
     code: 'NTFM001',
     contact: '张经理',
@@ -1532,7 +1477,7 @@ const tenants = [
   },
   {
     id: 2,
-    type: 'labor_company',
+    type: 'tenant',
     name: '三鼎劳务有限公司',
     code: 'SD001',
     contact: '李经理',
@@ -1560,14 +1505,14 @@ const tenants = [
   },
   {
     id: 3,
-    type: 'factory',
+    type: 'tenant',
     name: '富士康科技集团',
     code: 'FK001',
     contact: '王经理',
     phone: '13800138003',
     email: 'wangjl@foxconn.com',
     address: '深圳市龙华区富士康科技园区',
-    packageId: 5,
+    packageId: 3,
     packageName: '企业版',
     packageExpireDate: '2026-05-01',
     status: 'active',
@@ -1588,14 +1533,14 @@ const tenants = [
   },
   {
     id: 4,
-    type: 'factory',
+    type: 'tenant',
     name: '华为技术有限公司',
     code: 'HW001',
     contact: '刘经理',
     phone: '13800138004',
     email: 'liujl@huawei.com',
     address: '深圳市龙岗区坂田华为基地',
-    packageId: 5,
+    packageId: 3,
     packageName: '企业版',
     packageExpireDate: '2026-06-01',
     status: 'active',
@@ -1616,7 +1561,7 @@ const tenants = [
   },
   {
     id: 5,
-    type: 'labor_company',
+    type: 'tenant',
     name: '诚信劳务服务有限公司',
     code: 'CX001',
     contact: '赵经理',

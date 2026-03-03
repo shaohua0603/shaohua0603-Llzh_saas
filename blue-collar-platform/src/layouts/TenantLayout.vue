@@ -154,15 +154,15 @@
         >
           <!-- 工作中心二级菜单 -->
           <template v-if="activeFirstMenu === 'work-center'">
-            <el-menu-item index="/labor-company/todo">
+            <el-menu-item index="/tenant/todo">
               <el-icon><Bell /></el-icon>
               <span>待办任务</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/messages">
+            <el-menu-item index="/tenant/messages">
               <el-icon><Bell /></el-icon>
               <span>消息通知</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/warnings">
+            <el-menu-item index="/tenant/warnings">
               <el-icon><Bell /></el-icon>
               <span>预警消息</span>
             </el-menu-item>
@@ -170,11 +170,11 @@
           
           <!-- 招聘管理二级菜单 -->
           <template v-if="activeFirstMenu === 'recruitment'">
-            <el-menu-item index="/labor-company/recruitment">
+            <el-menu-item index="/tenant/recruitment">
               <el-icon><Connection /></el-icon>
               <span>招聘需求</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/recruitment/resume">
+            <el-menu-item index="/tenant/recruitment/resume">
               <el-icon><Document /></el-icon>
               <span>简历管理</span>
             </el-menu-item>
@@ -182,19 +182,19 @@
           
           <!-- 面试管理二级菜单 -->
           <template v-if="activeFirstMenu === 'interview'">
-            <el-menu-item index="/labor-company/interview/pickup">
+            <el-menu-item index="/tenant/interview/pickup">
               <el-icon><Van /></el-icon>
               <span>接送管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/interview/initial-interview">
+            <el-menu-item index="/tenant/interview/initial-interview">
               <el-icon><ChatDotRound /></el-icon>
               <span>初步面试</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/interview/invitation">
+            <el-menu-item index="/tenant/interview/invitation">
               <el-icon><Bell /></el-icon>
               <span>面试邀约</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/interview/factory-interview">
+            <el-menu-item index="/tenant/interview/factory-interview">
               <el-icon><OfficeBuilding /></el-icon>
               <span>工厂面试</span>
             </el-menu-item>
@@ -202,7 +202,7 @@
           
           <!-- 工人管理二级菜单 -->
           <template v-if="activeFirstMenu === 'workers'">
-            <el-menu-item index="/labor-company/workers">
+            <el-menu-item index="/tenant/workers">
               <el-icon><List /></el-icon>
               <span>工人信息</span>
             </el-menu-item>
@@ -210,7 +210,7 @@
           
           <!-- 合同管理二级菜单 -->
           <template v-if="activeFirstMenu === 'contract'">
-            <el-menu-item index="/labor-company/contract">
+            <el-menu-item index="/tenant/contract">
               <el-icon><Document /></el-icon>
               <span>签订合同</span>
             </el-menu-item>
@@ -223,15 +223,15 @@
                 <el-icon><Coffee /></el-icon>
                 <span>工作与生活</span>
               </template>
-              <el-menu-item index="/labor-company/on-duty/living-expense">
+              <el-menu-item index="/tenant/on-duty/living-expense">
                 <el-icon><Wallet /></el-icon>
                 <span>生活费管理</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/salary">
+              <el-menu-item index="/tenant/on-duty/salary">
                 <el-icon><Money /></el-icon>
                 <span>工资管理</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/claim">
+              <el-menu-item index="/tenant/on-duty/claim">
                 <el-icon><DocumentChecked /></el-icon>
                 <span>理赔管理</span>
               </el-menu-item>
@@ -241,28 +241,28 @@
                 <el-icon><Management /></el-icon>
                 <span>管理与关怀</span>
               </template>
-              <el-menu-item index="/labor-company/on-duty/communication">
+              <el-menu-item index="/tenant/on-duty/communication">
                 <el-icon><ChatLineSquare /></el-icon>
                 <span>沟通管理</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/entertainment">
+              <el-menu-item index="/tenant/on-duty/entertainment">
                 <el-icon><Trophy /></el-icon>
                 <span>文娱活动</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/registration">
+              <el-menu-item index="/tenant/on-duty/registration">
                 <el-icon><Edit /></el-icon>
                 <span>报名管理</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/news">
+              <el-menu-item index="/tenant/on-duty/news">
                 <el-icon><Promotion /></el-icon>
                 <span>发布资讯</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/community">
+              <el-menu-item index="/tenant/on-duty/community">
                 <el-icon><UserFilled /></el-icon>
                 <span>社团管理</span>
               </el-menu-item>
             </el-sub-menu>
-            <el-menu-item index="/labor-company/on-duty/special-case">
+            <el-menu-item index="/tenant/on-duty/special-case">
               <el-icon><WarningFilled /></el-icon>
               <span>特殊情况管理</span>
             </el-menu-item>
@@ -271,28 +271,28 @@
                 <el-icon><Document /></el-icon>
                 <span>保险管理</span>
               </template>
-              <el-menu-item index="/labor-company/on-duty/insurance">
+              <el-menu-item index="/tenant/on-duty/insurance">
                 <el-icon><Document /></el-icon>
                 <span>保险管理</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/insurance-record">
+              <el-menu-item index="/tenant/on-duty/insurance-record">
                 <el-icon><EditPen /></el-icon>
                 <span>参保登记</span>
               </el-menu-item>
             </el-sub-menu>
-            <el-menu-item index="/labor-company/attendance">
+            <el-menu-item index="/tenant/attendance">
               <el-icon><Check /></el-icon>
               <span>考勤管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/on-duty/leave">
+            <el-menu-item index="/tenant/on-duty/leave">
               <el-icon><Calendar /></el-icon>
               <span>请假管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/on-duty/transfer">
+            <el-menu-item index="/tenant/on-duty/transfer">
               <el-icon><Sort /></el-icon>
               <span>调岗管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/on-duty/reward-punishment">
+            <el-menu-item index="/tenant/on-duty/reward-punishment">
               <el-icon><Medal /></el-icon>
               <span>奖惩管理</span>
             </el-menu-item>
@@ -301,32 +301,32 @@
                 <el-icon><Reading /></el-icon>
                 <span>业务课堂</span>
               </template>
-              <el-menu-item index="/labor-company/on-duty/learning-material">
+              <el-menu-item index="/tenant/on-duty/learning-material">
                 <el-icon><Document /></el-icon>
                 <span>学习材料</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/question-bank">
+              <el-menu-item index="/tenant/on-duty/question-bank">
                 <el-icon><Notebook /></el-icon>
                 <span>题库管理</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/learning-time">
+              <el-menu-item index="/tenant/on-duty/learning-time">
                 <el-icon><Clock /></el-icon>
                 <span>学习时长管理</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/exam">
+              <el-menu-item index="/tenant/on-duty/exam">
                 <el-icon><EditPen /></el-icon>
                 <span>考试管理</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/on-duty/exam-result">
+              <el-menu-item index="/tenant/on-duty/exam-result">
                 <el-icon><DataAnalysis /></el-icon>
                 <span>考试成绩</span>
               </el-menu-item>
             </el-sub-menu>
-            <el-menu-item index="/labor-company/on-duty/abnormal">
+            <el-menu-item index="/tenant/on-duty/abnormal">
               <el-icon><Warning /></el-icon>
               <span>异常管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/on-duty/complaint">
+            <el-menu-item index="/tenant/on-duty/complaint">
               <el-icon><ChatDotRound /></el-icon>
               <span>投诉/建议</span>
             </el-menu-item>
@@ -334,7 +334,7 @@
           
           <!-- 离职管理二级菜单 -->
           <template v-if="activeFirstMenu === 'resignation'">
-            <el-menu-item index="/labor-company/resignation">
+            <el-menu-item index="/tenant/resignation">
               <el-icon><RemoveFilled /></el-icon>
               <span>离职管理</span>
             </el-menu-item>
@@ -347,16 +347,16 @@
                 <el-icon><Share /></el-icon>
                 <span>工作转介绍</span>
               </template>
-              <el-menu-item index="/labor-company/referral">
+              <el-menu-item index="/tenant/referral">
                 <el-icon><Share /></el-icon>
                 <span>工作转介绍</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/commission">
+              <el-menu-item index="/tenant/commission">
                 <el-icon><Wallet /></el-icon>
                 <span>佣金发放</span>
               </el-menu-item>
             </el-sub-menu>
-            <el-menu-item index="/labor-company/settlement">
+            <el-menu-item index="/tenant/settlement">
               <el-icon><Money /></el-icon>
               <span>结算管理</span>
             </el-menu-item>
@@ -369,52 +369,52 @@
                 <el-icon><OfficeBuilding /></el-icon>
                 <span>企业介绍</span>
               </template>
-              <el-menu-item index="/labor-company/company-culture">
+              <el-menu-item index="/tenant/company-culture">
                 <el-icon><Document /></el-icon>
                 <span>企业文化介绍</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/position-culture">
+              <el-menu-item index="/tenant/position-culture">
                 <el-icon><PositionIcon /></el-icon>
                 <span>岗位文化介绍</span>
               </el-menu-item>
             </el-sub-menu>
-            <el-menu-item index="/labor-company/departments">
+            <el-menu-item index="/tenant/departments">
               <el-icon><FolderOpened /></el-icon>
               <span>部门管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/employees">
+            <el-menu-item index="/tenant/employees">
               <el-icon><UserSolid /></el-icon>
               <span>正式员工</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/positions">
+            <el-menu-item index="/tenant/positions">
               <el-icon><PositionIcon /></el-icon>
               <span>岗位管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/rules">
+            <el-menu-item index="/tenant/rules">
               <el-icon><DocumentIcon /></el-icon>
               <span>规则配置</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/menu-config">
+            <el-menu-item index="/tenant/menu-config">
               <el-icon><MenuIcon /></el-icon>
               <span>菜单配置</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/dictionary">
+            <el-menu-item index="/tenant/dictionary">
               <el-icon><ListIcon /></el-icon>
               <span>字典管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/system-parameter">
+            <el-menu-item index="/tenant/system-parameter">
               <el-icon><Parameter /></el-icon>
               <span>系统参数</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/process">
+            <el-menu-item index="/tenant/process">
               <el-icon><Operation /></el-icon>
               <span>流程管理</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/process-config">
+            <el-menu-item index="/tenant/process-config">
               <el-icon><SettingIcon /></el-icon>
               <span>流程配置</span>
             </el-menu-item>
-            <el-menu-item index="/labor-company/attachment">
+            <el-menu-item index="/tenant/attachment">
               <el-icon><File /></el-icon>
               <span>附件管理</span>
             </el-menu-item>
@@ -423,16 +423,16 @@
                 <el-icon><Printer /></el-icon>
                 <span>打印管理</span>
               </template>
-              <el-menu-item index="/labor-company/template-config">
+              <el-menu-item index="/tenant/template-config">
                 <el-icon><DocumentIcon /></el-icon>
                 <span>模版配置</span>
               </el-menu-item>
-              <el-menu-item index="/labor-company/print-config">
+              <el-menu-item index="/tenant/print-config">
                 <el-icon><Printer /></el-icon>
                 <span>打印配置</span>
               </el-menu-item>
             </el-sub-menu>
-            <el-menu-item index="/labor-company/roles">
+            <el-menu-item index="/tenant/roles">
               <el-icon><Key /></el-icon>
               <span>角色管理</span>
             </el-menu-item>
@@ -600,78 +600,78 @@ const firstMenus = [
 // 二级菜单配置
 const secondMenus = {
   'work-center': [
-    { path: '/labor-company/todo', label: '待办任务', icon: Bell },
-    { path: '/labor-company/messages', label: '消息通知', icon: Bell },
-    { path: '/labor-company/warnings', label: '预警消息', icon: Bell }
+    { path: '/tenant/todo', label: '待办任务', icon: Bell },
+    { path: '/tenant/messages', label: '消息通知', icon: Bell },
+    { path: '/tenant/warnings', label: '预警消息', icon: Bell }
   ],
   home: [
-    { path: '/labor-company/home', label: '首页', icon: HomeFilled }
+    { path: '/tenant/home', label: '首页', icon: HomeFilled }
   ],
   recruitment: [
-    { path: '/labor-company/recruitment', label: '招聘需求', icon: Connection },
-    { path: '/labor-company/recruitment/resume', label: '简历管理', icon: Document }
+    { path: '/tenant/recruitment', label: '招聘需求', icon: Connection },
+    { path: '/tenant/recruitment/resume', label: '简历管理', icon: Document }
   ],
   interview: [
-    { path: '/labor-company/interview/pickup', label: '接送管理', icon: Van },
-    { path: '/labor-company/interview/initial-interview', label: '初步面试', icon: ChatDotRound },
-    { path: '/labor-company/interview/invitation', label: '面试邀约', icon: Bell },
-    { path: '/labor-company/interview/factory-interview', label: '工厂面试', icon: OfficeBuilding }
+    { path: '/tenant/interview/pickup', label: '接送管理', icon: Van },
+    { path: '/tenant/interview/initial-interview', label: '初步面试', icon: ChatDotRound },
+    { path: '/tenant/interview/invitation', label: '面试邀约', icon: Bell },
+    { path: '/tenant/interview/factory-interview', label: '工厂面试', icon: OfficeBuilding }
   ],
   workers: [
-    { path: '/labor-company/workers', label: '工人信息', icon: List },
-    { path: '/labor-company/workers/:id', label: '工人信息详情', icon: Avatar }
+    { path: '/tenant/workers', label: '工人信息', icon: List },
+    { path: '/tenant/workers/:id', label: '工人信息详情', icon: Avatar }
   ],
   contract: [
-    { path: '/labor-company/contract', label: '签订合同', icon: Document }
+    { path: '/tenant/contract', label: '签订合同', icon: Document }
   ],
   employment: [
-    { path: '/labor-company/on-duty/living-expense', label: '生活费管理', icon: Wallet },
-    { path: '/labor-company/on-duty/salary', label: '工资管理', icon: Money },
-    { path: '/labor-company/on-duty/claim', label: '理赔管理', icon: DocumentChecked },
-    { path: '/labor-company/on-duty/communication', label: '沟通管理', icon: ChatLineSquare },
-    { path: '/labor-company/on-duty/entertainment', label: '文娱活动', icon: Trophy },
-    { path: '/labor-company/on-duty/registration', label: '报名管理', icon: Edit },
-    { path: '/labor-company/on-duty/news', label: '发布资讯', icon: Promotion },
-    { path: '/labor-company/on-duty/community', label: '社团管理', icon: UserFilled },
-    { path: '/labor-company/on-duty/special-case', label: '特殊情况管理', icon: WarningFilled },
-    { path: '/labor-company/on-duty/insurance', label: '保险管理', icon: Document },
-    { path: '/labor-company/on-duty/insurance-record', label: '参保登记', icon: EditPen },
-    { path: '/labor-company/attendance', label: '考勤管理', icon: Check },
-    { path: '/labor-company/on-duty/leave', label: '请假管理', icon: Calendar },
-    { path: '/labor-company/on-duty/transfer', label: '调岗管理', icon: Sort },
-    { path: '/labor-company/on-duty/reward-punishment', label: '奖惩管理', icon: Medal },
-    { path: '/labor-company/on-duty/learning-material', label: '学习材料', icon: Document },
-    { path: '/labor-company/on-duty/question-bank', label: '题库管理', icon: Notebook },
-    { path: '/labor-company/on-duty/learning-time', label: '学习时长管理', icon: Clock },
-    { path: '/labor-company/on-duty/exam', label: '考试管理', icon: EditPen },
-    { path: '/labor-company/on-duty/exam-result', label: '考试成绩', icon: DataAnalysis },
-    { path: '/labor-company/on-duty/abnormal', label: '异常管理', icon: Warning },
-    { path: '/labor-company/on-duty/complaint', label: '投诉/建议', icon: ChatDotRound }
+    { path: '/tenant/on-duty/living-expense', label: '生活费管理', icon: Wallet },
+    { path: '/tenant/on-duty/salary', label: '工资管理', icon: Money },
+    { path: '/tenant/on-duty/claim', label: '理赔管理', icon: DocumentChecked },
+    { path: '/tenant/on-duty/communication', label: '沟通管理', icon: ChatLineSquare },
+    { path: '/tenant/on-duty/entertainment', label: '文娱活动', icon: Trophy },
+    { path: '/tenant/on-duty/registration', label: '报名管理', icon: Edit },
+    { path: '/tenant/on-duty/news', label: '发布资讯', icon: Promotion },
+    { path: '/tenant/on-duty/community', label: '社团管理', icon: UserFilled },
+    { path: '/tenant/on-duty/special-case', label: '特殊情况管理', icon: WarningFilled },
+    { path: '/tenant/on-duty/insurance', label: '保险管理', icon: Document },
+    { path: '/tenant/on-duty/insurance-record', label: '参保登记', icon: EditPen },
+    { path: '/tenant/attendance', label: '考勤管理', icon: Check },
+    { path: '/tenant/on-duty/leave', label: '请假管理', icon: Calendar },
+    { path: '/tenant/on-duty/transfer', label: '调岗管理', icon: Sort },
+    { path: '/tenant/on-duty/reward-punishment', label: '奖惩管理', icon: Medal },
+    { path: '/tenant/on-duty/learning-material', label: '学习材料', icon: Document },
+    { path: '/tenant/on-duty/question-bank', label: '题库管理', icon: Notebook },
+    { path: '/tenant/on-duty/learning-time', label: '学习时长管理', icon: Clock },
+    { path: '/tenant/on-duty/exam', label: '考试管理', icon: EditPen },
+    { path: '/tenant/on-duty/exam-result', label: '考试成绩', icon: DataAnalysis },
+    { path: '/tenant/on-duty/abnormal', label: '异常管理', icon: Warning },
+    { path: '/tenant/on-duty/complaint', label: '投诉/建议', icon: ChatDotRound }
   ],
   resignation: [
-    { path: '/labor-company/resignation', label: '离职管理', icon: RemoveFilled }
+    { path: '/tenant/resignation', label: '离职管理', icon: RemoveFilled }
   ],
   settlement: [
-    { path: '/labor-company/referral', label: '工作转介绍', icon: Share },
-    { path: '/labor-company/commission', label: '佣金发放', icon: Wallet },
-    { path: '/labor-company/settlement', label: '结算管理', icon: Money }
+    { path: '/tenant/referral', label: '工作转介绍', icon: Share },
+    { path: '/tenant/commission', label: '佣金发放', icon: Wallet },
+    { path: '/tenant/settlement', label: '结算管理', icon: Money }
   ],
   system: [
-    { path: '/labor-company/company-culture', label: '企业文化介绍', icon: Document },
-    { path: '/labor-company/position-culture', label: '岗位文化介绍', icon: PositionIcon },
-    { path: '/labor-company/departments', label: '部门管理', icon: FolderOpened },
-    { path: '/labor-company/employees', label: '正式员工', icon: UserSolid },
-    { path: '/labor-company/positions', label: '岗位管理', icon: PositionIcon },
-    { path: '/labor-company/rules', label: '规则配置', icon: DocumentIcon },
-    { path: '/labor-company/menu-config', label: '菜单配置', icon: MenuIcon },
-    { path: '/labor-company/dictionary', label: '字典管理', icon: ListIcon },
-    { path: '/labor-company/system-parameter', label: '系统参数', icon: Parameter },
-    { path: '/labor-company/process', label: '流程管理', icon: Operation },
-    { path: '/labor-company/process-config', label: '流程配置', icon: SettingIcon },
-    { path: '/labor-company/attachment', label: '附件管理', icon: File },
-    { path: '/labor-company/template-config', label: '模版配置', icon: DocumentIcon },
-    { path: '/labor-company/print-config', label: '打印配置', icon: Printer },
-    { path: '/labor-company/roles', label: '角色管理', icon: Key }
+    { path: '/tenant/company-culture', label: '企业文化介绍', icon: Document },
+    { path: '/tenant/position-culture', label: '岗位文化介绍', icon: PositionIcon },
+    { path: '/tenant/departments', label: '部门管理', icon: FolderOpened },
+    { path: '/tenant/employees', label: '正式员工', icon: UserSolid },
+    { path: '/tenant/positions', label: '岗位管理', icon: PositionIcon },
+    { path: '/tenant/rules', label: '规则配置', icon: DocumentIcon },
+    { path: '/tenant/menu-config', label: '菜单配置', icon: MenuIcon },
+    { path: '/tenant/dictionary', label: '字典管理', icon: ListIcon },
+    { path: '/tenant/system-parameter', label: '系统参数', icon: Parameter },
+    { path: '/tenant/process', label: '流程管理', icon: Operation },
+    { path: '/tenant/process-config', label: '流程配置', icon: SettingIcon },
+    { path: '/tenant/attachment', label: '附件管理', icon: File },
+    { path: '/tenant/template-config', label: '模版配置', icon: DocumentIcon },
+    { path: '/tenant/print-config', label: '打印配置', icon: Printer },
+    { path: '/tenant/roles', label: '角色管理', icon: Key }
   ]
 }
 
@@ -781,7 +781,7 @@ onMounted(() => {
 // 页面标签相关状态
 const openTabs = ref([
   {
-    path: '/labor-company/home',
+    path: '/tenant/home',
     title: '首页',
     fixed: true
   }
@@ -819,108 +819,108 @@ const handleMenuSelect = (key) => {
 // 根据路径获取页面标题
 const getTabTitle = (path) => {
   const titleMap = {
-    '/labor-company/home': '首页',
-    '/labor-company/todo': '待办任务',
-    '/labor-company/messages': '消息通知',
-    '/labor-company/warnings': '预警消息',
-    '/labor-company/recruitment': '招聘管理',
-    '/labor-company/recruitment/detail/:id': '招聘需求详情',
-    '/labor-company/recruitment/add': '新增招聘需求',
-    '/labor-company/recruitment/edit/:id': '编辑招聘需求',
-    '/labor-company/recruitment/resume': '简历管理',
-    '/labor-company/recruitment/resume/:id': '简历详情',
-    '/labor-company/interview/pickup': '接送管理',
-    '/labor-company/interview/pickup/add': '新增接送',
-    '/labor-company/interview/pickup/edit/:id': '编辑接送',
-    '/labor-company/interview/pickup/:id': '接送详情',
-    '/labor-company/interview/initial-interview': '初步面试',
-    '/labor-company/interview/initial-interview/add': '新增初步面试',
-    '/labor-company/interview/initial-interview/edit/:id': '编辑初步面试',
-    '/labor-company/interview/initial-interview/:id': '初步面试详情',
-    '/labor-company/interview/invitation': '面试邀约',
-    '/labor-company/interview/invitation/add': '新增面试邀约',
-    '/labor-company/interview/invitation/edit/:id': '编辑面试邀约',
-    '/labor-company/interview/invitation/:id': '面试邀约详情',
-    '/labor-company/interview/factory-interview': '工厂面试',
-    '/labor-company/interview/factory-interview/add': '新增工厂面试',
-    '/labor-company/interview/factory-interview/edit/:id': '编辑工厂面试',
-    '/labor-company/interview/factory-interview/:id': '工厂面试详情',
-    '/labor-company/workers': '工人管理',
-    '/labor-company/workers/:id': '工人信息详情',
-    '/labor-company/workers/:id/transfer': '岗位调动',
-    '/labor-company/workers/create': '新增工人',
-    '/labor-company/workers/:id/edit': '编辑工人',
-    '/labor-company/contract': '签订合同',
-    '/labor-company/contract/:id': '合同详情',
-    '/labor-company/contract/add': '新增合同',
-    '/labor-company/contract/edit/:id': '编辑合同',
-    '/labor-company/attendance': '考勤管理',
-    '/labor-company/attendance/statistics': '考勤统计',
-    '/labor-company/on-duty/living-expense': '生活费管理',
-    '/labor-company/on-duty/salary': '工资管理',
-    '/labor-company/on-duty/claim': '理赔管理',
-    '/labor-company/on-duty/special-case': '特殊情况管理',
-    '/labor-company/on-duty/insurance': '保险管理',
-    '/labor-company/on-duty/insurance-record': '参保登记',
-    '/labor-company/on-duty/leave': '请假管理',
-    '/labor-company/on-duty/leave-detail': '请假详情',
-    '/labor-company/on-duty/transfer': '调岗管理',
-    '/labor-company/on-duty/transfer/detail/:id': '调岗详情',
-    '/labor-company/on-duty/reward-punishment': '奖惩管理',
-    '/labor-company/on-duty/learning-material': '学习材料',
-    '/labor-company/on-duty/question-bank': '题库管理',
-    '/labor-company/on-duty/learning-time': '学习时长管理',
-    '/labor-company/on-duty/exam': '考试管理',
-    '/labor-company/on-duty/exam-result': '考试成绩',
-    '/labor-company/on-duty/abnormal': '异常管理',
-    '/labor-company/on-duty/complaint': '投诉/建议',
-    '/labor-company/on-duty/communication': '沟通管理',
-    '/labor-company/on-duty/entertainment': '文娱活动',
-    '/labor-company/on-duty/registration': '报名管理',
-    '/labor-company/on-duty/news': '发布资讯',
-    '/labor-company/on-duty/community': '社团管理',
-    '/labor-company/resignation': '离职管理',
-    '/labor-company/resignation/:id': '离职详情',
-    '/labor-company/resignation/add': '新增离职',
-    '/labor-company/resignation/edit/:id': '编辑离职',
-    '/labor-company/referral': '工作转介绍',
-    '/labor-company/referral/add': '新增转介绍',
-    '/labor-company/referral/edit/:id': '编辑转介绍',
-    '/labor-company/referral/:id': '转介绍详情',
-    '/labor-company/commission': '佣金发放',
-    '/labor-company/commission/:id': '佣金详情',
-    '/labor-company/commission/rule': '佣金规则配置',
-    '/labor-company/settlement': '结算管理',
-    '/labor-company/settlement/add': '新建结算',
-    '/labor-company/settlement/edit/:id': '编辑结算',
-    '/labor-company/settlement/:id': '结算详情',
-    '/labor-company/departments': '部门管理',
-    '/labor-company/departments/add': '新增部门',
-    '/labor-company/departments/edit/:id': '编辑部门',
-    '/labor-company/departments/:id': '部门详情',
-    '/labor-company/roles': '角色管理',
-    '/labor-company/roles/create': '创建角色',
-    '/labor-company/roles/permissions': '权限管理',
-    '/labor-company/company-culture': '企业文化介绍',
-    '/labor-company/position-culture': '岗位文化介绍',
-    '/labor-company/employees': '正式员工',
-    '/labor-company/employees/add': '新增员工',
-    '/labor-company/employees/edit/:id': '编辑员工',
-    '/labor-company/employees/:id': '员工详情',
-    '/labor-company/positions': '岗位管理',
-    '/labor-company/rules': '规则配置',
-    '/labor-company/menu-config': '菜单配置',
-    '/labor-company/dictionary': '字典管理',
-    '/labor-company/system-parameter': '系统参数',
-    '/labor-company/process': '流程管理',
-    '/labor-company/process-config': '流程配置',
-    '/labor-company/attachment': '附件管理',
-    '/labor-company/template-config': '模版配置',
-    '/labor-company/print-config': '打印配置',
-    '/labor-company/quick-access-settings': '首页快捷入口设置',
-    '/labor-company/todo-detail/:id': '待办详情',
-    '/labor-company/message-detail/:id': '消息详情',
-    '/labor-company/warning-detail/:id': '预警详情'
+    '/tenant/home': '首页',
+    '/tenant/todo': '待办任务',
+    '/tenant/messages': '消息通知',
+    '/tenant/warnings': '预警消息',
+    '/tenant/recruitment': '招聘管理',
+    '/tenant/recruitment/detail/:id': '招聘需求详情',
+    '/tenant/recruitment/add': '新增招聘需求',
+    '/tenant/recruitment/edit/:id': '编辑招聘需求',
+    '/tenant/recruitment/resume': '简历管理',
+    '/tenant/recruitment/resume/:id': '简历详情',
+    '/tenant/interview/pickup': '接送管理',
+    '/tenant/interview/pickup/add': '新增接送',
+    '/tenant/interview/pickup/edit/:id': '编辑接送',
+    '/tenant/interview/pickup/:id': '接送详情',
+    '/tenant/interview/initial-interview': '初步面试',
+    '/tenant/interview/initial-interview/add': '新增初步面试',
+    '/tenant/interview/initial-interview/edit/:id': '编辑初步面试',
+    '/tenant/interview/initial-interview/:id': '初步面试详情',
+    '/tenant/interview/invitation': '面试邀约',
+    '/tenant/interview/invitation/add': '新增面试邀约',
+    '/tenant/interview/invitation/edit/:id': '编辑面试邀约',
+    '/tenant/interview/invitation/:id': '面试邀约详情',
+    '/tenant/interview/factory-interview': '工厂面试',
+    '/tenant/interview/factory-interview/add': '新增工厂面试',
+    '/tenant/interview/factory-interview/edit/:id': '编辑工厂面试',
+    '/tenant/interview/factory-interview/:id': '工厂面试详情',
+    '/tenant/workers': '工人管理',
+    '/tenant/workers/:id': '工人信息详情',
+    '/tenant/workers/:id/transfer': '岗位调动',
+    '/tenant/workers/create': '新增工人',
+    '/tenant/workers/:id/edit': '编辑工人',
+    '/tenant/contract': '签订合同',
+    '/tenant/contract/:id': '合同详情',
+    '/tenant/contract/add': '新增合同',
+    '/tenant/contract/edit/:id': '编辑合同',
+    '/tenant/attendance': '考勤管理',
+    '/tenant/attendance/statistics': '考勤统计',
+    '/tenant/on-duty/living-expense': '生活费管理',
+    '/tenant/on-duty/salary': '工资管理',
+    '/tenant/on-duty/claim': '理赔管理',
+    '/tenant/on-duty/special-case': '特殊情况管理',
+    '/tenant/on-duty/insurance': '保险管理',
+    '/tenant/on-duty/insurance-record': '参保登记',
+    '/tenant/on-duty/leave': '请假管理',
+    '/tenant/on-duty/leave-detail': '请假详情',
+    '/tenant/on-duty/transfer': '调岗管理',
+    '/tenant/on-duty/transfer/detail/:id': '调岗详情',
+    '/tenant/on-duty/reward-punishment': '奖惩管理',
+    '/tenant/on-duty/learning-material': '学习材料',
+    '/tenant/on-duty/question-bank': '题库管理',
+    '/tenant/on-duty/learning-time': '学习时长管理',
+    '/tenant/on-duty/exam': '考试管理',
+    '/tenant/on-duty/exam-result': '考试成绩',
+    '/tenant/on-duty/abnormal': '异常管理',
+    '/tenant/on-duty/complaint': '投诉/建议',
+    '/tenant/on-duty/communication': '沟通管理',
+    '/tenant/on-duty/entertainment': '文娱活动',
+    '/tenant/on-duty/registration': '报名管理',
+    '/tenant/on-duty/news': '发布资讯',
+    '/tenant/on-duty/community': '社团管理',
+    '/tenant/resignation': '离职管理',
+    '/tenant/resignation/:id': '离职详情',
+    '/tenant/resignation/add': '新增离职',
+    '/tenant/resignation/edit/:id': '编辑离职',
+    '/tenant/referral': '工作转介绍',
+    '/tenant/referral/add': '新增转介绍',
+    '/tenant/referral/edit/:id': '编辑转介绍',
+    '/tenant/referral/:id': '转介绍详情',
+    '/tenant/commission': '佣金发放',
+    '/tenant/commission/:id': '佣金详情',
+    '/tenant/commission/rule': '佣金规则配置',
+    '/tenant/settlement': '结算管理',
+    '/tenant/settlement/add': '新建结算',
+    '/tenant/settlement/edit/:id': '编辑结算',
+    '/tenant/settlement/:id': '结算详情',
+    '/tenant/departments': '部门管理',
+    '/tenant/departments/add': '新增部门',
+    '/tenant/departments/edit/:id': '编辑部门',
+    '/tenant/departments/:id': '部门详情',
+    '/tenant/roles': '角色管理',
+    '/tenant/roles/create': '创建角色',
+    '/tenant/roles/permissions': '权限管理',
+    '/tenant/company-culture': '企业文化介绍',
+    '/tenant/position-culture': '岗位文化介绍',
+    '/tenant/employees': '正式员工',
+    '/tenant/employees/add': '新增员工',
+    '/tenant/employees/edit/:id': '编辑员工',
+    '/tenant/employees/:id': '员工详情',
+    '/tenant/positions': '岗位管理',
+    '/tenant/rules': '规则配置',
+    '/tenant/menu-config': '菜单配置',
+    '/tenant/dictionary': '字典管理',
+    '/tenant/system-parameter': '系统参数',
+    '/tenant/process': '流程管理',
+    '/tenant/process-config': '流程配置',
+    '/tenant/attachment': '附件管理',
+    '/tenant/template-config': '模版配置',
+    '/tenant/print-config': '打印配置',
+    '/tenant/quick-access-settings': '首页快捷入口设置',
+    '/tenant/todo-detail/:id': '待办详情',
+    '/tenant/message-detail/:id': '消息详情',
+    '/tenant/warning-detail/:id': '预警详情'
   }
   
   // 首先尝试精确匹配
@@ -932,7 +932,7 @@ const getTabTitle = (path) => {
   if (path.includes('/contract/edit/')) {
     return '编辑合同'
   }
-  if (path === '/labor-company/contract/add') {
+  if (path === '/tenant/contract/add') {
     return '新增合同'
   }
   if (path.includes('/contract/add')) {
@@ -1004,7 +1004,7 @@ const closeTab = (tab) => {
       if (openTabs.value.length > 0) {
         router.push(openTabs.value[Math.max(0, index - 1)].path)
       } else {
-        router.push('/labor-company/home')
+        router.push('/tenant/home')
       }
     }
   }
@@ -1057,7 +1057,7 @@ const closeOtherTabs = () => {
 const closeAllTabs = () => {
   // 只保留固定标签（首页）
   openTabs.value = openTabs.value.filter(tab => tab.fixed)
-  router.push('/labor-company/home')
+  router.push('/tenant/home')
   closeContextMenu()
 }
 

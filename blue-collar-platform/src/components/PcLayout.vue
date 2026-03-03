@@ -78,7 +78,7 @@ const currentFirstLevelMenu = ref<string>('work-center')
 // 打开的页面标签
 const openTabs = ref<PageTab[]>([
   {
-    path: '/labor-company/todo',
+    path: '/tenant/todo',
     title: '待办任务',
     fixed: true
   }
@@ -92,19 +92,19 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'todo',
       name: '待办任务',
       icon: 'List',
-      path: '/labor-company/todo'
+      path: '/tenant/todo'
     },
     {
       code: 'messages',
       name: '消息中心',
       icon: 'Bell',
-      path: '/labor-company/messages'
+      path: '/tenant/messages'
     },
     {
       code: 'warnings',
       name: '预警信息',
       icon: 'Warning',
-      path: '/labor-company/warnings'
+      path: '/tenant/warnings'
     }
   ],
   // 招聘管理
@@ -113,13 +113,13 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'recruitment-requirement',
       name: '招聘需求',
       icon: 'Document',
-      path: '/labor-company/recruitment-requirement'
+      path: '/tenant/recruitment-requirement'
     },
     {
       code: 'resume-management',
       name: '简历管理',
       icon: 'DocumentCopy',
-      path: '/labor-company/resume-management'
+      path: '/tenant/resume-management'
     }
   ],
   // 面试管理
@@ -128,25 +128,25 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'pickup-management',
       name: '接送管理',
       icon: 'Van',
-      path: '/labor-company/pickup-management'
+      path: '/tenant/pickup-management'
     },
     {
       code: 'preliminary-interview',
       name: '初步面试',
       icon: 'ChatDotRound',
-      path: '/labor-company/preliminary-interview'
+      path: '/tenant/preliminary-interview'
     },
     {
       code: 'interview-invitation',
       name: '面试邀约',
       icon: 'Message',
-      path: '/labor-company/interview-invitation'
+      path: '/tenant/interview-invitation'
     },
     {
       code: 'factory-interview',
       name: '工厂面试',
       icon: 'OfficeBuilding',
-      path: '/labor-company/factory-interview'
+      path: '/tenant/factory-interview'
     }
   ],
   // 工人管理
@@ -155,7 +155,7 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'worker-info',
       name: '工人信息',
       icon: 'User',
-      path: '/labor-company/worker-info'
+      path: '/tenant/worker-info'
     }
   ],
   // 合同管理
@@ -164,7 +164,7 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'sign-contract',
       name: '签订合同',
       icon: 'EditPen',
-      path: '/labor-company/sign-contract'
+      path: '/tenant/sign-contract'
     }
   ],
   // 在职管理
@@ -178,19 +178,19 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
           code: 'living-expense',
           name: '生活费管理',
           icon: 'Wallet',
-          path: '/labor-company/on-duty/living-expense'
+          path: '/tenant/on-duty/living-expense'
         },
         {
           code: 'salary',
           name: '工资管理',
           icon: 'Money',
-          path: '/labor-company/on-duty/salary'
+          path: '/tenant/on-duty/salary'
         },
         {
           code: 'claim-management',
           name: '理赔管理',
           icon: 'DocumentChecked',
-          path: '/labor-company/on-duty/claim'
+          path: '/tenant/on-duty/claim'
         }
       ]
     },
@@ -203,31 +203,31 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
           code: 'communication',
           name: '沟通管理',
           icon: 'ChatLineSquare',
-          path: '/labor-company/communication'
+          path: '/tenant/communication'
         },
         {
           code: 'entertainment',
           name: '文娱活动',
           icon: 'Trophy',
-          path: '/labor-company/entertainment'
+          path: '/tenant/entertainment'
         },
         {
           code: 'registration',
           name: '报名管理',
           icon: 'Edit',
-          path: '/labor-company/registration'
+          path: '/tenant/registration'
         },
         {
           code: 'publish-news',
           name: '发布资讯',
           icon: 'Promotion',
-          path: '/labor-company/publish-news'
+          path: '/tenant/publish-news'
         },
         {
           code: 'club-management',
           name: '社团管理',
           icon: 'UserFilled',
-          path: '/labor-company/club-management'
+          path: '/tenant/club-management'
         }
       ]
     },
@@ -235,7 +235,7 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'special-case',
       name: '特殊情况',
       icon: 'WarningFilled',
-      path: '/labor-company/special-case'
+      path: '/tenant/special-case'
     },
     {
       code: 'insurance',
@@ -246,13 +246,13 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
           code: 'insurance-management',
           name: '保险管理',
           icon: 'Document',
-          path: '/labor-company/insurance-management'
+          path: '/tenant/insurance-management'
         },
         {
           code: 'claim-registration',
           name: '参保登记',
           icon: 'EditPen',
-          path: '/labor-company/claim-registration'
+          path: '/tenant/claim-registration'
         }
       ]
     },
@@ -260,25 +260,25 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'attendance',
       name: '考勤管理',
       icon: 'Clock',
-      path: '/labor-company/attendance'
+      path: '/tenant/attendance'
     },
     {
       code: 'leave',
       name: '请假管理',
       icon: 'Calendar',
-      path: '/labor-company/leave'
+      path: '/tenant/leave'
     },
     {
       code: 'transfer',
       name: '调岗管理',
       icon: 'Sort',
-      path: '/labor-company/transfer'
+      path: '/tenant/transfer'
     },
     {
       code: 'reward-punishment',
       name: '奖惩管理',
       icon: 'Medal',
-      path: '/labor-company/reward-punishment'
+      path: '/tenant/reward-punishment'
     },
     {
       code: 'business-classroom',
@@ -289,31 +289,31 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
           code: 'learning-materials',
           name: '学习材料',
           icon: 'Document',
-          path: '/labor-company/learning-materials'
+          path: '/tenant/learning-materials'
         },
         {
           code: 'question-bank',
           name: '题库管理',
           icon: 'Notebook',
-          path: '/labor-company/question-bank'
+          path: '/tenant/question-bank'
         },
         {
           code: 'learning-time',
           name: '学习时长管理',
           icon: 'Clock',
-          path: '/labor-company/learning-time'
+          path: '/tenant/learning-time'
         },
         {
           code: 'exam-management',
           name: '考试管理',
           icon: 'EditPen',
-          path: '/labor-company/exam-management'
+          path: '/tenant/exam-management'
         },
         {
           code: 'exam-results',
           name: '考试成绩',
           icon: 'DataAnalysis',
-          path: '/labor-company/exam-results'
+          path: '/tenant/exam-results'
         }
       ]
     },
@@ -321,7 +321,7 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'complaint-suggestion',
       name: '投诉/建议',
       icon: 'ChatDotRound',
-      path: '/labor-company/complaint-suggestion'
+      path: '/tenant/complaint-suggestion'
     }
   ],
   // 离职管理
@@ -330,7 +330,7 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'resignation-management',
       name: '离职管理',
       icon: 'RemoveFilled',
-      path: '/labor-company/resignation-management'
+      path: '/tenant/resignation-management'
     }
   ],
   // 结算管理
@@ -344,13 +344,13 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
           code: 'referral',
           name: '工作转介绍',
           icon: 'Share',
-          path: '/labor-company/referral'
+          path: '/tenant/referral'
         },
         {
           code: 'commission',
           name: '佣金发放',
           icon: 'Wallet',
-          path: '/labor-company/commission'
+          path: '/tenant/commission'
         }
       ]
     },
@@ -358,7 +358,7 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'settlement',
       name: '结算管理',
       icon: 'Money',
-      path: '/labor-company/settlement'
+      path: '/tenant/settlement'
     }
   ],
   // 系统管理
@@ -372,13 +372,13 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
           code: 'company-culture',
           name: '企业文化介绍',
           icon: 'Reading',
-          path: '/labor-company/company-culture'
+          path: '/tenant/company-culture'
         },
         {
           code: 'position-culture',
           name: '岗位文化介绍',
           icon: 'Briefcase',
-          path: '/labor-company/position-culture'
+          path: '/tenant/position-culture'
         }
       ]
     },
@@ -386,61 +386,61 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'department',
       name: '部门管理',
       icon: 'FolderOpened',
-      path: '/labor-company/department'
+      path: '/tenant/department'
     },
     {
       code: 'employee',
       name: '正式员工',
       icon: 'UserFilled',
-      path: '/labor-company/employee'
+      path: '/tenant/employee'
     },
     {
       code: 'position',
       name: '岗位管理',
       icon: 'Briefcase',
-      path: '/labor-company/position'
+      path: '/tenant/position'
     },
     {
       code: 'rule',
       name: '规则配置',
       icon: 'Setting',
-      path: '/labor-company/rule'
+      path: '/tenant/rule'
     },
     {
       code: 'menu',
       name: '菜单配置',
       icon: 'Menu',
-      path: '/labor-company/menu'
+      path: '/tenant/menu'
     },
     {
       code: 'dictionary',
       name: '字典管理',
       icon: 'Notebook',
-      path: '/labor-company/dictionary'
+      path: '/tenant/dictionary'
     },
     {
       code: 'system-parameter',
       name: '系统参数',
       icon: 'Tools',
-      path: '/labor-company/system-parameter'
+      path: '/tenant/system-parameter'
     },
     {
       code: 'process',
       name: '流程管理',
       icon: 'Connection',
-      path: '/labor-company/process'
+      path: '/tenant/process'
     },
     {
       code: 'process-config',
       name: '流程配置',
       icon: 'Operation',
-      path: '/labor-company/process-config'
+      path: '/tenant/process-config'
     },
     {
       code: 'attachment',
       name: '附件管理',
       icon: 'Paperclip',
-      path: '/labor-company/attachment'
+      path: '/tenant/attachment'
     },
     {
       code: 'print',
@@ -451,13 +451,13 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
           code: 'template-config',
           name: '模版配置',
           icon: 'Document',
-          path: '/labor-company/template-config'
+          path: '/tenant/template-config'
         },
         {
           code: 'print-config',
           name: '打印配置',
           icon: 'Printer',
-          path: '/labor-company/print-config'
+          path: '/tenant/print-config'
         }
       ]
     }
@@ -620,7 +620,7 @@ const handleTabClose = (tab: PageTab) => {
         router.push(nextTab.path)
       } else {
         // 如果没有其他标签，跳转到首页
-        router.push('/labor-company/todo')
+        router.push('/tenant/todo')
       }
     }
   }
@@ -643,7 +643,7 @@ const handleCloseOtherTabs = (tab: PageTab) => {
 const handleCloseAllTabs = () => {
   // 只保留固定标签
   openTabs.value = openTabs.value.filter(tab => tab.fixed)
-  router.push('/labor-company/todo')
+  router.push('/tenant/todo')
 }
 
 // 处理标签重新排序

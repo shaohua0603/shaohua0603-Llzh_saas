@@ -5,7 +5,7 @@
 /**
  * 用户角色类型
  */
-export type UserRole = 'worker' | 'labor_company' | 'factory' | 'platform_admin'
+export type UserRole = 'worker' | 'tenant' | 'platform_admin'
 
 /**
  * 权限类型
@@ -192,19 +192,11 @@ export class PermissionUtil {
   }
 
   /**
-   * 检查是否是劳务公司用户
+   * 检查是否是租户用户
    */
-  static isLaborCompany(): boolean {
+  static isTenant(): boolean {
     const permission = this.getUserPermission()
-    return permission?.role === 'labor_company'
-  }
-
-  /**
-   * 检查是否是工厂用户
-   */
-  static isFactory(): boolean {
-    const permission = this.getUserPermission()
-    return permission?.role === 'factory'
+    return permission?.role === 'tenant'
   }
 
   /**

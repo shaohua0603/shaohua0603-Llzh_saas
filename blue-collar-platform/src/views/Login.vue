@@ -28,8 +28,7 @@ const handleLogin = () => {
   // 硬编码的登录验证逻辑
   const testAccounts = [
     { phone: '13800138001', password: '123456', role: 'worker', name: '张三' },
-    { phone: '13800138002', password: '123456', role: 'labor_company', name: '李四' },
-    { phone: '13800138003', password: '123456', role: 'factory', name: '王五' },
+    { phone: '13800138002', password: '123456', role: 'tenant', name: '李四' },
     { phone: '13800138004', password: '123456', role: 'platform_admin', name: '赵六' }
   ]
   
@@ -141,15 +140,9 @@ const handleLogin = () => {
             }
           ]
       }),
-      ...(user.role === 'labor_company' && {
-        laborCompany: '南通富民劳务服务有限公司',
+      ...(user.role === 'tenant' && {
         companyName: '南通富民劳务服务有限公司',
         position: '招聘经理'
-      }),
-      ...(user.role === 'factory' && {
-        factory: '富士康科技集团',
-        companyName: '富士康科技集团',
-        position: '人事主管'
       })
     }
     
@@ -166,20 +159,11 @@ const handleLogin = () => {
         console.log('跳转到工人首页')
         router.push('/worker/home')
         break
-      case 'labor_company':
+      case 'tenant':
         // 检测设备类型，跳转到PC端或移动端
-        console.log('跳转到劳务公司页面，设备宽度:', window.innerWidth)
-        console.log('准备跳转到:', window.innerWidth > 768 ? '/labor-company/home' : '/labor-company-mobile/home')
-        router.push('/labor-company/home')
-        break
-      case 'factory':
-        // 检测设备类型，跳转到PC端或移动端
-        console.log('跳转到工厂页面，设备宽度:', window.innerWidth)
-        if (window.innerWidth > 768) {
-          router.push('/factory/home')
-        } else {
-          router.push('/factory-mobile/home')
-        }
+        console.log('跳转到租户页面，设备宽度:', window.innerWidth)
+        console.log('准备跳转到:', window.innerWidth > 768 ? '/tenant/home' : '/tenant-mobile/home')
+        router.push('/tenant/home')
         break
       case 'platform_admin':
         console.log('跳转到平台管理员页面')
@@ -259,8 +243,7 @@ const goToForgotPassword = () => {
       <div class="login-test-info">
         <h4>测试账号信息：</h4>
         <p>工人：13800138001 / 123456</p>
-        <p>劳务公司：13800138002 / 123456</p>
-        <p>工厂：13800138003 / 123456</p>
+        <p>租户：13800138002 / 123456</p>
         <p>平台管理员：13800138004 / 123456</p>
       </div>
     </div>
