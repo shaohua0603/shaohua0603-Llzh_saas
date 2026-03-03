@@ -2,22 +2,21 @@
   <div class="news-management">
     <!-- 搜索和筛选区域 -->
     <div class="search-filter-section">
-      <el-row :gutter="16" align="middle">
-        <el-col :span="6">
+      <el-form :inline="true" :model="filterForm" class="filter-form">
+        <el-form-item label="资讯标题">
           <el-input
-            v-model="searchKeyword"
+            v-model="filterForm.keyword"
             placeholder="搜索资讯标题"
-            prefix-icon="Search"
             clearable
-            @input="handleSearch"
+            style="width: 250px"
           />
-        </el-col>
-        <el-col :span="4">
+        </el-form-item>
+        <el-form-item label="资讯类型">
           <el-select
-            v-model="typeFilter"
+            v-model="filterForm.type"
             placeholder="资讯类型"
             clearable
-            @change="handleSearch"
+            style="width: 150px"
           >
             <el-option label="全部" value="" />
             <el-option label="技能提升" value="skill" />
@@ -25,31 +24,20 @@
             <el-option label="岗位介绍" value="job" />
             <el-option label="其他资讯" value="other" />
           </el-select>
-        </el-col>
-        <el-col :span="4">
+        </el-form-item>
+        <el-form-item label="发布状态">
           <el-select
-            v-model="statusFilter"
+            v-model="filterForm.status"
             placeholder="发布状态"
             clearable
-            @change="handleSearch"
+            style="width: 150px"
           >
             <el-option label="全部" value="" />
             <el-option label="已发布" value="published" />
             <el-option label="未发布" value="unpublished" />
           </el-select>
-        </el-col>
-        <el-col :span="4">
-          <el-date-picker
-            v-model="dateRange"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            @change="handleSearch"
-          />
-        </el-col>
-        <el-col :span="6">
+        </el-form-item>
+        <el-form-item>
           <el-button type="primary" @click="handleSearch">
             <el-icon><Search /></el-icon>
             搜索
@@ -58,36 +46,48 @@
             <el-icon><Refresh /></el-icon>
             重置
           </el-button>
-        </el-col>
-      </el-row>
+        </el-form-item>
+      </el-form>
+      <div class="expand-toggle" @click="toggleFilter">
+        <el-icon :class="{ 'rotate-180': filterExpanded }"><ArrowDown /></el-icon>
+        <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+      </div>
+      <!-- 展开显示更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form :inline="true" :model="filterForm" class="filter-form">
+          <el-form-item label="创建日期范围">
+            <el-date-picker
+              v-model="filterForm.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              style="width: 250px"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
 
-    <!-- 统计卡片 -->
-    <div class="stats-cards">
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.totalCount }}</div>
-          <div class="stat-label">资讯总数</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.publishedCount }}</div>
-          <div class="stat-label">已发布</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.unpublishedCount }}</div>
-          <div class="stat-label">未发布</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.skillCount }}</div>
-          <div class="stat-label">技能提升</div>
-        </div>
-      </el-card>
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>
+        新增资讯
+      </el-button>
+      <el-button type="warning" @click="handleBatchPublish" :disabled="true">
+        <el-icon><Upload /></el-icon>
+        批量发布
+      </el-button>
+      <el-button type="info" @click="handleBatchUnpublish" :disabled="true">
+        <el-icon><Download /></el-icon>
+        批量取消发布
+      </el-button>
+      <el-button type="danger" @click="handleBatchDelete" :disabled="true">
+        <el-icon><Delete /></el-icon>
+        批量删除
+      </el-button>
     </div>
 
     <!-- 通用表格 -->
@@ -100,18 +100,14 @@
       :current-page="currentPage"
       :page-size="pageSize"
       :loading="loading"
-      :show-selection="false"
-      :show-toolbar="false"
+      :show-selection="true"
+      :show-toolbar="true"
+      :stats-info="statsInfo"
       @update:current-page="handlePageChange"
       @update:page-size="handleSizeChange"
+      @selection-change="handleSelectionChange"
       @global-search="handleGlobalSearch"
     >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增资讯
-        </el-button>
-      </template>
 
       <template #column-newsType="{ row }">
         <el-tag>{{ getTypeText(row.newsType) }}</el-tag>
@@ -243,11 +239,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, View, Edit, Delete, Upload, Download } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, View, Edit, Delete, Upload, Download, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
-import RichTextEditor from '../../components/RichTextEditor.vue'
+import RichTextEditor from '../../../components/RichTextEditor.vue'
 import type { ColumnConfig } from '../../types/common-table'
 import type { FormInstance, FormRules } from 'element-plus'
 
@@ -264,16 +260,20 @@ interface NewsRecord {
 }
 
 // 响应式数据
-const searchKeyword = ref('')
-const typeFilter = ref('')
-const statusFilter = ref('')
-const dateRange = ref<string[]>([])
+const filterExpanded = ref(false)
+const filterForm = reactive({
+  keyword: '',
+  type: '',
+  status: '',
+  dateRange: [] as string[]
+})
 const tableData = ref<NewsRecord[]>([])
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const loading = ref(false)
 const currentRow = ref<NewsRecord | null>(null)
+const selectedRows = ref<NewsRecord[]>([])
 
 // 对话框控制
 const formDialogVisible = ref(false)
@@ -315,6 +315,16 @@ const stats = reactive({
   unpublishedCount: 0,
   skillCount: 0
 })
+
+// 统计信息字符串
+const statsInfo = computed(() => {
+  return `资讯总数: ${stats.totalCount} | 已发布: ${stats.publishedCount} | 未发布: ${stats.unpublishedCount} | 技能提升: ${stats.skillCount}`
+})
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
 
 // 模拟数据存储
 const allData = ref<NewsRecord[]>([])
@@ -403,10 +413,10 @@ const handleSearch = () => {
 
 // 重置搜索
 const handleReset = () => {
-  searchKeyword.value = ''
-  typeFilter.value = ''
-  statusFilter.value = ''
-  dateRange.value = []
+  filterForm.keyword = ''
+  filterForm.type = ''
+  filterForm.status = ''
+  filterForm.dateRange = []
   handleSearch()
 }
 
@@ -422,9 +432,14 @@ const handleSizeChange = (size: number) => {
   fetchData()
 }
 
+// 选择变化
+const handleSelectionChange = (selection: NewsRecord[]) => {
+  selectedRows.value = selection
+}
+
 // 全局搜索
 const handleGlobalSearch = (keyword: string) => {
-  searchKeyword.value = keyword
+  filterForm.keyword = keyword
   handleSearch()
 }
 
@@ -434,23 +449,23 @@ const fetchData = () => {
 
   let filteredData = [...allData.value]
 
-  if (searchKeyword.value) {
+  if (filterForm.keyword) {
     filteredData = filteredData.filter(item =>
-      item.title.toLowerCase().includes(searchKeyword.value.toLowerCase())
+      item.title.toLowerCase().includes(filterForm.keyword.toLowerCase())
     )
   }
 
-  if (typeFilter.value) {
-    filteredData = filteredData.filter(item => item.newsType === typeFilter.value)
+  if (filterForm.type) {
+    filteredData = filteredData.filter(item => item.newsType === filterForm.type)
   }
 
-  if (statusFilter.value) {
-    filteredData = filteredData.filter(item => item.status === statusFilter.value)
+  if (filterForm.status) {
+    filteredData = filteredData.filter(item => item.status === filterForm.status)
   }
 
-  if (dateRange.value && dateRange.value.length === 2) {
+  if (filterForm.dateRange && filterForm.dateRange.length === 2) {
     filteredData = filteredData.filter(item => {
-      return item.createTime >= dateRange.value[0] && item.createTime <= dateRange.value[1]
+      return item.createTime >= filterForm.dateRange[0] && item.createTime <= filterForm.dateRange[1]
     })
   }
 
@@ -528,7 +543,7 @@ const handleSubmitForm = async () => {
   }
 }
 
-// 查看详情
+// 查看
 const handleView = (row: NewsRecord) => {
   currentRow.value = row
   detailDialogVisible.value = true
@@ -583,6 +598,108 @@ const handleUnpublish = (row: NewsRecord) => {
   }).catch(() => {})
 }
 
+// 批量发布
+const handleBatchPublish = async () => {
+  if (selectedRows.value.length === 0) return
+
+  const unpublishedRows = selectedRows.value.filter(row => row.status === 'unpublished')
+
+  if (unpublishedRows.length === 0) {
+    ElMessage.warning('没有未发布的资讯')
+    return
+  }
+
+  try {
+    ElMessageBox.confirm(
+      `确定要发布选中的 ${unpublishedRows.length} 条资讯吗？`,
+      '批量发布',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    ).then(() => {
+      unpublishedRows.forEach(row => {
+        const index = allData.value.findIndex(item => item.id === row.id)
+        if (index > -1) {
+          allData.value[index].status = 'published'
+          allData.value[index].publishTime = new Date().toISOString()
+        }
+      })
+      ElMessage.success('批量发布成功')
+      fetchData()
+    }).catch(() => {})
+  } catch (error) {
+    console.error('批量发布失败:', error)
+    ElMessage.error('批量发布失败')
+  }
+}
+
+// 批量取消发布
+const handleBatchUnpublish = async () => {
+  if (selectedRows.value.length === 0) return
+
+  const publishedRows = selectedRows.value.filter(row => row.status === 'published')
+
+  if (publishedRows.length === 0) {
+    ElMessage.warning('没有已发布的资讯')
+    return
+  }
+
+  try {
+    ElMessageBox.confirm(
+      `确定要取消发布选中的 ${publishedRows.length} 条资讯吗？`,
+      '批量取消发布',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'info'
+      }
+    ).then(() => {
+      publishedRows.forEach(row => {
+        const index = allData.value.findIndex(item => item.id === row.id)
+        if (index > -1) {
+          allData.value[index].status = 'unpublished'
+        }
+      })
+      ElMessage.success('批量取消发布成功')
+      fetchData()
+    }).catch(() => {})
+  } catch (error) {
+    console.error('批量取消发布失败:', error)
+    ElMessage.error('批量取消发布失败')
+  }
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (selectedRows.value.length === 0) return
+
+  try {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedRows.value.length} 条资讯吗？`,
+      '批量删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(() => {
+      selectedRows.value.forEach(row => {
+        const index = allData.value.findIndex(item => item.id === row.id)
+        if (index > -1) {
+          allData.value.splice(index, 1)
+        }
+      })
+      ElMessage.success('批量删除成功')
+      fetchData()
+    }).catch(() => {})
+  } catch (error) {
+    console.error('批量删除失败:', error)
+    ElMessage.error('批量删除失败')
+  }
+}
+
 // 生命周期
 onMounted(() => {
   allData.value = generateMockData()
@@ -592,43 +709,63 @@ onMounted(() => {
 
 <style scoped>
 .news-management {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
 .search-filter-section {
-  margin-bottom: 20px;
-  padding: 16px;
-  background-color: #f5f7fa;
+  margin-bottom: 16px;
+  background-color: #fff;
   border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+.filter-form {
+  padding: 16px;
+  padding-bottom: 0;
 }
 
-.stat-card {
-  text-align: center;
-}
-
-.stat-content {
-  padding: 10px 0;
-}
-
-.stat-number {
-  font-size: 24px;
-  font-weight: bold;
+.expand-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  cursor: pointer;
   color: #409eff;
-  margin-bottom: 8px;
+  border-top: 1px solid #e4e7ed;
+  transition: all 0.3s;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #606266;
+.expand-toggle:hover {
+  background-color: #f5f7fa;
+}
+
+.expand-toggle .el-icon {
+  margin-right: 8px;
+  transition: transform 0.3s;
+}
+
+.expand-toggle .rotate-180 {
+  transform: rotate(180deg);
+}
+
+.filter-content.expanded {
+  padding: 16px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .detail-content {
@@ -641,24 +778,30 @@ onMounted(() => {
 }
 
 /* 响应式设计 */
-@media screen and (max-width: 1200px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media screen and (max-width: 768px) {
-  .search-filter-section :deep(.el-row) {
-    flex-direction: column;
+  .news-management {
+    padding: 8px;
   }
 
-  .search-filter-section :deep(.el-col) {
-    width: 100%;
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .filter-form :deep(.el-form-item) {
+    margin-right: 0;
     margin-bottom: 12px;
   }
 
-  .stats-cards {
-    grid-template-columns: 1fr;
+  .filter-form :deep(.el-input),
+  .filter-form :deep(.el-select),
+  .filter-form :deep(.el-date-picker) {
+    width: 100%;
+  }
+
+  .detail-content {
+    padding: 5px;
   }
 }
 </style>

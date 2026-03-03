@@ -1,40 +1,11 @@
 <template>
   <div class="resignation-container">
     <!-- 搜索区域 -->
-    <el-card class="search-card">
+    <div class="search-filter-section">
+      <!-- 默认显示的一行查询条件 -->
       <el-form :inline="true" :model="searchForm" class="search-form">
         <el-form-item label="关键字">
           <el-input v-model="searchForm.keyword" placeholder="请输入姓名、手机号、离职编号" clearable style="width: 180px" />
-        </el-form-item>
-        <el-form-item label="离职日期">
-          <el-date-picker
-            v-model="searchForm.resignationDate"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-          />
-        </el-form-item>
-        <el-form-item label="审核状态">
-          <el-select v-model="searchForm.approvalStatus" placeholder="请选择审核状态" clearable style="width: 140px">
-            <el-option label="未审核" value="PENDING" />
-            <el-option label="审核中" value="IN_PROGRESS" />
-            <el-option label="审核通过" value="APPROVED" />
-            <el-option label="已驳回" value="REJECTED" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="离职状态">
-          <el-select v-model="searchForm.resignationStatus" placeholder="请选择离职状态" clearable style="width: 140px">
-            <el-option label="未开始" value="NOT_STARTED" />
-            <el-option label="离职中" value="IN_PROGRESS" />
-            <el-option label="已离职" value="COMPLETED" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="离职原因">
-          <el-select v-model="searchForm.resignationReason" placeholder="请选择离职原因" clearable style="width: 140px">
-            <el-option v-for="item in resignationReasonOptions" :key="item.value" :label="item.label" :value="item.value" />
-          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">
@@ -46,11 +17,53 @@
             重置
           </el-button>
         </el-form-item>
+        <el-form-item>
+          <el-button type="text" @click="toggleFilter" class="expand-toggle">
+            <el-icon :class="{ 'rotate': filterExpanded }"><ArrowDown /></el-icon>
+            <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+          </el-button>
+        </el-form-item>
       </el-form>
-    </el-card>
+      
+      <!-- 展开显示的更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form :inline="true" :model="searchForm" class="search-form">
+          <el-form-item label="离职日期">
+            <el-date-picker
+              v-model="searchForm.resignationDate"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+            />
+          </el-form-item>
+          <el-form-item label="审核状态">
+            <el-select v-model="searchForm.approvalStatus" placeholder="请选择审核状态" clearable style="width: 140px">
+              <el-option label="未审核" value="PENDING" />
+              <el-option label="审核中" value="IN_PROGRESS" />
+              <el-option label="审核通过" value="APPROVED" />
+              <el-option label="已驳回" value="REJECTED" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="离职状态">
+            <el-select v-model="searchForm.resignationStatus" placeholder="请选择离职状态" clearable style="width: 140px">
+              <el-option label="未开始" value="NOT_STARTED" />
+              <el-option label="离职中" value="IN_PROGRESS" />
+              <el-option label="已离职" value="COMPLETED" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="离职原因">
+            <el-select v-model="searchForm.resignationReason" placeholder="请选择离职原因" clearable style="width: 140px">
+              <el-option v-for="item in resignationReasonOptions" :key="item.value" :label="item.label" :value="item.value" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
 
     <!-- 工具栏 -->
-    <div class="toolbar-section">
+    <div class="action-bar">
       <el-button type="primary" @click="handleAdd">
         <el-icon><Plus /></el-icon>
         新增离职
@@ -83,6 +96,7 @@
       :page-size="pageSize"
       :loading="loading"
       table-id="resignation-list"
+      :stats-info="statsInfo"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @page-change="handlePageChange"
@@ -164,7 +178,7 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Upload, Download, Printer, CircleCheck, CircleClose, DocumentChecked, Search, Refresh, UploadFilled } from '@element-plus/icons-vue'
+import { Plus, Upload, Download, Printer, CircleCheck, CircleClose, DocumentChecked, Search, Refresh, UploadFilled, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 import type { ColumnConfig } from '@/types/common-table'
 import { RESIGNATION_REASON_OPTIONS, type Resignation, type ApprovalStatus, type ResignationStatus, type ResignationReason } from '@/types/resignationTypes'
@@ -188,6 +202,8 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedRows = ref<Resignation[]>([])
+const filterExpanded = ref(false)
+const statsInfo = ref<Array<{ label: string; value: string }>>([])
 
 const hasSelection = computed(() => selectedRows.value.length > 0)
 
@@ -222,8 +238,13 @@ const columns: ColumnConfig[] = [
         APPROVED: { text: '审核通过', type: 'success' },
         REJECTED: { text: '已驳回', type: 'danger' }
       }
-      return statusMap[value] || value
-    }
+      const status = statusMap[value]
+      if (status) {
+        return `<el-tag type="${status.type}">${status.text}</el-tag>`
+      }
+      return value
+    },
+    showTooltip: true
   },
   {
     prop: 'resignationStatus',
@@ -235,8 +256,13 @@ const columns: ColumnConfig[] = [
         IN_PROGRESS: { text: '离职中', type: 'warning' },
         COMPLETED: { text: '已离职', type: 'success' }
       }
-      return statusMap[value] || value
-    }
+      const status = statusMap[value]
+      if (status) {
+        return `<el-tag type="${status.type}">${status.text}</el-tag>`
+      }
+      return value
+    },
+    showTooltip: true
   },
   { prop: 'applicationTime', label: '申请时间', minWidth: 160, sortable: true }
 ]
@@ -269,11 +295,28 @@ const loadData = async () => {
     const res = await getResignationList(params)
     tableData.value = res.data.list
     total.value = res.data.total
+    
+    // 计算统计信息
+    const totalRecords = total.value
+    const pendingCount = tableData.value.filter(item => item.approvalStatus === 'PENDING').length
+    const approvedCount = tableData.value.filter(item => item.approvalStatus === 'APPROVED').length
+    const rejectedCount = tableData.value.filter(item => item.approvalStatus === 'REJECTED').length
+    statsInfo.value = [
+      { label: '总记录数', value: totalRecords.toString() },
+      { label: '待审核', value: pendingCount.toString() },
+      { label: '已通过', value: approvedCount.toString() },
+      { label: '已驳回', value: rejectedCount.toString() }
+    ]
   } catch (error) {
     ElMessage.error('加载数据失败')
   } finally {
     loading.value = false
   }
+}
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
 }
 
 const handleSearch = () => {
@@ -456,20 +499,61 @@ onMounted(() => {
 
 <style scoped>
 .resignation-container {
-  padding: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
-.search-card {
+.search-filter-section {
+  background: #fff;
+  padding: 16px;
+  border-radius: 4px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.toolbar-section {
+.search-form {
   display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+}
+
+.filter-content {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.expand-toggle {
+  color: #409eff;
+}
+
+.rotate {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+:deep(.el-icon) {
+  transition: transform 0.3s ease;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   padding: 16px 20px;
   background-color: #fff;
   border-radius: 4px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 }
 </style>

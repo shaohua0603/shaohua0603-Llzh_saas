@@ -17,7 +17,7 @@ import type {
  */
 export const idleWorkerApi = {
   /**
-   * 获取空闲工人列表
+   * 获取空闲工人信息
    */
   getIdleWorkerList: (params: IdleWorkerQueryParams): Promise<PageResponse<WorkerBasicInfo>> => {
     return request.get('/api/v1/admin/operations/idle-workers', { params })

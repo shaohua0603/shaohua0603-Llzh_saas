@@ -1,15 +1,7 @@
 <template>
   <div class="referral-detail-container">
-    <!-- 顶部操作栏 -->
-    <div class="page-header">
-      <div class="header-actions">
-        <el-button @click="handleEdit">编辑</el-button>
-        <el-button type="danger" @click="handleDelete">删除</el-button>
-      </div>
-    </div>
-
     <!-- 内容区域 -->
-    <div class="content-section">
+    <div class="detail-content">
       <!-- 被介绍人信息 -->
       <el-card>
         <template #header>
@@ -86,6 +78,22 @@
         </el-table>
       </el-card>
     </div>
+
+    <!-- 底部悬浮操作栏 -->
+    <div class="detail-footer">
+      <el-button @click="handleBack">
+        <el-icon><ArrowLeft /></el-icon>
+        返回
+      </el-button>
+      <el-button @click="handleEdit">
+        <el-icon><Edit /></el-icon>
+        编辑
+      </el-button>
+      <el-button type="danger" @click="handleDelete">
+        <el-icon><Delete /></el-icon>
+        删除
+      </el-button>
+    </div>
   </div>
 </template>
 
@@ -93,7 +101,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft } from '@element-plus/icons-vue'
+import { ArrowLeft, Edit, Delete } from '@element-plus/icons-vue'
 
 // 路由
 const router = useRouter()
@@ -237,43 +245,23 @@ onMounted(() => {
   padding: 20px;
   background-color: #f5f7fa;
   min-height: calc(100vh - 100px);
-}
-
-.page-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 16px 20px;
-  background-color: #fff;
-  border-radius: 4px;
+  flex-direction: column;
 }
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+.detail-content {
+  flex: 1;
+  overflow-y: auto;
+  padding-bottom: 80px;
 }
 
-.page-title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.header-actions {
-  display: flex;
-  gap: 10px;
-}
-
-.content-section {
+.detail-content {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.content-section .el-card {
+.detail-content .el-card {
   border-radius: 4px;
 }
 
@@ -291,5 +279,20 @@ onMounted(() => {
 
 .mt-4 {
   margin-top: 16px;
+}
+
+.detail-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width, 210px);
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-top: 1px solid #e4e7ed;
+  z-index: 100;
+  transition: left 0.3s;
 }
 </style>

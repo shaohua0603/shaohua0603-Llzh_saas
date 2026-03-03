@@ -90,7 +90,7 @@
       >
         <template #actions="{ row }">
           <el-button type="primary" link size="small" @click.stop="handleDetail(row)" v-permission="['interview:invitation:view']">
-            查看详情
+            查看
           </el-button>
           <el-button type="warning" link size="small" @click.stop="handleEdit(row)" v-permission="['interview:invitation:update']">
             编辑
@@ -251,7 +251,7 @@ const handleRowClick = (row: any) => {
   handleDetail(row)
 }
 
-// 查看详情
+// 查看
 const handleDetail = (row: any) => {
   router.push(`/labor-company/interview/invitation/${row.id}`)
 }

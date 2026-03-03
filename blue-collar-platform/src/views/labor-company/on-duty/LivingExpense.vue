@@ -1,174 +1,176 @@
 <template>
   <div class="living-expense-management">
-    <!-- 搜索和筛选区域 -->
-    <div class="search-filter-section">
-      <el-row :gutter="16" align="middle">
-        <el-col :span="6">
-          <el-input
-            v-model="searchKeyword"
-            placeholder="搜索工人姓名或手机号"
-            prefix-icon="Search"
-            clearable
-            @input="handleSearch"
-          />
-        </el-col>
-        <el-col :span="4">
-          <el-select
-            v-model="statusFilter"
-            placeholder="申请状态"
-            clearable
-            @change="handleSearch"
+    <!-- 筛选区域 -->
+    <el-card class="filter-card" shadow="never">
+      <div class="filter-default">
+        <div class="filter-toggle-container">
+          <el-form :model="searchForm" inline>
+            <el-form-item label="工人姓名/手机号">
+              <el-input
+                v-model="searchForm.keyword"
+                placeholder="请输入工人姓名或手机号"
+                clearable
+                style="width: 240px"
+              />
+            </el-form-item>
+            <el-form-item label="申请状态">
+              <el-select
+                v-model="searchForm.status"
+                placeholder="申请状态"
+                clearable
+                style="width: 150px"
+              >
+                <el-option label="全部" value="" />
+                <el-option label="待审核" value="pending" />
+                <el-option label="已通过" value="approved" />
+                <el-option label="已驳回" value="rejected" />
+                <el-option label="已发放" value="issued" />
+              </el-select>
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleSearch">
+                <el-icon><Search /></el-icon>
+                搜索
+              </el-button>
+              <el-button @click="handleReset">
+                <el-icon><RefreshLeft /></el-icon>
+                重置
+              </el-button>
+            </el-form-item>
+          </el-form>
+          <el-button type="text" class="filter-toggle" @click="filterVisible = !filterVisible">
+            {{ filterVisible ? '收起' : '展开' }}
+            <el-icon>
+              <component :is="filterVisible ? 'ArrowUp' : 'ArrowDown'" />
+            </el-icon>
+          </el-button>
+        </div>
+      </div>
+      <!-- 展开后显示的全部查询条件 -->
+      <el-collapse-transition>
+        <div v-show="filterVisible" class="filter-expanded">
+          <el-form :model="searchForm" inline>
+            <el-form-item label="申请日期">
+              <el-date-picker
+                v-model="searchForm.dateRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
+                format="YYYY-MM-DD"
+                value-format="YYYY-MM-DD"
+                style="width: 240px"
+              />
+            </el-form-item>
+          </el-form>
+        </div>
+      </el-collapse-transition>
+    </el-card>
+
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" :disabled="selectedRows.length === 0" @click="handleBatchIssue">
+        <el-icon><Money /></el-icon>
+        批量发放
+      </el-button>
+      <el-button type="success" @click="handleImport">
+        <el-icon><Upload /></el-icon>
+        导入
+      </el-button>
+      <el-button type="warning" @click="handleExport">
+        <el-icon><Download /></el-icon>
+        导出
+      </el-button>
+      <el-button type="info" @click="handleOpenConfig">
+        <el-icon><Setting /></el-icon>
+        规则配置
+      </el-button>
+    </div>
+
+    <!-- 生活费申请信息 -->
+    <el-card class="table-card" shadow="never">
+      <!-- 数据统计信息 -->
+      <div class="table-stats">
+        <span>共 {{ stats.totalCount }} 笔申请，其中待审核 {{ stats.pendingCount }} 笔，已通过 {{ stats.approvedCount }} 笔，已发放金额 ¥{{ stats.issuedAmount.toFixed(2) }}</span>
+      </div>
+      <CommonTable
+        :data="tableData"
+        :columns="tableColumns"
+        table-id="living-expense-table"
+        :total="total"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :loading="loading"
+        :show-selection="true"
+        :show-actions="true"
+        @update:current-page="handleCurrentChange"
+        @update:page-size="handleSizeChange"
+        @sort-change="handleSortChange"
+        @global-search="handleGlobalSearch"
+        @row-click="handleRowClick"
+        @selection-change="handleSelectionChange"
+      >
+        <template #column-status="{ row }">
+          <el-tag :type="getStatusType(row.status)">
+            {{ getStatusText(row.status) }}
+          </el-tag>
+        </template>
+
+        <template #column-amount="{ row }">
+          <span class="amount">¥{{ row.amount.toFixed(2) }}</span>
+        </template>
+
+        <template #column-applyDate="{ row }">
+          {{ formatDate(row.applyDate) }}
+        </template>
+
+        <template #column-issueDate="{ row }">
+          {{ row.issueDate ? formatDate(row.issueDate) : '-' }}
+        </template>
+
+        <template #actions="{ row }">
+          <el-button
+            size="small"
+            type="primary"
+            link
+            @click="handleView(row)"
           >
-            <el-option label="全部" value="" />
-            <el-option label="待审核" value="pending" />
-            <el-option label="已通过" value="approved" />
-            <el-option label="已驳回" value="rejected" />
-            <el-option label="已发放" value="issued" />
-          </el-select>
-        </el-col>
-        <el-col :span="4">
-          <el-date-picker
-            v-model="dateRange"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            @change="handleSearch"
-          />
-        </el-col>
-        <el-col :span="10">
-          <el-button type="primary" @click="handleSearch">
-            <el-icon><Search /></el-icon>
-            搜索
+            <el-icon><View /></el-icon>
+            查看
           </el-button>
-          <el-button @click="handleReset">
-            <el-icon><Refresh /></el-icon>
-            重置
+          <el-button
+            v-if="row.status === 'pending'"
+            size="small"
+            type="success"
+            link
+            @click="handleApprove(row)"
+          >
+            <el-icon><Check /></el-icon>
+            审核
           </el-button>
-        </el-col>
-      </el-row>
-    </div>
-
-    <!-- 统计卡片 -->
-    <div class="stats-cards">
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.pendingCount }}</div>
-          <div class="stat-label">待审核</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.approvedCount }}</div>
-          <div class="stat-label">已通过</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">¥{{ stats.issuedAmount.toFixed(2) }}</div>
-          <div class="stat-label">已发放金额</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.totalCount }}</div>
-          <div class="stat-label">申请总数</div>
-        </div>
-      </el-card>
-    </div>
-
-    <!-- 通用表格 -->
-    <CommonTable
-      ref="tableRef"
-      :data="tableData"
-      :columns="columns"
-      table-id="living-expense-table"
-      :total="total"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      :loading="loading"
-      :show-selection="true"
-      :show-toolbar="true"
-      @update:current-page="handlePageChange"
-      @update:page-size="handleSizeChange"
-      @selection-change="handleSelectionChange"
-      @global-search="handleGlobalSearch"
-    >
-      <template #toolbar-left>
-        <el-button
-          type="primary"
-          :disabled="selectedRows.length === 0"
-          @click="handleBatchIssue"
-        >
-          <el-icon><Money /></el-icon>
-          批量发放
-        </el-button>
-      </template>
-
-      <template #toolbar-right>
-        <el-button type="success" @click="handleImport">
-          <el-icon><Upload /></el-icon>
-          导入
-        </el-button>
-        <el-button type="warning" @click="handleExport">
-          <el-icon><Download /></el-icon>
-          导出
-        </el-button>
-        <el-button type="info" @click="handleOpenConfig">
-          <el-icon><Setting /></el-icon>
-          规则配置
-        </el-button>
-      </template>
-
-      <template #column-status="{ row }">
-        <el-tag :type="getStatusType(row.status)">
-          {{ getStatusText(row.status) }}
-        </el-tag>
-      </template>
-
-      <template #column-amount="{ row }">
-        <span class="amount">¥{{ row.amount.toFixed(2) }}</span>
-      </template>
-
-      <template #column-applyDate="{ row }">
-        {{ formatDate(row.applyDate) }}
-      </template>
-
-      <template #actions="{ row }">
-        <el-button type="primary" link @click="handleView(row)">
-          <el-icon><View /></el-icon>
-          查看
-        </el-button>
-        <el-button
-          v-if="row.status === 'pending'"
-          type="success"
-          link
-          @click="handleApprove(row)"
-        >
-          <el-icon><Check /></el-icon>
-          审核
-        </el-button>
-        <el-button
-          v-if="row.status === 'approved'"
-          type="warning"
-          link
-          @click="handleIssue(row)"
-        >
-          <el-icon><Money /></el-icon>
-          发放
-        </el-button>
-        <el-button
-          v-if="row.status === 'pending'"
-          type="danger"
-          link
-          @click="handleDelete(row)"
-        >
-          <el-icon><Delete /></el-icon>
-          删除
-        </el-button>
-      </template>
-    </CommonTable>
+          <el-button
+            v-if="row.status === 'approved'"
+            size="small"
+            type="warning"
+            link
+            @click="handleIssue(row)"
+          >
+            <el-icon><Money /></el-icon>
+            发放
+          </el-button>
+          <el-button
+            v-if="row.status === 'pending'"
+            size="small"
+            type="danger"
+            link
+            @click="handleDelete(row)"
+          >
+            <el-icon><Delete /></el-icon>
+            删除
+          </el-button>
+        </template>
+      </CommonTable>
+    </el-card>
 
     <!-- 规则配置对话框 -->
     <el-dialog
@@ -185,7 +187,7 @@
           />
           <span class="form-tip">次</span>
         </el-form-item>
-        <el-form-item label="开发申请日期">
+        <el-form-item label="开放申请日期">
           <el-input-number
             v-model="configForm.daysAfterEntry"
             :min="1"
@@ -382,7 +384,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Upload, Download, Setting, Money, View, Check, Delete } from '@element-plus/icons-vue'
+import { Search, RefreshLeft, Upload, Download, Setting, Money, View, Check, Delete, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 import type { ColumnConfig } from '../../types/common-table'
 
@@ -401,9 +403,12 @@ interface LivingExpenseRecord {
 }
 
 // 响应式数据
-const searchKeyword = ref('')
-const statusFilter = ref('')
-const dateRange = ref<string[]>([])
+const searchForm = reactive({
+  keyword: '',
+  status: '',
+  dateRange: [] as string[]
+})
+const filterVisible = ref(false)
 const tableData = ref<LivingExpenseRecord[]>([])
 const total = ref(0)
 const currentPage = ref(1)
@@ -443,13 +448,13 @@ const issueForm = reactive({
 })
 
 // 表格列配置
-const columns: ColumnConfig[] = [
-  { prop: 'workerName', label: '工人姓名', minWidth: 120, sortable: true },
-  { prop: 'phone', label: '手机号', minWidth: 120, sortable: true },
-  { prop: 'amount', label: '申请金额', minWidth: 120, sortable: true },
-  { prop: 'status', label: '状态', minWidth: 100 },
-  { prop: 'applyDate', label: '申请时间', minWidth: 160, sortable: true },
-  { prop: 'issueDate', label: '发放时间', minWidth: 160, sortable: true }
+const tableColumns = [
+  { prop: 'workerName', label: '工人姓名', width: 120, sortable: true },
+  { prop: 'phone', label: '手机号', width: 130 },
+  { prop: 'amount', label: '申请金额', width: 120, sortable: true },
+  { prop: 'status', label: '状态', width: 100, sortable: true },
+  { prop: 'applyDate', label: '申请时间', width: 160, sortable: true },
+  { prop: 'issueDate', label: '发放时间', width: 160, sortable: true }
 ]
 
 // 统计数据
@@ -526,16 +531,29 @@ const handleSearch = () => {
 
 // 重置搜索
 const handleReset = () => {
-  searchKeyword.value = ''
-  statusFilter.value = ''
-  dateRange.value = []
+  searchForm.keyword = ''
+  searchForm.status = ''
+  searchForm.dateRange = []
   handleSearch()
 }
 
 // 分页变化
-const handlePageChange = (page: number) => {
+const handleCurrentChange = (page: number) => {
   currentPage.value = page
   fetchData()
+}
+
+// 排序变化
+const handleSortChange = (sort: any) => {
+  // 排序逻辑
+  console.log('排序变化:', sort)
+  fetchData()
+}
+
+// 行点击
+const handleRowClick = (row: LivingExpenseRecord) => {
+  // 行点击逻辑
+  console.log('行点击:', row)
 }
 
 // 每页条数变化
@@ -551,9 +569,11 @@ const handleSelectionChange = (selection: LivingExpenseRecord[]) => {
 
 // 全局搜索
 const handleGlobalSearch = (keyword: string) => {
-  searchKeyword.value = keyword
+  searchForm.keyword = keyword
   handleSearch()
 }
+
+
 
 // 获取数据
 const fetchData = () => {
@@ -562,8 +582,8 @@ const fetchData = () => {
   // 模拟过滤
   let filteredData = [...allData.value]
 
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
+  if (searchForm.keyword) {
+    const keyword = searchForm.keyword.toLowerCase()
     filteredData = filteredData.filter(
       item =>
         item.workerName.toLowerCase().includes(keyword) ||
@@ -571,13 +591,13 @@ const fetchData = () => {
     )
   }
 
-  if (statusFilter.value) {
-    filteredData = filteredData.filter(item => item.status === statusFilter.value)
+  if (searchForm.status) {
+    filteredData = filteredData.filter(item => item.status === searchForm.status)
   }
 
-  if (dateRange.value && dateRange.value.length === 2) {
+  if (searchForm.dateRange && searchForm.dateRange.length === 2) {
     filteredData = filteredData.filter(item => {
-      return item.applyDate >= dateRange.value[0] && item.applyDate <= dateRange.value[1]
+      return item.applyDate >= searchForm.dateRange[0] && item.applyDate <= searchForm.dateRange[1]
     })
   }
 
@@ -610,7 +630,7 @@ const handleSaveConfig = () => {
   configDialogVisible.value = false
 }
 
-// 查看详情
+// 查看
 const handleView = (row: LivingExpenseRecord) => {
   currentRow.value = row
   detailDialogVisible.value = true
@@ -756,43 +776,67 @@ onMounted(() => {
 
 <style scoped>
 .living-expense-management {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-}
-
-.search-filter-section {
-  margin-bottom: 20px;
   padding: 16px;
   background-color: #f5f7fa;
+}
+
+.filter-card {
+  margin-bottom: 16px;
   border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+.filter-default {
+  margin-bottom: 12px;
 }
 
-.stat-card {
-  text-align: center;
+.filter-toggle-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.stat-content {
-  padding: 10px 0;
+.filter-toggle {
+  white-space: nowrap;
 }
 
-.stat-number {
-  font-size: 24px;
-  font-weight: bold;
-  color: #409eff;
-  margin-bottom: 8px;
+.filter-expanded {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e4e7ed;
 }
 
-.stat-label {
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table-card {
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table-stats {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  border-left: 4px solid #409eff;
   font-size: 14px;
   color: #606266;
+}
+
+.table-stats p {
+  margin: 0;
+  line-height: 1.5;
 }
 
 .amount {
@@ -818,25 +862,20 @@ onMounted(() => {
   padding: 10px;
 }
 
-/* 响应式设计 */
-@media screen and (max-width: 1200px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
+/* 响应式适配 */
 @media screen and (max-width: 768px) {
-  .search-filter-section :deep(.el-row) {
+  .filter-toggle-container {
     flex-direction: column;
+    align-items: flex-start;
   }
-
-  .search-filter-section :deep(.el-col) {
+  
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .action-bar .el-button {
     width: 100%;
-    margin-bottom: 12px;
-  }
-
-  .stats-cards {
-    grid-template-columns: 1fr;
   }
 }
 </style>

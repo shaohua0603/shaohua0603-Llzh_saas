@@ -54,7 +54,7 @@
                 <h4 class="news-title">{{ news.title }}</h4>
                 <p class="news-content">{{ news.content }}</p>
                 <div class="news-footer">
-                  <el-button type="text" @click="viewNewsDetail(news.id)">查看详情</el-button>
+                  <el-button type="text" @click="viewNewsDetail(news.id)">查看</el-button>
                 </div>
               </el-card>
             </el-timeline-item>

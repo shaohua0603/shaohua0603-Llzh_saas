@@ -3,15 +3,53 @@
   <div class="exam-page">
     <!-- 搜索筛选区域 -->
     <div class="search-filter-section">
+      <!-- 默认显示的一行查询条件 -->
       <el-form inline :model="searchForm" class="search-form">
         <el-form-item label="考卷名称">
           <el-input v-model="searchForm.examName" placeholder="请输入考卷名称" clearable style="width: 200px" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>
+            搜索
+          </el-button>
+          <el-button @click="handleReset">
+            <el-icon><Refresh /></el-icon>
+            重置
+          </el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="text" @click="toggleFilter" class="expand-toggle">
+            <el-icon :class="{ 'rotate': filterExpanded }"><ArrowDown /></el-icon>
+            <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+          </el-button>
         </el-form-item>
       </el-form>
+      
+      <!-- 展开显示的更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form inline :model="searchForm" class="search-form">
+          <el-form-item label="发布状态">
+            <el-select v-model="searchForm.publishStatus" placeholder="请选择" clearable style="width: 150px">
+              <el-option label="全部" value="" />
+              <el-option label="已发布" value="published" />
+              <el-option label="未发布" value="unpublished" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
+
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>
+        新增
+      </el-button>
+      <el-button type="danger" :disabled="selectedRows.length === 0" @click="handleBatchDelete">
+        <el-icon><Delete /></el-icon>
+        批量删除
+      </el-button>
     </div>
 
     <!-- 表格 -->
@@ -23,27 +61,16 @@
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
-      :showToolbar="true"
       :showSelection="true"
       :showIndex="true"
       :showActions="true"
       action-column-width="200"
+      :stats-info="statsInfo"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增
-        </el-button>
-        <el-button type="danger" :disabled="selectedRows.length === 0" @click="handleBatchDelete">
-          <el-icon><Delete /></el-icon>
-          批量删除
-        </el-button>
-      </template>
-
       <template #column-totalScore="{ row }">
         {{ row.totalScore }}分
       </template>
@@ -59,9 +86,26 @@
         </el-tag>
       </template>
       <template #actions="{ row }">
-        <el-button link type="primary" size="small" @click="handleDetail(row)">详情</el-button>
-        <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-        <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+        <el-button link type="primary" size="small" @click="handleDetail(row)">
+          <el-icon><View /></el-icon>
+          详情
+        </el-button>
+        <el-button link type="primary" size="small" @click="handleEdit(row)">
+          <el-icon><Edit /></el-icon>
+          编辑
+        </el-button>
+        <el-button link type="danger" size="small" @click="handleDelete(row)">
+          <el-icon><Delete /></el-icon>
+          删除
+        </el-button>
+        <el-button link type="success" size="small" v-if="row.publishStatus === 'unpublished'" @click="handlePublish(row)">
+          <el-icon><Check /></el-icon>
+          发布
+        </el-button>
+        <el-button link type="warning" size="small" v-else @click="handleUnpublish(row)">
+          <el-icon><Close /></el-icon>
+          取消发布
+        </el-button>
       </template>
     </CommonTable>
 
@@ -215,6 +259,7 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
+import { Plus, Delete, ArrowDown, Search, Refresh, View, Edit, Check, Close } from '@element-plus/icons-vue'
 
 // 类型定义
 interface ExamQuestion {
@@ -260,9 +305,13 @@ const detailVisible = ref(false)
 const submitLoading = ref(false)
 const dialogTitle = ref('新增考试')
 const currentRow = ref<ExamRecord | null>(null)
+const filterExpanded = ref(false)
+const statsInfo = ref<Array<{ label: string; value: string }>>([])
+const tableRef = ref<InstanceType<typeof CommonTable> | null>(null)
 
 const searchForm = reactive({
-  examName: ''
+  examName: '',
+  publishStatus: ''
 })
 
 const formData = reactive<ExamRecord>({
@@ -370,13 +419,59 @@ const loadData = () => {
     if (searchForm.examName) {
       filteredData = filteredData.filter(item => item.examName.includes(searchForm.examName))
     }
+    if (searchForm.publishStatus) {
+      filteredData = filteredData.filter(item => item.publishStatus === searchForm.publishStatus)
+    }
 
     total.value = filteredData.length
     // 分页
     const start = (currentPage.value - 1) * pageSize.value
     tableData.value = filteredData.slice(start, start + pageSize.value)
+    
+    // 计算统计信息
+    const publishedCount = mockData.filter(item => item.publishStatus === 'published').length
+    const totalExams = mockData.length
+    statsInfo.value = [
+      { label: '考试总数', value: totalExams.toString() },
+      { label: '已发布', value: publishedCount.toString() },
+      { label: '未发布', value: (totalExams - publishedCount).toString() }
+    ]
+    
     loading.value = false
   }, 500)
+}
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
+
+// 发布
+const handlePublish = (row: ExamRecord) => {
+  if (row.publishStatus === 'published') return
+  ElMessageBox.confirm('确定要发布该考试吗?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'success'
+  }).then(() => {
+    row.publishStatus = 'published'
+    ElMessage.success('发布成功')
+    loadData()
+  }).catch(() => {})
+}
+
+// 取消发布
+const handleUnpublish = (row: ExamRecord) => {
+  if (row.publishStatus === 'unpublished') return
+  ElMessageBox.confirm('确定要取消发布该考试吗?', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    row.publishStatus = 'unpublished'
+    ElMessage.success('取消发布成功')
+    loadData()
+  }).catch(() => {})
 }
 
 // 搜索
@@ -388,6 +483,7 @@ const handleSearch = () => {
 // 重置
 const handleReset = () => {
   searchForm.examName = ''
+  searchForm.publishStatus = ''
   handleSearch()
 }
 
@@ -550,35 +646,53 @@ onMounted(() => {
 
 <style scoped>
 .exam-page {
-  padding: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
 .search-filter-section {
   background: #fff;
-  padding: 20px;
+  padding: 16px;
   border-radius: 4px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-}
-
-.table-toolbar {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
 }
 
-.toolbar-left {
+.filter-content {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.expand-toggle {
+  color: #409eff;
+}
+
+.rotate {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+:deep(.el-icon) {
+  transition: transform 0.3s ease;
+}
+
+.action-bar {
   display: flex;
+  justify-content: flex-start;
   gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .questions-section {
@@ -594,5 +708,32 @@ onMounted(() => {
 :deep(.el-divider__text) {
   font-weight: 600;
   color: #303133;
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+:deep(.el-icon) {
+  transition: transform 0.3s ease;
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .filter-footer {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .filter-footer .el-button {
+    width: 100%;
+  }
 }
 </style>

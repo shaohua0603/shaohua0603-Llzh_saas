@@ -1,150 +1,110 @@
 <template>
   <div class="salary-management">
-    <!-- 搜索和筛选区域 -->
-    <div class="search-filter-section">
-      <el-row :gutter="16" align="middle">
-        <el-col :span="5">
-          <el-input
-            v-model="searchKeyword"
-            placeholder="搜索工人姓名或手机号"
-            prefix-icon="Search"
-            clearable
-            @input="handleSearch"
-          />
-        </el-col>
-        <el-col :span="4">
-          <el-date-picker
-            v-model="salaryMonth"
-            type="month"
-            placeholder="选择发放月份"
-            value-format="YYYY-MM"
-            @change="handleSearch"
-          />
-        </el-col>
-        <el-col :span="4">
-          <el-select
-            v-model="statusFilter"
-            placeholder="发放状态"
-            clearable
-            @change="handleSearch"
-          >
-            <el-option label="全部" value="" />
-            <el-option label="待发放" value="pending" />
-            <el-option label="已发放" value="issued" />
-          </el-select>
-        </el-col>
-        <el-col :span="11">
-          <el-button type="primary" @click="handleSearch">
-            <el-icon><Search /></el-icon>
-            搜索
+    <!-- 筛选区域 -->
+    <el-card class="filter-card" shadow="never">
+      <div class="filter-default">
+        <div class="filter-toggle-container">
+          <el-form :model="filterForm" inline>
+            <el-form-item label="工人姓名/手机号">
+              <el-input
+                v-model="filterForm.keyword"
+                placeholder="请输入工人姓名或手机号"
+                clearable
+                style="width: 240px"
+              />
+            </el-form-item>
+            <el-form-item label="发放月份">
+              <el-date-picker
+                v-model="filterForm.salaryMonth"
+                type="month"
+                placeholder="选择发放月份"
+                value-format="YYYY-MM"
+                style="width: 150px"
+              />
+            </el-form-item>
+            <el-form-item>
+              <el-button type="primary" @click="handleSearch">
+                <el-icon><Search /></el-icon>
+                搜索
+              </el-button>
+              <el-button @click="handleReset">
+                <el-icon><RefreshLeft /></el-icon>
+                重置
+              </el-button>
+            </el-form-item>
+          </el-form>
+          <el-button type="text" class="filter-toggle" @click="filterVisible = !filterVisible">
+            {{ filterVisible ? '收起' : '展开' }}
+            <el-icon>
+              <component :is="filterVisible ? 'ArrowUp' : 'ArrowDown'" />
+            </el-icon>
           </el-button>
-          <el-button @click="handleReset">
-            <el-icon><Refresh /></el-icon>
-            重置
-          </el-button>
-        </el-col>
-      </el-row>
-    </div>
-
-    <!-- 统计卡片 -->
-    <div class="stats-cards">
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.workerCount }}</div>
-          <div class="stat-label">发放人数</div>
         </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">¥{{ stats.totalAmount.toFixed(2) }}</div>
-          <div class="stat-label">发放总额</div>
+      </div>
+      <!-- 展开后显示的全部查询条件 -->
+      <el-collapse-transition>
+        <div v-show="filterVisible" class="filter-expanded">
+          <el-form :model="filterForm" inline>
+            <el-form-item label="发放状态">
+              <el-select
+                v-model="filterForm.status"
+                placeholder="发放状态"
+                clearable
+                style="width: 150px"
+              >
+                <el-option label="全部" value="" />
+                <el-option label="待发放" value="pending" />
+                <el-option label="已发放" value="issued" />
+              </el-select>
+            </el-form-item>
+          </el-form>
         </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.pendingCount }}</div>
-          <div class="stat-label">待发放</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.issuedCount }}</div>
-          <div class="stat-label">已发放</div>
-        </div>
-      </el-card>
-    </div>
-
-    <!-- 基本信息 -->
-    <el-card class="info-card">
-      <template #header>
-        <div class="card-header">
-          <span>工资发放信息</span>
-          <el-button type="primary" @click="handleOpenIssueDialog">新增发放</el-button>
-        </div>
-      </template>
-      <el-form :inline="true" :model="salaryInfo" class="info-form">
-        <el-form-item label="发放年月">
-          <el-date-picker
-            v-model="salaryInfo.salaryMonth"
-            type="month"
-            placeholder="选择月份"
-            value-format="YYYY-MM"
-            style="width: 150px"
-          />
-        </el-form-item>
-        <el-form-item label="发放时间">
-          <el-date-picker
-            v-model="salaryInfo.issueDate"
-            type="datetime"
-            placeholder="选择发放时间"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            style="width: 200px"
-          />
-        </el-form-item>
-        <el-form-item label="发放说明">
-          <el-input
-            v-model="salaryInfo.description"
-            placeholder="请输入发放说明"
-            style="width: 300px"
-          />
-        </el-form-item>
-      </el-form>
+      </el-collapse-transition>
     </el-card>
 
-    <!-- 通用表格 -->
-    <CommonTable
-      ref="tableRef"
-      :data="tableData"
-      :columns="columns"
-      table-id="salary-table"
-      :total="total"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      :loading="loading"
-      :show-selection="true"
-      :show-toolbar="true"
-      @update:current-page="handlePageChange"
-      @update:page-size="handleSizeChange"
-      @selection-change="handleSelectionChange"
-      @global-search="handleGlobalSearch"
-    >
-      <template #toolbar-left>
-        <el-button type="primary" :disabled="selectedRows.length === 0" @click="handleBatchIssue">
-          <el-icon><Money /></el-icon>
-          批量发放
-        </el-button>
-      </template>
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleOpenIssueDialog">
+        <el-icon><Plus /></el-icon>
+        新增发放
+      </el-button>
+      <el-button @click="handleImport">
+        <el-icon><Upload /></el-icon>
+        导入明细
+      </el-button>
+      <el-button @click="handleGenerateList">
+        <el-icon><Document /></el-icon>
+        生成清单
+      </el-button>
+      <el-button
+        v-if="selectedRows.length > 0"
+        type="success"
+        @click="handleBatchIssue"
+      >
+        <el-icon><Money /></el-icon>
+        批量发放 ({{ selectedRows.length }})
+      </el-button>
+    </div>
 
-      <template #toolbar-right>
-        <el-button type="success" @click="handleImport">
-          <el-icon><Upload /></el-icon>
-          导入明细
-        </el-button>
-        <el-button type="warning" @click="handleGenerateList">
-          <el-icon><Document /></el-icon>
-          生成清单
-        </el-button>
-      </template>
+    <!-- 工资发放信息 -->
+    <el-card class="table-card" shadow="never">
+      <CommonTable
+        ref="tableRef"
+        :data="tableData"
+        :columns="columns"
+        table-id="salary-table"
+        :total="total"
+        :current-page="currentPage"
+        :page-size="pageSize"
+        :loading="loading"
+        :show-selection="true"
+        :show-actions="true"
+        :stats-info="statsInfo"
+        @update:current-page="handlePageChange"
+        @update:page-size="handleSizeChange"
+        @selection-change="handleSelectionChange"
+        @global-search="handleGlobalSearch"
+      >
       <template #column-basicSalary="{ row }">
         <span class="amount">¥{{ row.basicSalary.toFixed(2) }}</span>
       </template>
@@ -190,7 +150,8 @@
           编辑
         </el-button>
       </template>
-    </CommonTable>
+      </CommonTable>
+    </el-card>
 
     <!-- 新增/编辑发放对话框 -->
     <el-dialog
@@ -428,7 +389,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Upload, Document, Money, View, Edit, Download } from '@element-plus/icons-vue'
+import { Search, RefreshLeft, Upload, Document, Money, View, Edit, Download, ArrowUp, ArrowDown, Plus } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 import type { ColumnConfig } from '../../types/common-table'
 
@@ -463,9 +424,12 @@ interface WorkerInfo {
 }
 
 // 响应式数据
-const searchKeyword = ref('')
-const salaryMonth = ref('')
-const statusFilter = ref('')
+const filterVisible = ref(false)
+const filterForm = reactive({
+  keyword: '',
+  salaryMonth: '',
+  status: ''
+})
 const tableData = ref<SalaryRecord[]>([])
 const total = ref(0)
 const currentPage = ref(1)
@@ -496,7 +460,7 @@ const salaryForm = reactive({
   workers: [] as WorkerInfo[]
 })
 
-// 可选择的工人列表
+// 可选择的工人信息
 const availableWorkers = ref<WorkerInfo[]>([])
 const selectedWorkers = ref<WorkerInfo[]>([])
 
@@ -506,6 +470,11 @@ const stats = reactive({
   totalAmount: 0,
   pendingCount: 0,
   issuedCount: 0
+})
+
+// 统计信息字符串
+const statsInfo = computed(() => {
+  return `共 ${stats.workerCount} 名工人，发放总额 ¥${stats.totalAmount.toFixed(2)}，其中待发放 ${stats.pendingCount} 人，已发放 ${stats.issuedCount} 人`
 })
 
 // 表格列配置
@@ -601,9 +570,9 @@ const handleSearch = () => {
 
 // 重置搜索
 const handleReset = () => {
-  searchKeyword.value = ''
-  salaryMonth.value = ''
-  statusFilter.value = ''
+  filterForm.keyword = ''
+  filterForm.salaryMonth = ''
+  filterForm.status = ''
   handleSearch()
 }
 
@@ -626,7 +595,7 @@ const handleSelectionChange = (selection: SalaryRecord[]) => {
 
 // 全局搜索
 const handleGlobalSearch = (keyword: string) => {
-  searchKeyword.value = keyword
+  filterForm.keyword = keyword
   handleSearch()
 }
 
@@ -636,8 +605,8 @@ const fetchData = () => {
 
   let filteredData = [...allData.value]
 
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
+  if (filterForm.keyword) {
+    const keyword = filterForm.keyword.toLowerCase()
     filteredData = filteredData.filter(
       item =>
         item.workerName.toLowerCase().includes(keyword) ||
@@ -645,12 +614,12 @@ const fetchData = () => {
     )
   }
 
-  if (salaryMonth.value) {
-    filteredData = filteredData.filter(item => item.salaryMonth === salaryMonth.value)
+  if (filterForm.salaryMonth) {
+    filteredData = filteredData.filter(item => item.salaryMonth === filterForm.salaryMonth)
   }
 
-  if (statusFilter.value) {
-    filteredData = filteredData.filter(item => item.status === statusFilter.value)
+  if (filterForm.status) {
+    filteredData = filteredData.filter(item => item.status === filterForm.status)
   }
 
   // 更新统计
@@ -734,7 +703,7 @@ const handleSubmitSalary = () => {
   fetchData()
 }
 
-// 查看详情
+// 查看
 const handleView = (row: SalaryRecord) => {
   currentRow.value = row
   detailDialogVisible.value = true
@@ -837,8 +806,9 @@ const handleDownloadTemplate = () => {
 onMounted(() => {
   // 设置默认月份
   const now = new Date()
-  salaryMonth.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
-  salaryInfo.salaryMonth = salaryMonth.value
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+  filterForm.salaryMonth = currentMonth
+  salaryInfo.salaryMonth = currentMonth
   salaryInfo.issueDate = now.toISOString().replace('T', ' ').slice(0, 19)
 
   allData.value = generateMockData()
@@ -848,57 +818,60 @@ onMounted(() => {
 
 <style scoped>
 .salary-management {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-}
-
-.search-filter-section {
-  margin-bottom: 20px;
   padding: 16px;
   background-color: #f5f7fa;
+}
+
+.filter-card,
+.table-card {
+  margin-bottom: 16px;
   border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+.filter-default {
+  margin-bottom: 12px;
 }
 
-.stat-card {
-  text-align: center;
-}
-
-.stat-content {
-  padding: 10px 0;
-}
-
-.stat-number {
-  font-size: 24px;
-  font-weight: bold;
-  color: #409eff;
-  margin-bottom: 8px;
-}
-
-.stat-label {
-  font-size: 14px;
-  color: #606266;
-}
-
-.info-card {
-  margin-bottom: 20px;
-}
-
-.card-header {
+.filter-toggle-container {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
-.info-form {
-  padding: 10px 0;
+.filter-toggle {
+  white-space: nowrap;
+  color: #409eff;
+}
+
+.filter-expanded {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e4e7ed;
+}
+
+/* 功能按钮区域 */
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.table-stats {
+  margin-bottom: 16px;
+  padding: 12px 16px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  border-left: 4px solid #409eff;
+  font-size: 14px;
+  color: #606266;
 }
 
 .amount {
@@ -934,29 +907,35 @@ onMounted(() => {
 }
 
 /* 响应式设计 */
-@media screen and (max-width: 1200px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media screen and (max-width: 768px) {
-  .search-filter-section :deep(.el-row) {
+  .filter-toggle-container {
     flex-direction: column;
+    align-items: flex-start;
   }
-
-  .search-filter-section :deep(.el-col) {
+  
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .action-bar .el-button {
     width: 100%;
-    margin-bottom: 12px;
   }
-
-  .stats-cards {
-    grid-template-columns: 1fr;
-  }
-
-  .info-form :deep(.el-form-item) {
+  
+  :deep(.el-form--inline .el-form-item) {
     display: block;
+    margin-right: 0;
     margin-bottom: 12px;
+  }
+  
+  :deep(.el-form-item__content) {
+    width: 100%;
+  }
+  
+  :deep(.el-select),
+  :deep(.el-input),
+  :deep(.el-date-picker) {
+    width: 100% !important;
   }
 }
 </style>

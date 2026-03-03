@@ -108,7 +108,7 @@
       </el-dropdown>
     </div>
 
-    <!-- 工人列表 -->
+    <!-- 工人信息 -->
     <el-card class="table-card" shadow="never">
       <!-- 数据统计信息 -->
       <div class="table-stats">
@@ -195,6 +195,7 @@ const router = useRouter()
 
 interface WorkerItem {
   id: string
+  workerId: string
   name: string
   gender: string
   age: number
@@ -244,6 +245,7 @@ const statusOptions: StatusOption[] = [
 ]
 
 const tableColumns = computed(() => [
+  { prop: 'workerId', label: '工号', width: 100, sortable: true },
   { prop: 'name', label: '姓名', width: 100, sortable: true },
   { prop: 'gender', label: '性别', width: 70, sortable: true },
   { prop: 'age', label: '年龄', width: 70, sortable: true },
@@ -343,6 +345,7 @@ const handleCreate = () => {
 }
 
 const handleViewDetail = (row: WorkerItem) => {
+  console.log('查看工人详情:', row.id)
   router.push(`/labor-company/workers/${row.id}`)
 }
 
@@ -432,6 +435,7 @@ const fetchWorkers = async () => {
     const mockData: WorkerItem[] = [
       {
         id: '1',
+        workerId: 'EMP001',
         name: '张三',
         gender: '男',
         age: 34,
@@ -448,6 +452,7 @@ const fetchWorkers = async () => {
       },
       {
         id: '2',
+        workerId: 'EMP002',
         name: '李四',
         gender: '女',
         age: 28,
@@ -464,6 +469,7 @@ const fetchWorkers = async () => {
       },
       {
         id: '3',
+        workerId: 'EMP003',
         name: '王五',
         gender: '男',
         age: 42,
@@ -480,6 +486,7 @@ const fetchWorkers = async () => {
       },
       {
         id: '4',
+        workerId: 'EMP004',
         name: '赵六',
         gender: '女',
         age: 25,
@@ -496,6 +503,7 @@ const fetchWorkers = async () => {
       },
       {
         id: '5',
+        workerId: 'EMP005',
         name: '钱七',
         gender: '男',
         age: 31,
@@ -518,6 +526,7 @@ const fetchWorkers = async () => {
       const keyword = filterForm.value.keyword.toLowerCase()
       filteredData = filteredData.filter(
         worker =>
+          worker.workerId.toLowerCase().includes(keyword) ||
           worker.name.toLowerCase().includes(keyword) ||
           worker.phone.includes(keyword) ||
           worker.idCard.includes(keyword)
@@ -547,8 +556,8 @@ const fetchWorkers = async () => {
     workersList.value = filteredData.slice(start, end)
     totalWorkers.value = filteredData.length
   } catch (error) {
-    console.error('获取工人列表失败:', error)
-    ElMessage.error('获取工人列表失败')
+    console.error('获取工人信息失败:', error)
+    ElMessage.error('获取工人信息失败')
   } finally {
     loading.value = false
   }

@@ -3,12 +3,10 @@
   <div class="transfer-page">
     <!-- 搜索筛选区域 -->
     <div class="search-filter-section">
+      <!-- 默认显示的一行查询条件 -->
       <el-form inline :model="searchForm" class="search-form">
         <el-form-item label="工人姓名">
           <el-input v-model="searchForm.workerName" placeholder="请输入工人姓名" clearable style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable style="width: 160px" />
         </el-form-item>
         <el-form-item label="审核状态">
           <el-select v-model="searchForm.approvalStatus" placeholder="请选择" clearable style="width: 150px">
@@ -19,36 +17,61 @@
             <el-option label="已驳回" value="rejected" />
           </el-select>
         </el-form-item>
-        <el-form-item label="期望调岗日期">
-          <el-date-picker
-            v-model="searchForm.transferDate"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            style="width: 240px"
-          />
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
+        <el-form-item>
+          <el-button type="text" @click="toggleFilter" class="expand-toggle">
+            <el-icon :class="{ 'rotate': filterExpanded }"><ArrowDown /></el-icon>
+            <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+          </el-button>
+        </el-form-item>
       </el-form>
+      
+      <!-- 展开显示的更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form inline :model="searchForm" class="search-form">
+          <el-form-item label="手机号">
+            <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable style="width: 160px" />
+          </el-form-item>
+          <el-form-item label="期望调岗日期">
+            <el-date-picker
+              v-model="searchForm.transferDate"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              style="width: 240px"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
 
-    <!-- 工具栏 -->
-    <div class="table-toolbar">
-      <div class="toolbar-left">
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增
-        </el-button>
-        <el-button type="danger" :disabled="selectedRows.length === 0" @click="handleBatchDelete">
-          <el-icon><Delete /></el-icon>
-          批量删除
-        </el-button>
-      </div>
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>
+        新增
+      </el-button>
+      <el-button type="danger" :disabled="selectedRows.length === 0" @click="handleBatchDelete">
+        <el-icon><Delete /></el-icon>
+        批量删除
+      </el-button>
+      <el-button type="success" @click="handleImport">
+        <el-icon><Upload /></el-icon>
+        导入
+      </el-button>
+      <el-button type="warning" @click="handleExport">
+        <el-icon><Download /></el-icon>
+        导出
+      </el-button>
+      <el-button type="info" @click="handlePrint">
+        <el-icon><Printer /></el-icon>
+        打印
+      </el-button>
     </div>
 
     <!-- 通用表格 -->
@@ -60,10 +83,10 @@
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
-      :show-toolbar="true"
       :show-selection="true"
       :show-index="true"
       :show-actions="true"
+      :stats-info="statsInfo"
       action-column-width="280"
       table-id="transfer-table"
       @sort-change="handleSortChange"
@@ -178,6 +201,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Plus, Delete, Upload, Download, Printer, ArrowDown } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
 
@@ -234,6 +258,8 @@ const selectedRows = ref<TransferRecord[]>([])
 const dialogVisible = ref(false)
 const submitLoading = ref(false)
 const dialogTitle = ref('新增调岗')
+const filterExpanded = ref(false)
+const statsInfo = ref<Array<{ label: string; value: string }>>([])
 
 const searchForm = reactive({
   workerName: '',
@@ -390,6 +416,21 @@ const loadData = () => {
     // 分页
     const start = (currentPage.value - 1) * pageSize.value
     tableData.value = filteredData.slice(start, start + pageSize.value)
+    
+    // 计算统计信息
+    const pendingCount = filteredData.filter(item => item.approvalStatus === 'pending').length
+    const approvedCount = filteredData.filter(item => item.approvalStatus === 'approved').length
+    const processingCount = filteredData.filter(item => item.approvalStatus === 'processing').length
+    const rejectedCount = filteredData.filter(item => item.approvalStatus === 'rejected').length
+    
+    statsInfo.value = [
+      { label: '总计调岗记录', value: total.value.toString() },
+      { label: '待审核', value: pendingCount.toString() },
+      { label: '审核中', value: processingCount.toString() },
+      { label: '已通过', value: approvedCount.toString() },
+      { label: '已驳回', value: rejectedCount.toString() }
+    ]
+    
     loading.value = false
   }, 500)
 }
@@ -407,6 +448,26 @@ const handleReset = () => {
   searchForm.approvalStatus = ''
   searchForm.transferDate = []
   handleSearch()
+}
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
+
+// 导入
+const handleImport = () => {
+  ElMessage.info('导入功能开发中')
+}
+
+// 导出
+const handleExport = () => {
+  ElMessage.info('导出功能开发中')
+}
+
+// 打印
+const handlePrint = () => {
+  ElMessage.info('打印功能开发中')
 }
 
 // 新增
@@ -570,35 +631,53 @@ onMounted(() => {
 
 <style scoped>
 .transfer-page {
-  padding: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
 .search-filter-section {
   background: #fff;
-  padding: 20px;
+  padding: 16px;
   border-radius: 4px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-}
-
-.table-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
-}
-
-.toolbar-left {
-  display: flex;
   gap: 12px;
+  align-items: center;
+}
+
+.filter-content {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed #e4e7ed;
+  animation: slideDown 0.3s ease;
+}
+
+.expand-toggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rotate {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .approval-records {
@@ -608,5 +687,40 @@ onMounted(() => {
 :deep(.el-divider__text) {
   font-weight: 600;
   color: #303133;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .search-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .search-form .el-form-item {
+    width: 100%;
+  }
+  
+  .search-form .el-input,
+  .search-form .el-select,
+  .search-form .el-date-picker {
+    width: 100% !important;
+  }
 }
 </style>

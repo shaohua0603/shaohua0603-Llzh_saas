@@ -398,7 +398,7 @@ const handleSortChange = (sort: { prop: string; order: string | null }) => {
   loadData()
 }
 
-// 查看详情
+// 查看
 const handleView = async (row: Message) => {
   try {
     const response = await getMessageDetail(row.id)

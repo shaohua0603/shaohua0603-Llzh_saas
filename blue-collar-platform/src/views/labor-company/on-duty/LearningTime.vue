@@ -3,25 +3,41 @@
   <div class="learning-time-page">
     <!-- 搜索筛选区域 -->
     <div class="search-filter-section">
-      <el-form inline :model="searchForm" class="search-form">
-        <el-form-item label="姓名">
-          <el-input v-model="searchForm.workerName" placeholder="请输入姓名" clearable style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="工号">
-          <el-input v-model="searchForm.workerNo" placeholder="请输入工号" clearable style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="学习材料类型">
-          <el-select v-model="searchForm.materialType" placeholder="请选择" clearable style="width: 150px">
-            <el-option label="全部" value="" />
-            <el-option label="岗前培训" value="pre_job" />
-            <el-option label="日常培训" value="daily" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
+      <el-card :body-style="{ padding: '16px' }" shadow="hover">
+        <el-form inline :model="searchForm" class="search-form">
+          <el-form-item label="姓名">
+            <el-input v-model="searchForm.workerName" placeholder="请输入姓名" clearable style="width: 160px" />
+          </el-form-item>
+          <el-form-item label="工号" v-show="filterExpanded">
+            <el-input v-model="searchForm.workerNo" placeholder="请输入工号" clearable style="width: 160px" />
+          </el-form-item>
+          <el-form-item label="学习材料类型" v-show="filterExpanded">
+            <el-select v-model="searchForm.materialType" placeholder="请选择" clearable style="width: 150px">
+              <el-option label="全部" value="" />
+              <el-option label="岗前培训" value="pre_job" />
+              <el-option label="日常培训" value="daily" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">搜索</el-button>
+            <el-button @click="handleReset">重置</el-button>
+            <el-button type="text" @click="toggleFilter">
+              <el-icon :class="{ 'is-rotated': filterExpanded }">
+                <ArrowDown />
+              </el-icon>
+              {{ filterExpanded ? '收起' : '展开' }}
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
+
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="success" @click="handleExport">
+        <el-icon><Download /></el-icon>
+        导出
+      </el-button>
     </div>
 
     <!-- 表格 -->
@@ -33,20 +49,14 @@
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
-      :showToolbar="true"
       :showSelection="false"
       :showIndex="true"
       :showActions="false"
+      :stats-info="statsInfo"
       @sort-change="handleSortChange"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
-      <template #toolbar-right>
-        <el-button type="success" @click="handleExport">
-          <el-icon><Download /></el-icon>
-          导出
-        </el-button>
-      </template>
 
       <template #column-materialType="{ row }">
         <el-tag :type="getMaterialTypeTag(row.materialType)">
@@ -61,6 +71,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
+import { ArrowDown, Download } from '@element-plus/icons-vue'
 
 // 类型定义
 interface LearningTimeRecord {
@@ -82,7 +93,7 @@ const columns = [
   { prop: 'monthLearningTime', label: '当月学习时长(小时)', minWidth: 160, sortable: true },
   { prop: 'materialType', label: '学习材料类型', minWidth: 120, sortable: true },
   { prop: 'materialTitle', label: '材料标题', minWidth: 200 },
-  { prop: 'materialSummary', label: '材料摘要', minWidth: 250 }
+  { prop: 'materialSummary', label: '材料摘要', minWidth: 300 }
 ]
 
 // 响应式数据
@@ -91,6 +102,14 @@ const loading = ref(false)
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
+const filterExpanded = ref(false)
+const statsInfo = ref<Array<{ label: string; value: string | number }>>([])
+const tableRef = ref()
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
 
 const searchForm = reactive({
   workerName: '',
@@ -217,6 +236,17 @@ const loadData = () => {
       filteredData = filteredData.filter(item => item.materialType === searchForm.materialType)
     }
 
+    // 计算统计信息
+    const totalWorkers = new Set(filteredData.map(item => item.workerNo)).size
+    const totalLearningTime = filteredData.reduce((sum, item) => sum + item.totalLearningTime, 0)
+    const avgLearningTime = totalWorkers > 0 ? (totalLearningTime / totalWorkers).toFixed(1) : 0
+    
+    statsInfo.value = [
+      { label: '统计人数', value: totalWorkers },
+      { label: '总学习时长(小时)', value: totalLearningTime },
+      { label: '平均学习时长(小时)', value: avgLearningTime }
+    ]
+
     total.value = filteredData.length
     // 分页
     const start = (currentPage.value - 1) * pageSize.value
@@ -269,34 +299,63 @@ onMounted(() => {
 
 <style scoped>
 .learning-time-page {
-  padding: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  min-height: 100vh;
 }
 
 .search-filter-section {
-  background: #fff;
-  padding: 20px;
-  border-radius: 4px;
   margin-bottom: 16px;
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-}
-
-.table-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
-}
-
-.toolbar-left {
-  display: flex;
   gap: 12px;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.is-rotated {
+  transform: rotate(180deg);
+  transition: transform 0.3s;
+}
+
+:deep(.el-icon) {
+  transition: transform 0.3s;
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .search-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .el-form-item {
+    width: 100%;
+  }
+  
+  .el-input,
+  .el-select {
+    width: 100% !important;
+  }
 }
 </style>

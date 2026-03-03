@@ -3,21 +3,56 @@
   <div class="exam-result-page">
     <!-- 搜索筛选区域 -->
     <div class="search-filter-section">
+      <!-- 默认显示的一行查询条件 -->
       <el-form inline :model="searchForm" class="search-form">
         <el-form-item label="姓名">
           <el-input v-model="searchForm.workerName" placeholder="请输入姓名" clearable style="width: 160px" />
         </el-form-item>
-        <el-form-item label="工号">
-          <el-input v-model="searchForm.workerNo" placeholder="请输入工号" clearable style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="考卷名称">
-          <el-input v-model="searchForm.examName" placeholder="请输入考卷名称" clearable style="width: 200px" />
+        <el-form-item>
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>
+            搜索
+          </el-button>
+          <el-button @click="handleReset">
+            <el-icon><Refresh /></el-icon>
+            重置
+          </el-button>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="handleReset">重置</el-button>
+          <el-button type="text" @click="toggleFilter" class="expand-toggle">
+            <el-icon :class="{ 'rotate': filterExpanded }"><ArrowDown /></el-icon>
+            <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+          </el-button>
         </el-form-item>
       </el-form>
+      
+      <!-- 展开显示的更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form inline :model="searchForm" class="search-form">
+          <el-form-item label="工号">
+            <el-input v-model="searchForm.workerNo" placeholder="请输入工号" clearable style="width: 160px" />
+          </el-form-item>
+          <el-form-item label="考卷名称">
+            <el-input v-model="searchForm.examName" placeholder="请输入考卷名称" clearable style="width: 200px" />
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
+
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="warning" @click="handleImport">
+        <el-icon><Upload /></el-icon>
+        导入
+      </el-button>
+      <el-button type="success" @click="handleExport">
+        <el-icon><Download /></el-icon>
+        导出
+      </el-button>
+      <el-button type="info" @click="handlePrint">
+        <el-icon><Printer /></el-icon>
+        打印
+      </el-button>
     </div>
 
     <!-- 表格 -->
@@ -29,36 +64,24 @@
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
-      :showToolbar="true"
       :showSelection="true"
       :showIndex="true"
       :showActions="true"
       action-column-width="180"
+      :stats-info="statsInfo"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
-      <template #toolbar-right>
-        <el-button type="warning" @click="handleImport">
-          <el-icon><Upload /></el-icon>
-          导入
-        </el-button>
-        <el-button type="success" @click="handleExport">
-          <el-icon><Download /></el-icon>
-          导出
-        </el-button>
-        <el-button type="info" @click="handlePrint">
-          <el-icon><Printer /></el-icon>
-          打印
-        </el-button>
-      </template>
-
       <template #column-score="{ row }">
         <span :class="getScoreClass(row.score, row.totalScore)">{{ row.score }}分</span>
       </template>
       <template #actions="{ row }">
-        <el-button link type="primary" size="small" @click="handleDetail(row)">详情</el-button>
+        <el-button link type="primary" size="small" @click="handleDetail(row)">
+          <el-icon><View /></el-icon>
+          详情
+        </el-button>
       </template>
     </CommonTable>
 
@@ -140,6 +163,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
+import { Upload, Download, Printer, Search, Refresh, View, ArrowDown } from '@element-plus/icons-vue'
 
 // 类型定义
 interface ExamQuestionResult {
@@ -188,6 +212,9 @@ const detailVisible = ref(false)
 const importVisible = ref(false)
 const importLoading = ref(false)
 const currentRow = ref<ExamResultRecord | null>(null)
+const filterExpanded = ref(false)
+const statsInfo = ref<Array<{ label: string; value: string }>>([])
+const tableRef = ref<InstanceType<typeof CommonTable> | null>(null)
 
 const searchForm = reactive({
   workerName: '',
@@ -332,8 +359,26 @@ const loadData = () => {
     // 分页
     const start = (currentPage.value - 1) * pageSize.value
     tableData.value = filteredData.slice(start, start + pageSize.value)
+    
+    // 计算统计信息
+    const totalRecords = mockData.length
+    const excellentCount = mockData.filter(item => (item.score / item.totalScore) * 100 >= 90).length
+    const passCount = mockData.filter(item => (item.score / item.totalScore) * 100 >= 60).length
+    const failCount = mockData.filter(item => (item.score / item.totalScore) * 100 < 60).length
+    statsInfo.value = [
+      { label: '总记录数', value: totalRecords.toString() },
+      { label: '优秀', value: excellentCount.toString() },
+      { label: '及格', value: passCount.toString() },
+      { label: '不及格', value: failCount.toString() }
+    ]
+    
     loading.value = false
   }, 500)
+}
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
 }
 
 // 搜索
@@ -427,35 +472,62 @@ onMounted(() => {
 
 <style scoped>
 .exam-result-page {
-  padding: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
 .search-filter-section {
   background: #fff;
-  padding: 20px;
+  padding: 16px;
   border-radius: 4px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-}
-
-.table-toolbar {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
 }
 
-.toolbar-left {
+.filter-content {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.expand-toggle {
+  color: #409eff;
+}
+
+.rotate {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+:deep(.el-icon) {
+  transition: transform 0.3s ease;
+}
+
+.action-bar {
   display: flex;
+  justify-content: flex-start;
   gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
 }
 
 .score-excellent {

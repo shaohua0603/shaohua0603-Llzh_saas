@@ -204,7 +204,7 @@
           <template v-if="activeFirstMenu === 'workers'">
             <el-menu-item index="/labor-company/workers">
               <el-icon><List /></el-icon>
-              <span>工人列表</span>
+              <span>工人信息</span>
             </el-menu-item>
           </template>
           
@@ -618,7 +618,7 @@ const secondMenus = {
     { path: '/labor-company/interview/factory-interview', label: '工厂面试', icon: OfficeBuilding }
   ],
   workers: [
-    { path: '/labor-company/workers', label: '工人列表', icon: List },
+    { path: '/labor-company/workers', label: '工人信息', icon: List },
     { path: '/labor-company/workers/:id', label: '工人信息详情', icon: Avatar }
   ],
   contract: [
@@ -823,45 +823,90 @@ const getTabTitle = (path) => {
     '/labor-company/todo': '待办任务',
     '/labor-company/messages': '消息通知',
     '/labor-company/warnings': '预警消息',
-    '/labor-company/recruitment': '招聘需求',
-    '/labor-company/recruitment/detail': '招聘需求详情',
+    '/labor-company/recruitment': '招聘管理',
+    '/labor-company/recruitment/detail/:id': '招聘需求详情',
+    '/labor-company/recruitment/add': '新增招聘需求',
+    '/labor-company/recruitment/edit/:id': '编辑招聘需求',
     '/labor-company/recruitment/resume': '简历管理',
-    '/labor-company/recruitment/resume/detail': '简历详情',
+    '/labor-company/recruitment/resume/:id': '简历详情',
     '/labor-company/interview/pickup': '接送管理',
     '/labor-company/interview/pickup/add': '新增接送',
-    '/labor-company/interview/pickup/edit': '编辑接送',
-    '/labor-company/interview/pickup/detail': '接送详情',
+    '/labor-company/interview/pickup/edit/:id': '编辑接送',
+    '/labor-company/interview/pickup/:id': '接送详情',
     '/labor-company/interview/initial-interview': '初步面试',
     '/labor-company/interview/initial-interview/add': '新增初步面试',
-    '/labor-company/interview/initial-interview/edit': '编辑初步面试',
-    '/labor-company/interview/initial-interview/detail': '初步面试详情',
+    '/labor-company/interview/initial-interview/edit/:id': '编辑初步面试',
+    '/labor-company/interview/initial-interview/:id': '初步面试详情',
     '/labor-company/interview/invitation': '面试邀约',
     '/labor-company/interview/invitation/add': '新增面试邀约',
-    '/labor-company/interview/invitation/edit': '编辑面试邀约',
-    '/labor-company/interview/invitation/detail': '面试邀约详情',
+    '/labor-company/interview/invitation/edit/:id': '编辑面试邀约',
+    '/labor-company/interview/invitation/:id': '面试邀约详情',
     '/labor-company/interview/factory-interview': '工厂面试',
     '/labor-company/interview/factory-interview/add': '新增工厂面试',
-    '/labor-company/interview/factory-interview/edit': '编辑工厂面试',
-    '/labor-company/interview/factory-interview/detail': '工厂面试详情',
-    '/labor-company/workers': '工人列表',
+    '/labor-company/interview/factory-interview/edit/:id': '编辑工厂面试',
+    '/labor-company/interview/factory-interview/:id': '工厂面试详情',
+    '/labor-company/workers': '工人管理',
     '/labor-company/workers/:id': '工人信息详情',
-    '/labor-company/workers/profile': '工人档案',
-    '/labor-company/workers/transfer': '调动管理',
-    '/labor-company/attendance': '考勤记录',
+    '/labor-company/workers/:id/transfer': '岗位调动',
+    '/labor-company/workers/create': '新增工人',
+    '/labor-company/workers/:id/edit': '编辑工人',
+    '/labor-company/contract': '签订合同',
+    '/labor-company/contract/:id': '合同详情',
+    '/labor-company/contract/add': '新增合同',
+    '/labor-company/contract/edit/:id': '编辑合同',
+    '/labor-company/attendance': '考勤管理',
     '/labor-company/attendance/statistics': '考勤统计',
-    '/labor-company/attendance/leave': '请假管理',
-    '/labor-company/salary': '工资结算',
-    '/labor-company/salary/history': '结算历史',
-    '/labor-company/salary/settings': '结算设置',
-    '/labor-company/departments': '部门列表',
-    '/labor-company/departments/create': '创建部门',
-    '/labor-company/departments/staff': '部门人员',
-    '/labor-company/roles': '角色列表',
+    '/labor-company/on-duty/living-expense': '生活费管理',
+    '/labor-company/on-duty/salary': '工资管理',
+    '/labor-company/on-duty/claim': '理赔管理',
+    '/labor-company/on-duty/special-case': '特殊情况管理',
+    '/labor-company/on-duty/insurance': '保险管理',
+    '/labor-company/on-duty/insurance-record': '参保登记',
+    '/labor-company/on-duty/leave': '请假管理',
+    '/labor-company/on-duty/leave-detail': '请假详情',
+    '/labor-company/on-duty/transfer': '调岗管理',
+    '/labor-company/on-duty/transfer/detail/:id': '调岗详情',
+    '/labor-company/on-duty/reward-punishment': '奖惩管理',
+    '/labor-company/on-duty/learning-material': '学习材料',
+    '/labor-company/on-duty/question-bank': '题库管理',
+    '/labor-company/on-duty/learning-time': '学习时长管理',
+    '/labor-company/on-duty/exam': '考试管理',
+    '/labor-company/on-duty/exam-result': '考试成绩',
+    '/labor-company/on-duty/abnormal': '异常管理',
+    '/labor-company/on-duty/complaint': '投诉/建议',
+    '/labor-company/on-duty/communication': '沟通管理',
+    '/labor-company/on-duty/entertainment': '文娱活动',
+    '/labor-company/on-duty/registration': '报名管理',
+    '/labor-company/on-duty/news': '发布资讯',
+    '/labor-company/on-duty/community': '社团管理',
+    '/labor-company/resignation': '离职管理',
+    '/labor-company/resignation/:id': '离职详情',
+    '/labor-company/resignation/add': '新增离职',
+    '/labor-company/resignation/edit/:id': '编辑离职',
+    '/labor-company/referral': '工作转介绍',
+    '/labor-company/referral/add': '新增转介绍',
+    '/labor-company/referral/edit/:id': '编辑转介绍',
+    '/labor-company/referral/:id': '转介绍详情',
+    '/labor-company/commission': '佣金发放',
+    '/labor-company/commission/:id': '佣金详情',
+    '/labor-company/commission/rule': '佣金规则配置',
+    '/labor-company/settlement': '结算管理',
+    '/labor-company/settlement/add': '新建结算',
+    '/labor-company/settlement/edit/:id': '编辑结算',
+    '/labor-company/settlement/:id': '结算详情',
+    '/labor-company/departments': '部门管理',
+    '/labor-company/departments/add': '新增部门',
+    '/labor-company/departments/edit/:id': '编辑部门',
+    '/labor-company/departments/:id': '部门详情',
+    '/labor-company/roles': '角色管理',
     '/labor-company/roles/create': '创建角色',
     '/labor-company/roles/permissions': '权限管理',
     '/labor-company/company-culture': '企业文化介绍',
     '/labor-company/position-culture': '岗位文化介绍',
     '/labor-company/employees': '正式员工',
+    '/labor-company/employees/add': '新增员工',
+    '/labor-company/employees/edit/:id': '编辑员工',
+    '/labor-company/employees/:id': '员工详情',
     '/labor-company/positions': '岗位管理',
     '/labor-company/rules': '规则配置',
     '/labor-company/menu-config': '菜单配置',
@@ -871,12 +916,27 @@ const getTabTitle = (path) => {
     '/labor-company/process-config': '流程配置',
     '/labor-company/attachment': '附件管理',
     '/labor-company/template-config': '模版配置',
-    '/labor-company/print-config': '打印配置'
+    '/labor-company/print-config': '打印配置',
+    '/labor-company/quick-access-settings': '首页快捷入口设置',
+    '/labor-company/todo-detail/:id': '待办详情',
+    '/labor-company/message-detail/:id': '消息详情',
+    '/labor-company/warning-detail/:id': '预警详情'
   }
   
   // 首先尝试精确匹配
   if (titleMap[path]) {
     return titleMap[path]
+  }
+  
+  // 处理编辑页面路径
+  if (path.includes('/contract/edit/')) {
+    return '编辑合同'
+  }
+  if (path === '/labor-company/contract/add') {
+    return '新增合同'
+  }
+  if (path.includes('/contract/add')) {
+    return '新增合同'
   }
   
   // 处理带动态参数的路径

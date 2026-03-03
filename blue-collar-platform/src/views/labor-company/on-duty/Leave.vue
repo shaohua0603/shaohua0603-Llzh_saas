@@ -3,12 +3,10 @@
   <div class="leave-page">
     <!-- 搜索筛选区域 -->
     <div class="search-filter-section">
+      <!-- 默认显示的一行查询条件 -->
       <el-form inline :model="searchForm" class="search-form">
         <el-form-item label="工人姓名">
           <el-input v-model="searchForm.workerName" placeholder="请输入工人姓名" clearable style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable style="width: 160px" />
         </el-form-item>
         <el-form-item label="请假类型">
           <el-select v-model="searchForm.leaveType" placeholder="请选择" clearable style="width: 150px">
@@ -21,31 +19,66 @@
             <el-option label="其他" value="other" />
           </el-select>
         </el-form-item>
-        <el-form-item label="审核状态">
-          <el-select v-model="searchForm.approvalStatus" placeholder="请选择" clearable style="width: 150px">
-            <el-option label="全部" value="" />
-            <el-option label="未审核" value="pending" />
-            <el-option label="审核中" value="processing" />
-            <el-option label="已通过" value="approved" />
-            <el-option label="已驳回" value="rejected" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="请假日期">
-          <el-date-picker
-            v-model="searchForm.leaveDate"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-            style="width: 240px"
-          />
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
+        <el-form-item>
+          <el-button type="text" @click="toggleFilter" class="expand-toggle">
+            <el-icon :class="{ 'rotate': filterExpanded }"><ArrowDown /></el-icon>
+            <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+          </el-button>
+        </el-form-item>
       </el-form>
+      
+      <!-- 展开显示的更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form inline :model="searchForm" class="search-form">
+          <el-form-item label="手机号">
+            <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable style="width: 160px" />
+          </el-form-item>
+          <el-form-item label="审核状态">
+            <el-select v-model="searchForm.approvalStatus" placeholder="请选择" clearable style="width: 150px">
+              <el-option label="全部" value="" />
+              <el-option label="未审核" value="pending" />
+              <el-option label="审核中" value="processing" />
+              <el-option label="已通过" value="approved" />
+              <el-option label="已驳回" value="rejected" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="请假日期">
+            <el-date-picker
+              v-model="searchForm.leaveDate"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              style="width: 240px"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
+    </div>
+
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>
+        新增
+      </el-button>
+      <el-button type="success" @click="handleImport">
+        <el-icon><Upload /></el-icon>
+        导入
+      </el-button>
+      <el-button type="warning" @click="handleExport">
+        <el-icon><Download /></el-icon>
+        导出
+      </el-button>
+      <el-button type="info" @click="handlePrint">
+        <el-icon><Printer /></el-icon>
+        打印
+      </el-button>
     </div>
 
     <!-- 通用表格 -->
@@ -57,10 +90,10 @@
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
-      :show-toolbar="true"
       :show-selection="true"
       :show-index="true"
       :show-actions="true"
+      :stats-info="statsInfo"
       action-column-width="280"
       table-id="leave-table"
       @sort-change="handleSortChange"
@@ -68,24 +101,6 @@
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增
-        </el-button>
-        <el-button type="success" @click="handleImport">
-          <el-icon><Upload /></el-icon>
-          导入
-        </el-button>
-        <el-button type="warning" @click="handleExport">
-          <el-icon><Download /></el-icon>
-          导出
-        </el-button>
-        <el-button type="info" @click="handlePrint">
-          <el-icon><Printer /></el-icon>
-          打印
-        </el-button>
-      </template>
 
       <template #column-leaveType="{ row }">
         <el-tag :type="getLeaveTypeTag(row.leaveType)">
@@ -304,13 +319,14 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Upload, Download, Printer, CircleCheck, CircleClose } from '@element-plus/icons-vue'
+import { Plus, Upload, Download, Printer, CircleCheck, CircleClose, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 import { submitApproval } from '@/api/approvalExecutionApi'
 
 const router = useRouter()
 
 // 搜索表单
+const filterExpanded = ref(false)
 const searchForm = reactive({
   workerName: '',
   phone: '',
@@ -326,6 +342,7 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedRows = ref<any[]>([])
+const statsInfo = ref<Array<{ label: string; value: string }>>([])
 
 // 表格列配置
 const columns = [
@@ -452,6 +469,11 @@ const handleReset = () => {
   handleSearch()
 }
 
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
+
 // 获取数据
 const fetchData = async () => {
   loading.value = true
@@ -536,6 +558,19 @@ const fetchData = async () => {
       }
     ]
     total.value = 4
+    
+    // 计算统计信息
+    const totalDays = tableData.value.reduce((sum, item) => sum + (item.days || 0), 0)
+    const pendingCount = tableData.value.filter(item => item.approvalStatus === 'pending').length
+    const approvedCount = tableData.value.filter(item => item.approvalStatus === 'approved').length
+    
+    statsInfo.value = [
+      { label: '总计请假记录', value: total.value.toString() },
+      { label: '总计请假天数', value: totalDays.toFixed(1) + ' 天' },
+      { label: '待审核', value: pendingCount.toString() },
+      { label: '已通过', value: approvedCount.toString() }
+    ]
+    
     loading.value = false
   }, 500)
 }
@@ -727,20 +762,53 @@ onMounted(() => {
 
 <style scoped>
 .leave-page {
-  padding: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
 .search-filter-section {
   background: #fff;
-  padding: 20px;
+  padding: 16px;
   border-radius: 4px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 12px;
+  align-items: center;
+}
+
+.filter-content {
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px dashed #e4e7ed;
+  animation: slideDown 0.3s ease;
+}
+
+.expand-toggle {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rotate {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .approval-record {
@@ -772,5 +840,40 @@ onMounted(() => {
 .download-template {
   margin-top: 20px;
   text-align: center;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .search-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .search-form .el-form-item {
+    width: 100%;
+  }
+  
+  .search-form .el-input,
+  .search-form .el-select,
+  .search-form .el-date-picker {
+    width: 100% !important;
+  }
 }
 </style>

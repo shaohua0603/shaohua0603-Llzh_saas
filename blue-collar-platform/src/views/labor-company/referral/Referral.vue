@@ -1,36 +1,58 @@
 <template>
   <div class="referral-container">
     <!-- 搜索区域 -->
-    <div class="search-section">
+    <div class="search-filter-section">
+      <!-- 默认显示的一行查询条件 -->
       <el-form :inline="true" :model="searchForm" class="search-form">
-        <el-form-item label="被介绍人">
-          <el-input v-model="searchForm.workerName" placeholder="请输入被介绍人姓名" clearable />
-        </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable />
-        </el-form-item>
-        <el-form-item label="介绍人">
-          <el-input v-model="searchForm.referrerName" placeholder="请输入介绍人姓名" clearable />
-        </el-form-item>
-        <el-form-item label="介绍日期">
-          <el-date-picker
-            v-model="searchForm.referralDate"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-          />
+        <el-form-item label="关键字">
+          <el-input v-model="searchForm.keyword" placeholder="请输入被介绍人姓名/手机号/介绍人姓名" clearable style="width: 180px" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>
+            搜索
+          </el-button>
+          <el-button @click="handleReset">
+            <el-icon><Refresh /></el-icon>
+            重置
+          </el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="text" @click="toggleSearch" class="expand-toggle">
+            <el-icon :class="{ 'rotate': searchExpanded }"><ArrowDown /></el-icon>
+            <span>{{ searchExpanded ? '收起' : '展开' }}</span>
+          </el-button>
         </el-form-item>
       </el-form>
+      
+      <!-- 展开显示的更多查询条件 -->
+      <div v-if="searchExpanded" class="filter-content expanded">
+        <el-form :inline="true" :model="searchForm" class="search-form">
+          <el-form-item label="被介绍人">
+            <el-input v-model="searchForm.workerName" placeholder="请输入被介绍人姓名" clearable />
+          </el-form-item>
+          <el-form-item label="手机号">
+            <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable />
+          </el-form-item>
+          <el-form-item label="介绍人">
+            <el-input v-model="searchForm.referrerName" placeholder="请输入介绍人姓名" clearable />
+          </el-form-item>
+          <el-form-item label="介绍日期">
+            <el-date-picker
+              v-model="searchForm.referralDate"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
 
-    <!-- 工具栏 -->
-    <div class="toolbar-section">
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
       <el-button type="primary" @click="handleAdd">
         <el-icon><Plus /></el-icon>
         新增转介绍
@@ -55,6 +77,7 @@
       :page-size="pageSize"
       :loading="loading"
       table-id="referral-list"
+      :stats-info="statsInfo"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @page-change="handlePageChange"
@@ -73,7 +96,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Download, Setting } from '@element-plus/icons-vue'
+import { Plus, Download, Setting, ArrowDown, Search, Refresh } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 import type { ColumnConfig } from '@/types/common-table'
 
@@ -82,11 +105,20 @@ const router = useRouter()
 
 // 搜索表单
 const searchForm = reactive({
+  keyword: '',
   workerName: '',
   phone: '',
   referralDate: [] as string[],
   referrerName: ''
 })
+
+// 搜索区域展开状态
+const searchExpanded = ref(false)
+
+// 切换搜索区域展开状态
+const toggleSearch = () => {
+  searchExpanded.value = !searchExpanded.value
+}
 
 // 表格数据
 const tableData = ref<any[]>([])
@@ -95,6 +127,7 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedRows = ref<any[]>([])
+const statsInfo = ref<{ label: string; value: string }[]>([])
 
 // 表格列配置
 const columns: ColumnConfig[] = [
@@ -117,8 +150,13 @@ const columns: ColumnConfig[] = [
         partial: { text: '部分发放', type: 'warning' },
         completed: { text: '已发放完成', type: 'success' }
       }
-      return statusMap[value] || value
-    }
+      const status = statusMap[value]
+      if (status) {
+        return `<el-tag type="${status.type}">${status.text}</el-tag>`
+      }
+      return value
+    },
+    showTooltip: true
   },
   { prop: 'totalCommission', label: '已发佣金(元)', minWidth: 120, sortable: true }
 ]
@@ -192,18 +230,47 @@ const loadData = async () => {
 
     // 筛选
     let filteredData = [...mockData]
-    if (searchForm.workerName) {
-      filteredData = filteredData.filter(item => item.workerName.includes(searchForm.workerName))
+    if (searchForm.keyword) {
+      const keyword = searchForm.keyword.toLowerCase()
+      filteredData = filteredData.filter(item => 
+        item.workerName.toLowerCase().includes(keyword) ||
+        item.phone.includes(keyword) ||
+        item.referrerName.toLowerCase().includes(keyword)
+      )
+    } else {
+      if (searchForm.workerName) {
+        filteredData = filteredData.filter(item => item.workerName.includes(searchForm.workerName))
+      }
+      if (searchForm.phone) {
+        filteredData = filteredData.filter(item => item.phone.includes(searchForm.phone))
+      }
+      if (searchForm.referrerName) {
+        filteredData = filteredData.filter(item => item.referrerName.includes(searchForm.referrerName))
+      }
     }
-    if (searchForm.phone) {
-      filteredData = filteredData.filter(item => item.phone.includes(searchForm.phone))
-    }
-    if (searchForm.referrerName) {
-      filteredData = filteredData.filter(item => item.referrerName.includes(searchForm.referrerName))
+    if (searchForm.referralDate && searchForm.referralDate.length === 2) {
+      filteredData = filteredData.filter(item => {
+        return item.referralDate >= searchForm.referralDate[0] && item.referralDate <= searchForm.referralDate[1]
+      })
     }
 
     tableData.value = filteredData
     total.value = filteredData.length
+    
+    // 计算统计信息
+    const totalCount = filteredData.length
+    const pendingCount = filteredData.filter(item => item.commissionStatus === 'pending').length
+    const partialCount = filteredData.filter(item => item.commissionStatus === 'partial').length
+    const completedCount = filteredData.filter(item => item.commissionStatus === 'completed').length
+    const totalCommission = filteredData.reduce((sum, item) => sum + item.totalCommission, 0)
+    
+    statsInfo.value = [
+      { label: '总记录数', value: totalCount.toString() },
+      { label: '待发放', value: pendingCount.toString() },
+      { label: '部分发放', value: partialCount.toString() },
+      { label: '已发放完成', value: completedCount.toString() },
+      { label: '总佣金', value: totalCommission.toFixed(2) + '元' }
+    ]
   } catch (error) {
     ElMessage.error('加载数据失败')
   } finally {
@@ -219,10 +286,11 @@ const handleSearch = () => {
 
 // 重置
 const handleReset = () => {
+  searchForm.keyword = ''
   searchForm.workerName = ''
   searchForm.phone = ''
-  searchForm.referralDate = []
   searchForm.referrerName = ''
+  searchForm.referralDate = []
   handleSearch()
 }
 
@@ -293,24 +361,76 @@ onMounted(() => {
 
 <style scoped>
 .referral-container {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 4px;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
-.search-section {
-  margin-bottom: 20px;
+.search-filter-section {
+  background: #fff;
+  padding: 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
 }
 
-.toolbar-section {
+.filter-content {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.expand-toggle {
+  color: #409eff;
+}
+
+.rotate {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
+
+:deep(.el-icon) {
+  transition: transform 0.3s ease;
+}
+
+.action-bar {
   display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .search-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .search-form .el-form-item {
+    width: 100%;
+  }
+  
+  .search-form .el-input,
+  .search-form .el-select,
+  .search-form .el-date-picker {
+    width: 100%;
+  }
 }
 </style>

@@ -2,22 +2,21 @@
   <div class="entertainment-management">
     <!-- 搜索和筛选区域 -->
     <div class="search-filter-section">
-      <el-row :gutter="16" align="middle">
-        <el-col :span="6">
+      <el-form :inline="true" :model="filterForm" class="filter-form">
+        <el-form-item label="活动标题">
           <el-input
-            v-model="searchKeyword"
-            placeholder="搜索活动标题"
-            prefix-icon="Search"
+            v-model="filterForm.keyword"
+            placeholder="请输入活动标题"
             clearable
-            @input="handleSearch"
+            style="width: 300px"
           />
-        </el-col>
-        <el-col :span="4">
+        </el-form-item>
+        <el-form-item label="活动类型">
           <el-select
-            v-model="typeFilter"
+            v-model="filterForm.type"
             placeholder="活动类型"
             clearable
-            @change="handleSearch"
+            style="width: 150px"
           >
             <el-option label="全部" value="" />
             <el-option label="文体活动" value="sports" />
@@ -26,13 +25,13 @@
             <el-option label="社团活动" value="community" />
             <el-option label="其他活动" value="other" />
           </el-select>
-        </el-col>
-        <el-col :span="4">
+        </el-form-item>
+        <el-form-item label="发布状态">
           <el-select
-            v-model="statusFilter"
+            v-model="filterForm.status"
             placeholder="发布状态"
             clearable
-            @change="handleSearch"
+            style="width: 150px"
           >
             <el-option label="全部" value="" />
             <el-option label="已发布" value="published" />
@@ -40,8 +39,8 @@
             <el-option label="进行中" value="ongoing" />
             <el-option label="已结束" value="ended" />
           </el-select>
-        </el-col>
-        <el-col :span="10">
+        </el-form-item>
+        <el-form-item>
           <el-button type="primary" @click="handleSearch">
             <el-icon><Search /></el-icon>
             搜索
@@ -50,36 +49,36 @@
             <el-icon><Refresh /></el-icon>
             重置
           </el-button>
-        </el-col>
-      </el-row>
+        </el-form-item>
+      </el-form>
+      <div class="expand-toggle" @click="toggleFilter">
+        <el-icon :class="{ 'rotate-180': filterExpanded }"><ArrowDown /></el-icon>
+        <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+      </div>
+      <!-- 展开显示更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form :inline="true" :model="filterForm" class="filter-form">
+          <el-form-item label="报名日期范围">
+            <el-date-picker
+              v-model="filterForm.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              style="width: 250px"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
 
-    <!-- 统计卡片 -->
-    <div class="stats-cards">
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.totalCount }}</div>
-          <div class="stat-label">活动总数</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.publishedCount }}</div>
-          <div class="stat-label">已发布</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.ongoingCount }}</div>
-          <div class="stat-label">进行中</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.endedCount }}</div>
-          <div class="stat-label">已结束</div>
-        </div>
-      </el-card>
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>
+        新增活动
+      </el-button>
     </div>
 
     <!-- 通用表格 -->
@@ -93,17 +92,12 @@
       :page-size="pageSize"
       :loading="loading"
       :show-selection="false"
-      :show-toolbar="false"
+      :show-toolbar="true"
+      :stats-info="statsInfo"
       @update:current-page="handlePageChange"
       @update:page-size="handleSizeChange"
       @global-search="handleGlobalSearch"
     >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增活动
-        </el-button>
-      </template>
 
       <template #column-activityType="{ row }">
         <el-tag>{{ getTypeText(row.activityType) }}</el-tag>
@@ -324,11 +318,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, View, Edit, Delete, Upload, Download, VideoPlay, VideoPause } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, View, Edit, Delete, Upload, Download, VideoPlay, VideoPause, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
-import RichTextEditor from '../../components/RichTextEditor.vue'
+import RichTextEditor from '../../../components/RichTextEditor.vue'
 import type { ColumnConfig } from '../../types/common-table'
 import type { FormInstance, FormRules } from 'element-plus'
 
@@ -357,9 +351,13 @@ interface Community {
 }
 
 // 响应式数据
-const searchKeyword = ref('')
-const typeFilter = ref('')
-const statusFilter = ref('')
+const filterExpanded = ref(false)
+const filterForm = reactive({
+  keyword: '',
+  type: '',
+  status: '',
+  dateRange: [] as string[]
+})
 const tableData = ref<EntertainmentRecord[]>([])
 const total = ref(0)
 const currentPage = ref(1)
@@ -433,6 +431,16 @@ const stats = reactive({
   ongoingCount: 0,
   endedCount: 0
 })
+
+// 统计信息字符串
+const statsInfo = computed(() => {
+  return `活动总数: ${stats.totalCount} | 已发布: ${stats.publishedCount} | 进行中: ${stats.ongoingCount} | 已结束: ${stats.endedCount}`
+})
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
 
 // 模拟数据存储
 const allData = ref<EntertainmentRecord[]>([])
@@ -543,9 +551,10 @@ const handleSearch = () => {
 
 // 重置搜索
 const handleReset = () => {
-  searchKeyword.value = ''
-  typeFilter.value = ''
-  statusFilter.value = ''
+  filterForm.keyword = ''
+  filterForm.type = ''
+  filterForm.status = ''
+  filterForm.dateRange = []
   handleSearch()
 }
 
@@ -563,7 +572,7 @@ const handleSizeChange = (size: number) => {
 
 // 全局搜索
 const handleGlobalSearch = (keyword: string) => {
-  searchKeyword.value = keyword
+  filterForm.keyword = keyword
   handleSearch()
 }
 
@@ -573,18 +582,24 @@ const fetchData = () => {
 
   let filteredData = [...allData.value]
 
-  if (searchKeyword.value) {
+  if (filterForm.keyword) {
     filteredData = filteredData.filter(item =>
-      item.title.toLowerCase().includes(searchKeyword.value.toLowerCase())
+      item.title.toLowerCase().includes(filterForm.keyword.toLowerCase())
     )
   }
 
-  if (typeFilter.value) {
-    filteredData = filteredData.filter(item => item.activityType === typeFilter.value)
+  if (filterForm.type) {
+    filteredData = filteredData.filter(item => item.activityType === filterForm.type)
   }
 
-  if (statusFilter.value) {
-    filteredData = filteredData.filter(item => item.status === statusFilter.value)
+  if (filterForm.status) {
+    filteredData = filteredData.filter(item => item.status === filterForm.status)
+  }
+
+  if (filterForm.dateRange && filterForm.dateRange.length === 2) {
+    filteredData = filteredData.filter(item => {
+      return item.registrationStartDate >= filterForm.dateRange[0] && item.registrationEndDate <= filterForm.dateRange[1]
+    })
   }
 
   // 更新统计
@@ -675,7 +690,7 @@ const handleSubmitForm = async () => {
   }
 }
 
-// 查看详情
+// 查看
 const handleView = (row: EntertainmentRecord) => {
   currentRow.value = row
   detailDialogVisible.value = true
@@ -772,68 +787,111 @@ onMounted(() => {
 
 <style scoped>
 .entertainment-management {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-}
-
-.search-filter-section {
-  margin-bottom: 20px;
   padding: 16px;
   background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+/* 搜索筛选区域 */
+.search-filter-section {
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #fff;
   border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+.filter-content {
+  margin-bottom: 12px;
 }
 
-.stat-card {
-  text-align: center;
+.filter-content.expanded {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed #e4e7ed;
+  animation: slideDown 0.3s ease-in-out;
 }
 
-.stat-content {
-  padding: 10px 0;
-}
-
-.stat-number {
-  font-size: 24px;
-  font-weight: bold;
+.expand-toggle {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   color: #409eff;
-  margin-bottom: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+  width: fit-content;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #606266;
+.filter-form {
+  margin-bottom: 0;
+}
+
+.filter-form :deep(.el-form-item) {
+  margin-right: 16px;
+  margin-bottom: 12px;
+}
+
+/* 操作按钮栏 */
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .detail-content {
   padding: 10px;
 }
 
-/* 响应式设计 */
-@media screen and (max-width: 1200px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
+/* 动画效果 */
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-@media screen and (max-width: 768px) {
-  .search-filter-section :deep(.el-row) {
-    flex-direction: column;
-  }
+.rotate-180 {
+  transform: rotate(180deg);
+  transition: transform 0.3s ease;
+}
 
-  .search-filter-section :deep(.el-col) {
-    width: 100%;
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .entertainment-management {
+    padding: 12px;
+  }
+  
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .filter-form :deep(.el-form-item) {
+    margin-right: 0;
     margin-bottom: 12px;
   }
-
-  .stats-cards {
-    grid-template-columns: 1fr;
+  
+  .filter-form :deep(.el-form-item) {
+    width: 100%;
+  }
+  
+  .filter-form :deep(.el-input),
+  .filter-form :deep(.el-select),
+  .filter-form :deep(.el-date-picker) {
+    width: 100%;
   }
 }
 </style>

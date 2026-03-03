@@ -701,7 +701,7 @@ const handleGlobalSearch = (keyword: string) => {
   loadTransferRecords()
 }
 
-// 查看详情
+// 查看
 const handleViewDetail = (row: any) => {
   currentTransfer.value = row
   transferStatus.value = {

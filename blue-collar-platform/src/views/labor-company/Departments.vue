@@ -249,7 +249,7 @@ const handleAddChild = (row: any) => {
   router.push({ name: 'LaborCompanyDepartmentAdd', query: { parentId: row.id } })
 }
 
-// 查看详情
+// 查看
 const handleDetail = (row: any) => {
   router.push({ name: 'LaborCompanyDepartmentDetail', params: { id: row.id } })
 }

@@ -1,67 +1,75 @@
 <template>
   <div class="common-table-container">
-    <!-- 数据统计区域 -->
-    <div v-if="statsInfo" class="table-stats">
-      {{ statsInfo }}
-    </div>
-
-    <!-- 工具栏 -->
-    <div v-if="showToolbar" class="table-toolbar">
-      <div class="toolbar-left">
-        <!-- 全局搜索 -->
-        <el-input
-          v-if="showGlobalSearch"
-          v-model="globalSearchKeyword"
-          placeholder="全局搜索"
-          prefix-icon="Search"
-          clearable
-          style="width: 300px"
-          @input="handleGlobalSearch"
-        />
-        <slot name="toolbar-left"></slot>
+    <!-- 表格容器 -->
+    <div class="table-wrapper">
+      <!-- 数据统计区域 -->
+      <div v-if="statsInfo" class="table-stats">
+        <template v-if="Array.isArray(statsInfo)">
+          <span v-for="(item, index) in statsInfo" :key="index" class="stats-item">
+            {{ item.label }}: {{ item.value }}
+            <span v-if="index < statsInfo.length - 1" class="stats-separator">|</span>
+          </span>
+        </template>
+        <span v-else>{{ statsInfo }}</span>
       </div>
-      <div class="toolbar-right">
-        <!-- 列表管理 -->
-        <el-dropdown v-if="showListManagement" @command="handleListCommand">
-          <el-button>
-            <el-icon><Menu /></el-icon>
-            列表管理
-            <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+
+      <!-- 工具栏 -->
+      <div v-if="showToolbar" class="table-toolbar">
+        <div class="toolbar-left">
+          <!-- 全局搜索 -->
+          <el-input
+            v-if="showGlobalSearch"
+            v-model="globalSearchKeyword"
+            placeholder="全局搜索"
+            prefix-icon="Search"
+            clearable
+            style="width: 300px"
+            @input="handleGlobalSearch"
+          />
+          <slot name="toolbar-left"></slot>
+        </div>
+        <div class="toolbar-right">
+          <!-- 列表管理 -->
+          <el-dropdown v-if="showListManagement" @command="handleListCommand">
+            <el-button>
+              <el-icon><Menu /></el-icon>
+              列表管理
+              <el-icon class="el-icon--right"><ArrowDown /></el-icon>
+            </el-button>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item command="save">保存当前列表</el-dropdown-item>
+                <el-dropdown-item command="manage">管理列表</el-dropdown-item>
+                <el-dropdown-item command="reset">重置为默认</el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+          <!-- 列设置 -->
+          <el-button v-if="showColumnSetting" @click="columnSettingVisible = true">
+            <el-icon><Setting /></el-icon>
+            列设置
           </el-button>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item command="save">保存当前列表</el-dropdown-item>
-              <el-dropdown-item command="manage">管理列表</el-dropdown-item>
-              <el-dropdown-item command="reset">重置为默认</el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
-        <!-- 列设置 -->
-        <el-button v-if="showColumnSetting" @click="columnSettingVisible = true">
-          <el-icon><Setting /></el-icon>
-          列设置
-        </el-button>
-        <slot name="toolbar-right"></slot>
+          <slot name="toolbar-right"></slot>
+        </div>
       </div>
-    </div>
 
-    <!-- 表格 -->
-    <el-table
-      ref="tableRef"
-      v-loading="loading"
-      :data="tableData"
-      :border="border"
-      :stripe="stripe"
-      :height="height"
-      :max-height="maxHeight"
-      :row-key="rowKey"
-      :default-sort="defaultSort"
-      :sort-orders="['ascending', 'descending', null]"
-      @sort-change="handleSortChange"
-      @selection-change="handleSelectionChange"
-      @row-click="handleRowClick"
-      style="width: 100%"
-    >
+      <!-- 表格 -->
+      <el-table
+        ref="tableRef"
+        v-loading="loading"
+        :data="tableData"
+        :border="border"
+        :stripe="stripe"
+        :height="height"
+        :max-height="maxHeight"
+        :row-key="rowKey"
+        :default-sort="defaultSort"
+        :sort-orders="['ascending', 'descending', null]"
+        @sort-change="handleSortChange"
+        @selection-change="handleSelectionChange"
+        @row-click="handleRowClick"
+        style="width: 100%"
+      >
       <!-- 多选列 -->
       <el-table-column
         v-if="showSelection"
@@ -81,7 +89,7 @@
       />
 
       <!-- 动态列 -->
-      <template v-for="column in visibleColumns" :key="column.prop">
+      <template v-for="column in props.columns" :key="column.prop">
         <el-table-column
           :prop="column.prop"
           :label="column.label"
@@ -103,7 +111,7 @@
               :$index="scope.$index"
             ></slot>
             <!-- 默认显示 -->
-            <span v-else>{{ formatCellValue(scope.row[column.prop], column) }}</span>
+            <span v-else v-html="formatCellValue(scope.row[column.prop], column)"></span>
           </template>
         </el-table-column>
       </template>
@@ -120,31 +128,32 @@
           <slot name="actions" :row="scope.row" :$index="scope.$index"></slot>
         </template>
       </el-table-column>
-    </el-table>
+      </el-table>
 
-    <!-- 分页 -->
-    <div v-if="showPagination" class="table-pagination">
-      <div class="pagination-left">
-        <el-button
-          v-if="showBatchActions && selectedRows.length > 0"
-          type="primary"
-          size="small"
-          @click="handleBatchAction"
-        >
-          批量操作 ({{ selectedRows.length }})
-        </el-button>
-        <slot name="pagination-left" :selected-rows="selectedRows"></slot>
+      <!-- 分页 -->
+      <div v-if="showPagination" class="table-pagination">
+        <div class="pagination-left">
+          <el-button
+            v-if="showBatchActions && selectedRows.length > 0"
+            type="primary"
+            size="small"
+            @click="handleBatchAction"
+          >
+            批量操作 ({{ selectedRows.length }})
+          </el-button>
+          <slot name="pagination-left" :selected-rows="selectedRows"></slot>
+        </div>
+        <el-pagination
+          v-model:current-page="localCurrentPage"
+          v-model:page-size="localPageSize"
+          :page-sizes="pageSizes"
+          :layout="paginationLayout"
+          :total="total"
+          :background="true"
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange"
+        />
       </div>
-      <el-pagination
-        v-model:current-page="localCurrentPage"
-        v-model:page-size="localPageSize"
-        :page-sizes="pageSizes"
-        :layout="paginationLayout"
-        :total="total"
-        :background="true"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
     </div>
 
     <!-- 列设置对话框 -->
@@ -162,7 +171,7 @@
         <el-checkbox-group v-model="visibleColumnProps">
           <div class="column-list">
             <el-checkbox
-              v-for="column in columns"
+              v-for="column in props.columns"
               :key="column.prop"
               :label="column.prop"
               :disabled="column.required"
@@ -356,7 +365,7 @@ interface Props {
   // 加载状态
   loading?: boolean
   // 数据统计信息
-  statsInfo?: string
+  statsInfo?: string | Array<{ label: string; value: string }>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -380,7 +389,8 @@ const props = withDefaults(defineProps<Props>(), {
   currentPage: 1,
   pageSize: 10,
   loading: false,
-  statsInfo: ''
+  statsInfo: '',
+  columns: () => []
 })
 
 // Emits定义
@@ -417,11 +427,7 @@ const listForm = ref({
   isDefault: false
 })
 
-// 计算属性 - 可见列
-const visibleColumns = computed(() => {
-  const visibleProps = visibleColumnProps.value
-  return props.columns.filter(col => visibleProps.includes(col.prop))
-})
+
 
 // 计算属性 - 表格数据
 const tableData = computed(() => props.data)
@@ -448,17 +454,17 @@ const getStorageKey = (type: string) => {
 
 // 初始化列设置
 const initColumnSettings = () => {
-  const savedSettings = localStorage.getItem(getStorageKey('column-settings'))
-  if (savedSettings) {
-    try {
-      const settings = JSON.parse(savedSettings)
-      visibleColumnProps.value = settings.visibleColumns || props.columns.map(col => col.prop)
-    } catch {
-      visibleColumnProps.value = props.columns.map(col => col.prop)
-    }
-  } else {
+  // 强制使用新的列配置，忽略localStorage中的旧设置
+  // 确保props.columns存在且不为空
+  if (props.columns && props.columns.length > 0) {
     visibleColumnProps.value = props.columns.map(col => col.prop)
+  } else {
+    // 安全处理，避免空数组
+    visibleColumnProps.value = []
   }
+  // 清除旧的存储设置，避免影响新的列配置
+  const storageKey = getStorageKey('column-settings')
+  localStorage.removeItem(storageKey)
 }
 
 // 保存列设置
@@ -653,9 +659,23 @@ watch(() => props.pageSize, (newPageSize) => {
   localPageSize.value = newPageSize
 })
 
+// 监听columns变化
+watch(() => props.columns, (newColumns) => {
+  if (newColumns && newColumns.length > 0) {
+    // 重新初始化列设置
+    initColumnSettings()
+  }
+}, { deep: true })
+
 // 生命周期
 onMounted(() => {
-  initColumnSettings()
+  // 确保props.columns存在且不为空
+  if (props.columns && props.columns.length > 0) {
+    initColumnSettings()
+  } else {
+    // 如果props.columns为空，设置一个默认值
+    visibleColumnProps.value = []
+  }
   initCustomLists()
 })
 </script>
@@ -673,21 +693,44 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  background-color: #f5f7fa;
+  padding: 0 16px 16px 16px;
+  background-color: #fff;
+}
+
+/* 表格容器 */
+.table-wrapper {
+  border: 1px solid #ebeef5;
   border-radius: 4px;
+  overflow: hidden;
+  background-color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* 数据统计区域 */
 .table-stats {
-  margin-bottom: 16px;
   padding: 12px 16px;
   background-color: #f5f7fa;
-  border-radius: 4px;
+  border-bottom: 1px solid #ebeef5;
   font-size: 14px;
   color: #606266;
   line-height: 1.5;
+  border-left: 3px solid #409eff;
+  margin: 16px;
+  border-radius: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.stats-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.stats-separator {
+  color: #c0c4cc;
+  margin-left: 4px;
 }
 
 .toolbar-left {
@@ -705,20 +748,28 @@ onMounted(() => {
 /* 表格 */
 :deep(.el-table) {
   font-size: 14px;
+  margin: 0 16px 16px 16px;
+  border-radius: 4px;
+  overflow: hidden;
 }
 
 :deep(.el-table th) {
   background-color: #f5f7fa;
   font-weight: 600;
   color: #303133;
+  border-bottom: 1px solid #ebeef5;
 }
 
 :deep(.el-table .cell) {
-  padding: 0 8px;
+  padding: 12px 8px;
 }
 
 :deep(.el-table--border .el-table__cell) {
   border-right: 1px solid #ebeef5;
+}
+
+:deep(.el-table--border) {
+  border: 1px solid #ebeef5;
 }
 
 /* 分页 */
@@ -726,8 +777,7 @@ onMounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-top: 16px;
-  padding: 12px 16px;
+  padding: 16px;
   background-color: #fff;
   border-top: 1px solid #ebeef5;
 }

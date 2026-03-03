@@ -274,7 +274,7 @@ const handleRowClick = (row: any) => {
   handleViewDetail(row)
 }
 
-// 查看详情
+// 查看
 const handleViewDetail = (row: any) => {
   router.push(`/labor-company/todo-detail/${row.id}`)
 }

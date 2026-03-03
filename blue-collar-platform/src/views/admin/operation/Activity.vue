@@ -107,7 +107,7 @@
       </template>
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleDetail(row)">
-          查看详情
+          查看
         </el-button>
         <el-button type="primary" link @click="handleEdit(row)">
           编辑
@@ -265,7 +265,7 @@ const handleAdd = () => {
   router.push('/admin/operations-management/activity-management/activity-info/add')
 }
 
-// 查看详情
+// 查看
 const handleDetail = (row: ActivityInfo) => {
   router.push(`/admin/operations-management/activity-management/activity-info/${row.id}`)
 }

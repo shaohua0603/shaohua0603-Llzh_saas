@@ -3,33 +3,77 @@
   <div class="insurance-record-page">
     <!-- 搜索筛选区域 -->
     <div class="search-filter-section">
-      <el-form inline :model="searchForm" class="search-form">
+      <!-- 默认显示的一行查询条件 -->
+      <el-form inline :model="filterForm" class="search-form">
         <el-form-item label="保单编号">
-          <el-input v-model="searchForm.policyNo" placeholder="请输入保单编号" clearable style="width: 160px" />
+          <el-input v-model="filterForm.policyNo" placeholder="请输入保单编号" clearable style="width: 160px" />
         </el-form-item>
         <el-form-item label="保单类型">
-          <el-select v-model="searchForm.policyType" placeholder="请选择" clearable style="width: 150px">
+          <el-select v-model="filterForm.policyType" placeholder="请选择" clearable style="width: 150px">
             <el-option label="全部" value="" />
             <el-option label="雇主责任险" value="employer_liability" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="理赔公司">
-          <el-input v-model="searchForm.claimCompany" placeholder="请输入理赔公司" clearable style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="工人姓名">
-          <el-input v-model="searchForm.workerName" placeholder="请输入工人姓名" clearable style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable style="width: 160px" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
+        <el-form-item>
+          <el-button type="text" @click="toggleFilter" class="expand-toggle">
+            <el-icon :class="{ 'rotate': filterExpanded }"><ArrowDown /></el-icon>
+            <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+          </el-button>
+        </el-form-item>
       </el-form>
+      
+      <!-- 展开显示的更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form inline :model="filterForm" class="search-form">
+          <el-form-item label="理赔公司">
+            <el-input v-model="filterForm.claimCompany" placeholder="请输入理赔公司" clearable style="width: 160px" />
+          </el-form-item>
+          <el-form-item label="工人姓名">
+            <el-input v-model="filterForm.workerName" placeholder="请输入工人姓名" clearable style="width: 160px" />
+          </el-form-item>
+          <el-form-item label="手机号">
+            <el-input v-model="filterForm.phone" placeholder="请输入手机号" clearable style="width: 160px" />
+          </el-form-item>
+          <el-form-item label="购买日期">
+            <el-date-picker
+              v-model="filterForm.purchaseDate"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              style="width: 240px"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
 
-    <!-- 工具栏 -->
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>
+        新增
+      </el-button>
+      <el-button type="warning" @click="handleImport">
+        <el-icon><Upload /></el-icon>
+        导入
+      </el-button>
+      <el-button type="danger" :disabled="selectedRows.length === 0" @click="handleBatchDelete">
+        <el-icon><Delete /></el-icon>
+        批量删除
+      </el-button>
+      <el-button type="success" @click="handleExport">
+        <el-icon><Download /></el-icon>
+        导出
+      </el-button>
+    </div>
+
+    <!-- 表格区域 -->
     <CommonTable
       ref="tableRef"
       :data="tableData"
@@ -38,34 +82,16 @@
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
-      :showToolbar="true"
       :showSelection="true"
       :showIndex="true"
       :showActions="true"
       action-column-width="200"
+      :statsInfo="statsInfo"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增
-        </el-button>
-        <el-button type="warning" @click="handleImport">
-          <el-icon><Upload /></el-icon>
-          导入
-        </el-button>
-        <el-button type="danger" :disabled="selectedRows.length === 0" @click="handleBatchDelete">
-          <el-icon><Delete /></el-icon>
-          批量删除
-        </el-button>
-        <el-button type="success" @click="handleExport">
-          <el-icon><Download /></el-icon>
-          导出
-        </el-button>
-      </template>
       <template #column-policyType="{ row }">
         <el-tag type="primary">雇主责任险</el-tag>
       </template>
@@ -334,16 +360,18 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Delete, Upload, Download } from '@element-plus/icons-vue'
+import { Plus, Delete, Upload, Download, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 
 // 搜索表单
-const searchForm = reactive({
+const filterExpanded = ref(false)
+const filterForm = reactive({
   policyNo: '',
   policyType: '',
   claimCompany: '',
   workerName: '',
-  phone: ''
+  phone: '',
+  purchaseDate: [] as string[]
 })
 
 // 表格数据
@@ -353,6 +381,17 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedRows = ref<any[]>([])
+
+// 统计信息
+const stats = reactive({
+  totalCount: 0,
+  totalPremium: 0
+})
+
+const statsInfo = ref([
+  { label: '参保登记总数', value: '0' },
+  { label: '总保费', value: '0 元' }
+])
 
 // 表格列配置
 const columns = [
@@ -433,6 +472,11 @@ const getEducationText = (value: string) => {
   return textMap[value] || value
 }
 
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
+
 // 搜索
 const handleSearch = () => {
   currentPage.value = 1
@@ -441,11 +485,12 @@ const handleSearch = () => {
 
 // 重置
 const handleReset = () => {
-  searchForm.policyNo = ''
-  searchForm.policyType = ''
-  searchForm.claimCompany = ''
-  searchForm.workerName = ''
-  searchForm.phone = ''
+  filterForm.policyNo = ''
+  filterForm.policyType = ''
+  filterForm.claimCompany = ''
+  filterForm.workerName = ''
+  filterForm.phone = ''
+  filterForm.purchaseDate = []
   handleSearch()
 }
 
@@ -495,6 +540,17 @@ const fetchData = async () => {
       }
     ]
     total.value = 2
+    
+    // 计算统计信息
+    stats.totalCount = tableData.value.length
+    stats.totalPremium = tableData.value.reduce((sum, item) => sum + item.premium, 0)
+    
+    // 更新统计信息显示
+    statsInfo.value = [
+      { label: '参保登记总数', value: stats.totalCount.toString() },
+      { label: '总保费', value: stats.totalPremium.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' 元' }
+    ]
+    
     loading.value = false
   }, 500)
 }
@@ -676,33 +732,61 @@ onMounted(() => {
 
 <style scoped>
 .insurance-record-page {
-  padding: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  min-height: 100vh;
 }
 
 .search-filter-section {
   background: #fff;
-  padding: 20px;
   border-radius: 4px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 16px;
+  padding: 16px 20px;
 }
 
-.table-toolbar {
+.filter-content.expanded {
+  padding: 0 20px 16px 20px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.expand-toggle {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  gap: 4px;
+  color: #409eff;
+  padding: 0;
+  height: 32px;
 }
 
-.toolbar-left,
-.toolbar-right {
+.expand-toggle:hover {
+  color: #66b1ff;
+}
+
+.expand-toggle .el-icon {
+  transition: transform 0.3s ease;
+}
+
+.expand-toggle .el-icon.rotate {
+  transform: rotate(180deg);
+}
+
+.action-bar {
   display: flex;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .worker-list-toolbar {
@@ -716,5 +800,23 @@ onMounted(() => {
 .download-template {
   margin-top: 20px;
   text-align: center;
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .search-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .search-form .el-form-item {
+    margin-bottom: 12px;
+  }
 }
 </style>

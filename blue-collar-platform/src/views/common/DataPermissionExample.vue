@@ -3,7 +3,7 @@
     <el-card>
       <template #header>
         <div class="card-header">
-          <span>数据权限示例 - 工人列表</span>
+          <span>数据权限示例 - 工人信息</span>
           <div>
             <el-button @click="handleRefreshPermission">刷新权限</el-button>
             <el-button @click="handleShowPermissionInfo">查看权限</el-button>
@@ -21,7 +21,7 @@
         style="margin-bottom: 20px"
       />
 
-      <!-- 工人列表表格 -->
+      <!-- 工人信息表格 -->
       <CommonTable
         :columns="columns"
         :data="filteredWorkers"
@@ -122,12 +122,12 @@ const {
 } = useDataPermission()
 
 /**
- * 工人列表数据
+ * 工人信息数据
  */
 const workers = ref<any[]>([])
 
 /**
- * 过滤后的工人列表
+ * 过滤后的工人信息
  */
 const filteredWorkers = computed(() => {
   if (isAdmin.value) {
@@ -312,7 +312,7 @@ const canDelete = (row: any): boolean => {
 }
 
 /**
- * 加载工人列表
+ * 加载工人信息
  */
 const loadWorkers = async () => {
   loading.value = true
@@ -381,8 +381,8 @@ const loadWorkers = async () => {
     workers.value = mockWorkers
     pagination.value.total = mockWorkers.length
   } catch (error) {
-    console.error('加载工人列表失败:', error)
-    ElMessage.error('加载工人列表失败')
+    console.error('加载工人信息失败:', error)
+    ElMessage.error('加载工人信息失败')
   } finally {
     loading.value = false
   }
@@ -406,7 +406,7 @@ const handleSizeChange = (size: number) => {
 }
 
 /**
- * 查看详情
+ * 查看
  */
 const handleViewDetail = (row: any) => {
   ElMessageBox.alert(
@@ -487,7 +487,7 @@ const handleShowPermissionInfo = () => {
 onMounted(async () => {
   // 初始化数据权限
   await refresh()
-  // 加载工人列表
+  // 加载工人信息
   loadWorkers()
 })
 </script>

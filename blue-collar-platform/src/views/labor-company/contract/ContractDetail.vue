@@ -11,44 +11,28 @@
           </div>
         </template>
         <el-descriptions :column="2" border>
-          <el-descriptions-item label="合同编号">
-            {{ contractDetail.contractNo }}
+          <el-descriptions-item label="姓名">
+            {{ contractDetail.name }}
+          </el-descriptions-item>
+          <el-descriptions-item label="手机号">
+            {{ contractDetail.phone }}
+          </el-descriptions-item>
+          <el-descriptions-item label="证件号">
+            {{ contractDetail.idCard }}
+          </el-descriptions-item>
+          <el-descriptions-item label="签订日期">
+            {{ contractDetail.signDate || '-' }}
           </el-descriptions-item>
           <el-descriptions-item label="结算方式">
             {{ getSettlementMethodText(contractDetail.settlementMethod) }}
           </el-descriptions-item>
-          <el-descriptions-item label="甲方">
-            {{ contractDetail.partyA }}
+          <el-descriptions-item label="负责人">
+            {{ contractDetail.responsiblePerson }}
           </el-descriptions-item>
-          <el-descriptions-item label="乙方姓名">
-            {{ contractDetail.partyBName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="乙方手机号">
-            {{ contractDetail.partyBPhone }}
-          </el-descriptions-item>
-          <el-descriptions-item label="合同签订日期">
-            {{ contractDetail.contractSignDate || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="合同生效日期">
-            {{ contractDetail.contractEffectiveDate || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="合同过期日期">
-            {{ contractDetail.contractExpiryDate || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="合同金额" :span="2">
-            <span class="amount-text">¥{{ formatAmount(contractDetail.contractAmount) }}</span>
-          </el-descriptions-item>
-          <el-descriptions-item v-if="contractDetail.remark" label="备注" :span="2">
-            {{ contractDetail.remark }}
+          <el-descriptions-item label="群号">
+            {{ contractDetail.groupId }}
           </el-descriptions-item>
         </el-descriptions>
-      </el-card>
-
-      <el-card class="info-card" shadow="never">
-        <template #header>
-          <span class="card-title">合同内容</span>
-        </template>
-        <div class="contract-content" v-html="contractDetail.contractContent"></div>
       </el-card>
 
       <el-card v-if="contractDetail.attachments && contractDetail.attachments.length > 0" class="info-card" shadow="never">
@@ -146,53 +130,50 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { ArrowLeft, Edit, Delete, Printer, Document } from '@element-plus/icons-vue'
-import { useContractStore } from '@/stores/contract'
-import type { Contract, ContractRecord } from '@/types/contract'
-import { ContractStatusConfig, SettlementMethodConfig } from '@/types/contract'
 
 const router = useRouter()
 const route = useRoute()
-const contractStore = useContractStore()
 
 const loading = ref(false)
-const contractDetail = reactive<Contract>({
+const contractDetail = reactive({
   id: '',
-  contractNo: '',
-  partyA: '',
-  partyAId: '',
-  partyB: '',
-  partyBId: '',
-  partyBName: '',
-  partyBPhone: '',
+  name: '',
+  phone: '',
+  idCard: '',
+  signDate: '',
   settlementMethod: '',
-  settlementMethodText: '',
-  contractStatus: '',
-  contractStatusText: '',
-  contractSignDate: '',
-  contractEffectiveDate: '',
-  contractExpiryDate: '',
-  contractAmount: 0,
-  contractContent: '',
+  responsiblePerson: '',
+  groupId: '',
   attachments: [],
-  approvalStatus: '',
-  approvalStatusText: '',
-  dataScope: '',
-  departmentId: '',
-  departmentName: '',
-  tenantId: '',
-  tenantName: '',
-  creatorId: '',
-  creatorName: '',
-  createTime: '',
-  updaterId: '',
-  updaterName: '',
-  updateTime: '',
-  remark: ''
+  contractStatus: ''
 })
+
+interface ContractRecord {
+  id: string
+  contractId: string
+  action: string
+  actionText: string
+  operatorId: string
+  operatorName: string
+  createTime: string
+  remark: string
+}
 
 const operationRecords = ref<ContractRecord[]>([])
 const showPreview = ref(false)
 const previewFile = ref<any>(null)
+
+const ContractStatusConfig = {
+  UNSIGNED: { code: 'UNSIGNED', name: '未签订', color: 'info' },
+  SIGNING: { code: 'SIGNING', name: '签订中', color: 'warning' },
+  SIGNED: { code: 'SIGNED', name: '已签订', color: 'success' },
+  CANCELLED: { code: 'CANCELLED', name: '已取消', color: 'danger' }
+}
+
+const SettlementMethodConfig = {
+  DAILY: { code: 'DAILY', name: '日结' },
+  MONTHLY: { code: 'MONTHLY', name: '月结' }
+}
 
 const getStatusType = (status: string) => {
   const config = Object.values(ContractStatusConfig).find(c => c.code === status)
@@ -209,18 +190,74 @@ const getSettlementMethodText = (method: string) => {
   return config?.name || method
 }
 
-const formatAmount = (amount: number) => {
-  return amount ? amount.toLocaleString('zh-CN', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '0.00'
+// 模拟合同数据
+const mockContractDetail = {
+  id: '1',
+  name: '张三',
+  phone: '138****8001',
+  idCard: '410101199005151234',
+  signDate: '2024-01-15',
+  settlementMethod: 'MONTHLY',
+  responsiblePerson: '李四',
+  groupId: '10086',
+  attachments: [
+    {
+      name: '身份证复印件.pdf',
+      url: 'https://example.com/files/id-card.pdf'
+    },
+    {
+      name: '体检报告.jpg',
+      url: 'https://example.com/files/medical-report.jpg'
+    }
+  ],
+  contractStatus: 'SIGNED'
 }
+
+// 模拟操作记录
+const mockOperationRecords: ContractRecord[] = [
+  {
+    id: '1',
+    contractId: '1',
+    action: 'CREATE',
+    actionText: '创建合同',
+    operatorId: '1',
+    operatorName: '管理员',
+    createTime: '2024-01-10 10:00:00',
+    remark: '创建新合同'
+  },
+  {
+    id: '2',
+    contractId: '1',
+    action: 'UPDATE',
+    actionText: '更新合同',
+    operatorId: '1',
+    operatorName: '管理员',
+    createTime: '2024-01-15 14:00:00',
+    remark: '更新合同状态为已签订'
+  },
+  {
+    id: '3',
+    contractId: '1',
+    action: 'APPROVE',
+    actionText: '审核通过',
+    operatorId: '2',
+    operatorName: '审批人',
+    createTime: '2024-01-15 14:30:00',
+    remark: '审核通过合同'
+  }
+]
 
 const loadContractDetail = async (id: string) => {
   loading.value = true
   try {
-    await contractStore.fetchContractDetail(id)
-    if (contractStore.contractDetail) {
-      Object.assign(contractDetail, contractStore.contractDetail)
-    }
+    // 模拟API延迟
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // 使用模拟数据
+    Object.assign(contractDetail, mockContractDetail)
+    operationRecords.value = mockOperationRecords
   } catch (error) {
+    console.error('加载合同详情失败:', error)
     ElMessage.error('加载合同详情失败')
   } finally {
     loading.value = false
@@ -238,11 +275,13 @@ const handleDelete = () => {
     type: 'warning'
   }).then(async () => {
     try {
-      await contractStore.deleteContract(contractDetail.id)
+      // 模拟API延迟
+      await new Promise(resolve => setTimeout(resolve, 300))
       ElMessage.success('删除成功')
       router.push({ name: 'LaborCompanyContract' })
     } catch (error) {
       console.error(error)
+      ElMessage.error('删除失败')
     }
   }).catch(() => {})
 }

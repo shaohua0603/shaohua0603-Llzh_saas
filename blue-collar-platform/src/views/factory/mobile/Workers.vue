@@ -22,7 +22,7 @@
           <el-tag :type="getStatusType(worker.status)">{{ worker.status }}</el-tag>
         </div>
         <div class="worker-actions">
-          <el-button size="small" @click="viewWorkerDetails(worker)">查看详情</el-button>
+          <el-button size="small" @click="viewWorkerDetails(worker)">查看</el-button>
           <el-button size="small" type="primary" @click="manageWorker(worker)">管理</el-button>
         </div>
       </el-card>
@@ -50,7 +50,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 
-// 工人列表数据
+// 工人信息数据
 const workers = ref([
   {
     id: 1,
@@ -110,7 +110,7 @@ const searchQuery = ref('')
 const currentPage = ref(1)
 const pageSize = ref(10)
 
-// 过滤后的工人列表
+// 过滤后的工人信息
 const filteredWorkers = computed(() => {
   let result = workers.value
   

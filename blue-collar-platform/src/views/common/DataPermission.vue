@@ -482,7 +482,7 @@ const handleWithdraw = async (applicationId: string) => {
 }
 
 /**
- * 查看详情
+ * 查看
  */
 const handleViewDetail = (application: DataPermissionApplication) => {
   ElMessageBox.alert(

@@ -332,9 +332,9 @@ const handleSelectionChange = (selection: CommissionPayment[]) => {
   selectedRows.value = selection
 }
 
-// 查看详情
+// 查看
 const handleDetail = (row: CommissionPayment) => {
-  console.log('查看详情:', row)
+  console.log('查看:', row)
   ElMessage.info('详情功能待实现')
 }
 

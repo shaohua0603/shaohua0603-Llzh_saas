@@ -1,15 +1,7 @@
 <template>
   <div class="referral-form-container">
-    <!-- 顶部操作栏 -->
-    <div class="page-header">
-      <div class="header-actions">
-        <el-button @click="handleReset">重置</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitting">提交</el-button>
-      </div>
-    </div>
-
     <!-- 表单区域 -->
-    <div class="form-section">
+    <div class="form-content">
       <el-card>
         <template #header>
           <span class="card-title">被介绍人信息</span>
@@ -71,7 +63,7 @@
       <el-card class="mt-4">
         <template #header>
           <span class="card-title">工作信息</span>
-        </el-form>
+        </template>
         <el-form
           ref="workFormRef"
           :model="formData"
@@ -176,6 +168,16 @@
           </el-row>
         </el-form>
       </el-card>
+    </div>
+    
+    <!-- 底部按钮栏 -->
+    <div class="form-footer">
+      <el-button @click="handleBack">
+        <el-icon><ArrowLeft /></el-icon>
+        返回
+      </el-button>
+      <el-button @click="handleReset">重置</el-button>
+      <el-button type="primary" @click="handleSubmit" :loading="submitting">提交</el-button>
     </div>
   </div>
 </template>
@@ -310,37 +312,18 @@ onMounted(() => {
 
 <style scoped>
 .referral-form-container {
-  padding: 20px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   background-color: #f5f7fa;
-  min-height: calc(100vh - 100px);
 }
 
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 16px 20px;
-  background-color: #fff;
-  border-radius: 4px;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.page-title {
-  margin: 0;
-  font-size: 18px;
-  font-weight: 600;
-  color: #303133;
-}
-
-.header-actions {
-  display: flex;
-  gap: 10px;
+.form-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 80px; /* 为底部按钮栏留出空间 */
 }
 
 .form-section {
@@ -361,5 +344,37 @@ onMounted(() => {
 
 .mt-4 {
   margin-top: 16px;
+}
+
+/* 底部按钮栏 - 固定悬浮 */
+.form-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-top: 1px solid #e4e7ed;
+  z-index: 100;
+  transition: left var(--transition-base);
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .form-footer {
+    left: 0;
+    flex-direction: column;
+  }
+  
+  .form-footer .el-button {
+    width: 100%;
+  }
+  
+  .form-content {
+    padding-bottom: 120px; /* 为垂直排列的按钮栏留出更多空间 */
+  }
 }
 </style>

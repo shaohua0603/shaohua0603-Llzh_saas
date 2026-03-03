@@ -1,15 +1,7 @@
 <template>
   <div class="settlement-form-container">
-    <!-- 顶部操作栏 -->
-    <div class="page-header">
-      <div class="header-actions">
-        <el-button @click="handleReset">重置</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitting">提交</el-button>
-      </div>
-    </div>
-
     <!-- 表单区域 -->
-    <div class="form-section">
+    <div class="form-content">
       <el-card>
         <template #header>
           <span class="card-title">结算基本信息</span>
@@ -184,6 +176,16 @@
         </div>
       </el-card>
     </div>
+    
+    <!-- 底部按钮栏 -->
+    <div class="form-footer">
+      <el-button @click="handleBack">
+        <el-icon><ArrowLeft /></el-icon>
+        返回
+      </el-button>
+      <el-button @click="handleReset">重置</el-button>
+      <el-button type="primary" @click="handleSubmit" :loading="submitting">提交</el-button>
+    </div>
 
     <!-- 导入对话框 -->
     <el-dialog
@@ -224,6 +226,7 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { ArrowLeft } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules, UploadInstance, UploadRawFile } from 'element-plus'
 
 // 路由
@@ -388,6 +391,11 @@ const handleSubmitImport = async () => {
   }
 }
 
+// 返回
+const handleBack = () => {
+  router.back()
+}
+
 // 重置
 const handleReset = () => {
   formRef.value?.resetFields()
@@ -479,24 +487,21 @@ onMounted(() => {
 
 <style scoped>
 .settlement-form-container {
-  padding: 20px;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   background-color: #f5f7fa;
-  min-height: calc(100vh - 100px);
 }
 
-.page-header {
+.form-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 80px; /* 为底部按钮栏留出空间 */
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 16px 20px;
-  background-color: #fff;
-  border-radius: 4px;
-}
-
-.header-actions {
-  display: flex;
-  gap: 10px;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .form-section {
@@ -540,5 +545,37 @@ onMounted(() => {
 .summary-info span:last-child {
   font-weight: 600;
   color: #67c23a;
+}
+
+/* 底部按钮栏 - 固定悬浮 */
+.form-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-top: 1px solid #e4e7ed;
+  z-index: 100;
+  transition: left var(--transition-base);
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .form-footer {
+    left: 0;
+    flex-direction: column;
+  }
+  
+  .form-footer .el-button {
+    width: 100%;
+  }
+  
+  .form-content {
+    padding-bottom: 120px; /* 为垂直排列的按钮栏留出更多空间 */
+  }
 }
 </style>

@@ -108,7 +108,7 @@
           审核不通过
         </el-button>
         <el-button type="primary" link @click="handleViewDetail(row)">
-          查看详情
+          查看
         </el-button>
       </template>
     </CommonTable>
@@ -320,9 +320,9 @@ const handleRejectConfirm = async () => {
   }
 }
 
-// 查看详情
+// 查看
 const handleViewDetail = (row: RegistrationInfo) => {
-  console.log('查看详情:', row)
+  console.log('查看:', row)
   // TODO: 跳转到详情页
 }
 

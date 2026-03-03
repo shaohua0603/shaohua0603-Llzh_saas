@@ -37,7 +37,7 @@
 
       <template #actions="{ row }">
         <el-button size="small" type="primary" link @click="handleViewDetail(row)">
-          查看详情
+          查看
         </el-button>
         <el-button size="small" type="primary" link @click="handleReprint(row)">
           重新打印

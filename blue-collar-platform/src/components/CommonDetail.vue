@@ -151,7 +151,7 @@
                         :target="field.target || '_blank'"
                         type="primary"
                       >
-                        {{ data[field.field] || '查看详情' }}
+                        {{ data[field.field] || '查看' }}
                       </el-link>
 
                       <!-- 标签类型 -->

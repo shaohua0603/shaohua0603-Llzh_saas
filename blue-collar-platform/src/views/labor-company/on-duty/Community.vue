@@ -2,42 +2,41 @@
   <div class="community-management">
     <!-- 搜索和筛选区域 -->
     <div class="search-filter-section">
-      <el-row :gutter="16" align="middle">
-        <el-col :span="6">
+      <el-form :inline="true" :model="filterForm" class="filter-form">
+        <el-form-item label="社团标题">
           <el-input
-            v-model="searchKeyword"
+            v-model="filterForm.keyword"
             placeholder="搜索社团标题"
-            prefix-icon="Search"
             clearable
-            @input="handleSearch"
+            style="width: 250px"
           />
-        </el-col>
-        <el-col :span="4">
+        </el-form-item>
+        <el-form-item label="社团类型">
           <el-select
-            v-model="typeFilter"
+            v-model="filterForm.type"
             placeholder="社团类型"
             clearable
-            @change="handleSearch"
+            style="width: 150px"
           >
             <el-option label="全部" value="" />
             <el-option label="体育类" value="sports" />
             <el-option label="文化类" value="culture" />
             <el-option label="兴趣类" value="interest" />
           </el-select>
-        </el-col>
-        <el-col :span="4">
+        </el-form-item>
+        <el-form-item label="报名审核">
           <el-select
-            v-model="approvalFilter"
+            v-model="filterForm.approval"
             placeholder="报名审核"
             clearable
-            @change="handleSearch"
+            style="width: 150px"
           >
             <el-option label="全部" value="" />
             <el-option label="需要审核" value="true" />
             <el-option label="无需审核" value="false" />
           </el-select>
-        </el-col>
-        <el-col :span="10">
+        </el-form-item>
+        <el-form-item>
           <el-button type="primary" @click="handleSearch">
             <el-icon><Search /></el-icon>
             搜索
@@ -46,36 +45,41 @@
             <el-icon><Refresh /></el-icon>
             重置
           </el-button>
-        </el-col>
-      </el-row>
+        </el-form-item>
+      </el-form>
+      <div class="expand-toggle" @click="toggleFilter">
+        <el-icon :class="{ 'rotate-180': filterExpanded }"><ArrowDown /></el-icon>
+        <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+      </div>
+      <!-- 展开显示更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form :inline="true" :model="filterForm" class="filter-form">
+          <el-form-item label="团员限制">
+            <el-select
+              v-model="filterForm.memberLimit"
+              placeholder="团员限制"
+              clearable
+              style="width: 150px"
+            >
+              <el-option label="全部" value="" />
+              <el-option label="有成员限制" value="limited" />
+              <el-option label="无成员限制" value="unlimited" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
 
-    <!-- 统计卡片 -->
-    <div class="stats-cards">
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.totalCount }}</div>
-          <div class="stat-label">社团总数</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.sportsCount }}</div>
-          <div class="stat-label">体育类</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.cultureCount }}</div>
-          <div class="stat-label">文化类</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.interestCount }}</div>
-          <div class="stat-label">兴趣类</div>
-        </div>
-      </el-card>
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>
+        新增社团
+      </el-button>
+      <el-button type="danger" @click="handleBatchDelete" :disabled="selectedRows.length === 0">
+        <el-icon><Delete /></el-icon>
+        批量删除
+      </el-button>
     </div>
 
     <!-- 通用表格 -->
@@ -88,18 +92,14 @@
       :current-page="currentPage"
       :page-size="pageSize"
       :loading="loading"
-      :show-selection="false"
-      :show-toolbar="false"
+      :show-selection="true"
+      :show-toolbar="true"
+      :stats-info="statsInfo"
       @update:current-page="handlePageChange"
       @update:page-size="handleSizeChange"
+      @selection-change="handleSelectionChange"
       @global-search="handleGlobalSearch"
     >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增社团
-        </el-button>
-      </template>
 
       <template #column-communityType="{ row }">
         <el-tag>{{ getTypeText(row.communityType) }}</el-tag>
@@ -286,11 +286,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, View, Edit, Delete, Document } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, View, Edit, Delete, Document, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
-import RichTextEditor from '../../components/RichTextEditor.vue'
+import RichTextEditor from '../../../components/RichTextEditor.vue'
 import type { ColumnConfig } from '../../types/common-table'
 import type { FormInstance, FormRules } from 'element-plus'
 
@@ -312,9 +312,13 @@ interface CommunityRecord {
 }
 
 // 响应式数据
-const searchKeyword = ref('')
-const typeFilter = ref('')
-const approvalFilter = ref('')
+const filterExpanded = ref(false)
+const filterForm = reactive({
+  keyword: '',
+  type: '',
+  approval: '',
+  memberLimit: ''
+})
 const tableData = ref<CommunityRecord[]>([])
 const total = ref(0)
 const currentPage = ref(1)
@@ -322,6 +326,7 @@ const pageSize = ref(10)
 const loading = ref(false)
 const currentRow = ref<CommunityRecord | null>(null)
 const introContent = ref('')
+const selectedRows = ref<CommunityRecord[]>([])
 
 // 对话框控制
 const formDialogVisible = ref(false)
@@ -384,6 +389,16 @@ const stats = reactive({
   cultureCount: 0,
   interestCount: 0
 })
+
+// 统计信息字符串
+const statsInfo = computed(() => {
+  return `社团总数: ${stats.totalCount} | 体育类: ${stats.sportsCount} | 文化类: ${stats.cultureCount} | 兴趣类: ${stats.interestCount}`
+})
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
 
 // 模拟数据存储
 const allData = ref<CommunityRecord[]>([])
@@ -475,9 +490,10 @@ const handleSearch = () => {
 
 // 重置搜索
 const handleReset = () => {
-  searchKeyword.value = ''
-  typeFilter.value = ''
-  approvalFilter.value = ''
+  filterForm.keyword = ''
+  filterForm.type = ''
+  filterForm.approval = ''
+  filterForm.memberLimit = ''
   handleSearch()
 }
 
@@ -493,9 +509,14 @@ const handleSizeChange = (size: number) => {
   fetchData()
 }
 
+// 选择变化
+const handleSelectionChange = (selection: CommunityRecord[]) => {
+  selectedRows.value = selection
+}
+
 // 全局搜索
 const handleGlobalSearch = (keyword: string) => {
-  searchKeyword.value = keyword
+  filterForm.keyword = keyword
   handleSearch()
 }
 
@@ -505,19 +526,27 @@ const fetchData = () => {
 
   let filteredData = [...allData.value]
 
-  if (searchKeyword.value) {
+  if (filterForm.keyword) {
     filteredData = filteredData.filter(item =>
-      item.title.toLowerCase().includes(searchKeyword.value.toLowerCase())
+      item.title.toLowerCase().includes(filterForm.keyword.toLowerCase())
     )
   }
 
-  if (typeFilter.value) {
-    filteredData = filteredData.filter(item => item.communityType === typeFilter.value)
+  if (filterForm.type) {
+    filteredData = filteredData.filter(item => item.communityType === filterForm.type)
   }
 
-  if (approvalFilter.value) {
-    const isRequired = approvalFilter.value === 'true'
+  if (filterForm.approval) {
+    const isRequired = filterForm.approval === 'true'
     filteredData = filteredData.filter(item => item.isApprovalRequired === isRequired)
+  }
+
+  if (filterForm.memberLimit) {
+    if (filterForm.memberLimit === 'limited') {
+      filteredData = filteredData.filter(item => item.isMemberLimit)
+    } else if (filterForm.memberLimit === 'unlimited') {
+      filteredData = filteredData.filter(item => !item.isMemberLimit)
+    }
   }
 
   // 更新统计
@@ -624,7 +653,7 @@ const handleSubmitForm = async () => {
   }
 }
 
-// 查看详情
+// 查看
 const handleView = (row: CommunityRecord) => {
   currentRow.value = row
   detailDialogVisible.value = true
@@ -679,6 +708,35 @@ const handleSubmitIntro = () => {
   }
 }
 
+// 批量删除
+const handleBatchDelete = async () => {
+  if (selectedRows.value.length === 0) return
+
+  try {
+    ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedRows.value.length} 个社团吗？`,
+      '批量删除',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    ).then(() => {
+      selectedRows.value.forEach(row => {
+        const index = allData.value.findIndex(item => item.id === row.id)
+        if (index > -1) {
+          allData.value.splice(index, 1)
+        }
+      })
+      ElMessage.success('批量删除成功')
+      fetchData()
+    }).catch(() => {})
+  } catch (error) {
+    console.error('批量删除失败:', error)
+    ElMessage.error('批量删除失败')
+  }
+}
+
 // 生命周期
 onMounted(() => {
   allData.value = generateMockData()
@@ -688,43 +746,63 @@ onMounted(() => {
 
 <style scoped>
 .community-management {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
 .search-filter-section {
-  margin-bottom: 20px;
-  padding: 16px;
-  background-color: #f5f7fa;
+  margin-bottom: 16px;
+  background-color: #fff;
   border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+.filter-form {
+  padding: 16px;
+  padding-bottom: 0;
 }
 
-.stat-card {
-  text-align: center;
-}
-
-.stat-content {
-  padding: 10px 0;
-}
-
-.stat-number {
-  font-size: 24px;
-  font-weight: bold;
+.expand-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  cursor: pointer;
   color: #409eff;
-  margin-bottom: 8px;
+  border-top: 1px solid #e4e7ed;
+  transition: all 0.3s;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #606266;
+.expand-toggle:hover {
+  background-color: #f5f7fa;
+}
+
+.expand-toggle .el-icon {
+  margin-right: 8px;
+  transition: transform 0.3s;
+}
+
+.expand-toggle .rotate-180 {
+  transform: rotate(180deg);
+}
+
+.filter-content.expanded {
+  padding: 16px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .form-tip {
@@ -742,24 +820,29 @@ onMounted(() => {
 }
 
 /* 响应式设计 */
-@media screen and (max-width: 1200px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media screen and (max-width: 768px) {
-  .search-filter-section :deep(.el-row) {
-    flex-direction: column;
+  .community-management {
+    padding: 8px;
   }
 
-  .search-filter-section :deep(.el-col) {
-    width: 100%;
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .filter-form :deep(.el-form-item) {
+    margin-right: 0;
     margin-bottom: 12px;
   }
 
-  .stats-cards {
-    grid-template-columns: 1fr;
+  .filter-form :deep(.el-input),
+  .filter-form :deep(.el-select) {
+    width: 100%;
+  }
+
+  .detail-content {
+    padding: 5px;
   }
 }
 </style>

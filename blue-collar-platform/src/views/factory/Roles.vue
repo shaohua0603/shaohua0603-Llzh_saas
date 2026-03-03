@@ -17,7 +17,7 @@
         <el-table-column prop="createDate" label="创建日期" width="120" />
         <el-table-column label="操作" width="150">
           <template #default="scope">
-            <el-button size="small" @click="viewRole(scope.row)">查看详情</el-button>
+            <el-button size="small" @click="viewRole(scope.row)">查看</el-button>
             <el-button size="small" type="primary" @click="editRole(scope.row)">编辑</el-button>
           </template>
         </el-table-column>

@@ -3,12 +3,10 @@
   <div class="attendance-page">
     <!-- 搜索筛选区域 -->
     <div class="search-filter-section">
+      <!-- 默认显示的一行查询条件 -->
       <el-form inline :model="searchForm" class="search-form">
         <el-form-item label="工人姓名">
           <el-input v-model="searchForm.workerName" placeholder="请输入工人姓名" clearable style="width: 160px" />
-        </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable style="width: 160px" />
         </el-form-item>
         <el-form-item label="考勤日期">
           <el-date-picker
@@ -19,63 +17,58 @@
             style="width: 160px"
           />
         </el-form-item>
-        <el-form-item label="考勤状态">
-          <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 150px">
-            <el-option label="全部" value="" />
-            <el-option label="正常" value="normal" />
-            <el-option label="迟到" value="late" />
-            <el-option label="早退" value="early" />
-            <el-option label="缺勤" value="absent" />
-          </el-select>
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
         </el-form-item>
+        <el-form-item>
+          <el-button type="text" @click="toggleFilter" class="expand-toggle">
+            <el-icon :class="{ 'rotate': filterExpanded }"><ArrowDown /></el-icon>
+            <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+          </el-button>
+        </el-form-item>
       </el-form>
+      
+      <!-- 展开显示的更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form inline :model="searchForm" class="search-form">
+          <el-form-item label="手机号">
+            <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable style="width: 160px" />
+          </el-form-item>
+          <el-form-item label="考勤状态">
+            <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 150px">
+              <el-option label="全部" value="" />
+              <el-option label="正常" value="normal" />
+              <el-option label="迟到" value="late" />
+              <el-option label="早退" value="early" />
+              <el-option label="缺勤" value="absent" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
 
-    <!-- 考勤统计 -->
-    <div class="attendance-stats">
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ attendanceStats.totalWorkers }}</div>
-          <div class="stat-label">总人数</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number normal">{{ attendanceStats.normalCount }}</div>
-          <div class="stat-label">正常</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number late">{{ attendanceStats.lateCount }}</div>
-          <div class="stat-label">迟到</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number early">{{ attendanceStats.earlyCount }}</div>
-          <div class="stat-label">早退</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number absent">{{ attendanceStats.absentCount }}</div>
-          <div class="stat-label">缺勤</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ attendanceStats.attendanceRate }}%</div>
-          <div class="stat-label">出勤率</div>
-        </div>
-      </el-card>
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>
+        新增
+      </el-button>
+      <el-button type="warning" @click="handleImport">
+        <el-icon><Upload /></el-icon>
+        导入
+      </el-button>
+      <el-button type="success" @click="handleExport">
+        <el-icon><Download /></el-icon>
+        导出
+      </el-button>
+      <el-button type="info" @click="handlePrint">
+        <el-icon><Printer /></el-icon>
+        打印
+      </el-button>
     </div>
 
-    <!-- 工具栏 -->
+    <!-- 表格区域 -->
     <CommonTable
       ref="tableRef"
       :data="tableData"
@@ -84,46 +77,11 @@
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
-      :showToolbar="true"
       :showSelection="true"
       :showIndex="true"
       :showActions="true"
       action-column-width="200"
-      @sort-change="handleSortChange"
-      @selection-change="handleSelectionChange"
-      @current-change="handleCurrentChange"
-      @size-change="handleSizeChange"
-    >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增
-        </el-button>
-        <el-button type="warning" @click="handleImport">
-          <el-icon><Upload /></el-icon>
-          导入
-        </el-button>
-        <el-button type="success" @click="handleExport">
-          <el-icon><Download /></el-icon>
-          导出
-        </el-button>
-        <el-button type="info" @click="handlePrint">
-          <el-icon><Printer /></el-icon>
-          打印
-        </el-button>
-      </template>
-      ref="tableRef"
-      :data="tableData"
-      :columns="columns"
-      :loading="loading"
-      :total="total"
-      :current-page="currentPage"
-      :page-size="pageSize"
-      :showToolbar="false"
-      :showSelection="true"
-      :showIndex="true"
-      :showActions="true"
-      action-column-width="200"
+      :stats-info="statsInfo"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
@@ -270,16 +228,22 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Upload, Download, Printer } from '@element-plus/icons-vue'
+import { Plus, Upload, Download, Printer, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 
 // 搜索表单
+const filterExpanded = ref(false)
 const searchForm = reactive({
   workerName: '',
   phone: '',
   attendanceDate: '',
   status: ''
 })
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
 
 // 考勤统计
 const attendanceStats = ref({
@@ -290,6 +254,16 @@ const attendanceStats = ref({
   absentCount: 0,
   attendanceRate: 0
 })
+
+// 统计信息
+const statsInfo = ref([
+  { label: '总人数', value: '0' },
+  { label: '正常', value: '0' },
+  { label: '迟到', value: '0' },
+  { label: '早退', value: '0' },
+  { label: '缺勤', value: '0' },
+  { label: '出勤率', value: '0%' }
+])
 
 // 表格数据
 const tableData = ref<any[]>([])
@@ -455,6 +429,16 @@ const fetchData = async () => {
       attendanceRate: 40
     }
 
+    // 更新统计信息
+    statsInfo.value = [
+      { label: '总人数', value: attendanceStats.value.totalWorkers.toString() },
+      { label: '正常', value: attendanceStats.value.normalCount.toString() },
+      { label: '迟到', value: attendanceStats.value.lateCount.toString() },
+      { label: '早退', value: attendanceStats.value.earlyCount.toString() },
+      { label: '缺勤', value: attendanceStats.value.absentCount.toString() },
+      { label: '出勤率', value: attendanceStats.value.attendanceRate + '%' }
+    ]
+
     loading.value = false
   }, 500)
 }
@@ -591,69 +575,64 @@ onMounted(() => {
 
 <style scoped>
 .attendance-page {
-  padding: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  min-height: 100vh;
 }
 
 .search-filter-section {
   background: #fff;
-  padding: 20px;
   border-radius: 4px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-}
-
-/* 考勤统计 */
-.attendance-stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
   gap: 16px;
-  margin-bottom: 16px;
+  padding: 16px 20px;
 }
 
-.stat-card {
-  height: 80px;
+.filter-content.expanded {
+  padding: 0 20px 16px 20px;
+  border-top: 1px solid #e4e7ed;
 }
 
-.stat-content {
+.expand-toggle {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
   align-items: center;
-  height: 100%;
-}
-
-.stat-number {
-  font-size: 24px;
-  font-weight: bold;
+  gap: 4px;
   color: #409eff;
-  margin-bottom: 4px;
+  padding: 0;
+  height: 32px;
 }
 
-.stat-number.normal {
-  color: #67c23a;
+.expand-toggle:hover {
+  color: #66b1ff;
 }
 
-.stat-number.late {
-  color: #e6a23c;
+.expand-toggle .el-icon {
+  transition: transform 0.3s ease;
 }
 
-.stat-number.early {
-  color: #f56c6c;
+.expand-toggle .el-icon.rotate {
+  transform: rotate(180deg);
 }
 
-.stat-number.absent {
-  color: #909399;
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #606266;
-}
+
 
 .table-toolbar {
   display: flex;

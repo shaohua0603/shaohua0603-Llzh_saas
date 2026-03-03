@@ -180,7 +180,7 @@ onMounted(() => {
             </div>
             <div class="exam-footer">
               <el-button type="info" @click="goToExamDetail(exam)">
-                查看详情
+                查看
               </el-button>
             </div>
           </div>

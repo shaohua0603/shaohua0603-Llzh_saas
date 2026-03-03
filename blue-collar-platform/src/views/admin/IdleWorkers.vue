@@ -30,7 +30,7 @@
             </el-table-column>
             <el-table-column label="操作" width="150">
               <template #default="scope">
-                <el-button size="small" @click="viewWorker(scope.row)">查看详情</el-button>
+                <el-button size="small" @click="viewWorker(scope.row)">查看</el-button>
                 <el-button size="small" type="primary" @click="assignToLaborCompany(scope.row)">分配劳务公司</el-button>
               </template>
             </el-table-column>
@@ -60,7 +60,7 @@
             <el-table-column prop="registerDate" label="注册日期" width="120" />
             <el-table-column label="操作" width="150">
               <template #default="scope">
-                <el-button size="small" @click="viewWorker(scope.row)">查看详情</el-button>
+                <el-button size="small" @click="viewWorker(scope.row)">查看</el-button>
                 <el-button size="small" type="primary" @click="assignToFactory(scope.row)">分配工厂</el-button>
               </template>
             </el-table-column>

@@ -2,7 +2,7 @@
 import { ref, onMounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Edit, SwitchButton, User, OfficeBuilding, Phone, Calendar, Document, Location, School, Briefcase, CreditCard, Star, Warning, History, ZoomIn } from '@element-plus/icons-vue'
+import { ArrowLeft, Edit, SwitchButton, User, OfficeBuilding, Phone, Calendar, Document, Location, School, Briefcase, CreditCard, Star, Warning, Timer, ZoomIn } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -28,6 +28,25 @@ const collapsedSections = ref<Record<string, boolean>>({
   health: false,
   experience: false
 })
+
+// 右侧展开面板状态
+const rightPanelVisible = ref(false)
+const rightPanelContent = ref<string>('')
+const rightPanelTitle = ref<string>('')
+
+// 打开右侧面板
+const openRightPanel = (content: string, title: string) => {
+  rightPanelContent.value = content
+  rightPanelTitle.value = title
+  rightPanelVisible.value = true
+}
+
+// 关闭右侧面板
+const closeRightPanel = () => {
+  rightPanelVisible.value = false
+  rightPanelContent.value = ''
+  rightPanelTitle.value = ''
+}
 
 // 切换分组展开/收起
 const toggleSection = (section: string) => {
@@ -79,6 +98,7 @@ const fetchWorkerDetail = async () => {
     // 模拟工人数据
     workerInfo.value = {
       id: workerId.value,
+      workerId: 'EMP001',
       name: '张三',
       gender: '男',
       age: 34,
@@ -111,6 +131,13 @@ const fetchWorkerDetail = async () => {
       positionName: '操作工',
       laborCompany: '南通富民劳务服务有限公司',
       
+      // 初步面试信息
+      initialInterview: {
+        recommendationLevel: '优先推荐',
+        imageLevel: '优秀',
+        recommendationReason: '该工人工作经验丰富，技能熟练，表现良好，推荐优先录用。'
+      },
+      
       // 教育背景
       education: [
         {
@@ -130,7 +157,29 @@ const fetchWorkerDetail = async () => {
         workDays: 730,
         department: '组装车间',
         group: '第三组',
-        supervisor: '李四'
+        supervisor: '李四',
+        attendance: {
+          totalDays: 730,
+          absentDays: 5,
+          lateDays: 8,
+          sickDays: 3
+        },
+        transfer: {
+          count: 1,
+          lastTransferDate: '2023-06-15',
+          lastTransferFrom: 'B区',
+          lastTransferTo: 'A区'
+        },
+        salary: {
+          monthlySalary: '5500元',
+          lastSalaryDate: '2026-02-15',
+          salaryHistory: 12
+        },
+        claim: {
+          count: 0,
+          lastClaimDate: null,
+          lastClaimAmount: null
+        }
       },
       
       // 求职意向
@@ -217,13 +266,7 @@ onMounted(() => {
 
 <template>
   <div class="worker-detail">
-    <!-- 顶部操作栏 -->
-    <div class="detail-header">
-      <div class="header-right">
-        <el-button type="primary" :icon="SwitchButton" @click="handleTransfer">岗位调动</el-button>
-        <el-button type="success" :icon="Edit" @click="handleEdit">编辑信息</el-button>
-      </div>
-    </div>
+
 
     <!-- 加载状态 -->
     <div v-if="loading" class="loading-container">
@@ -260,39 +303,35 @@ onMounted(() => {
                   {{ getLifecycleStatus().text }}
                 </el-tag>
               </div>
-              <div class="info-row">
-                <span class="info-item">
-                  <el-icon><Phone /></el-icon>
-                  {{ workerInfo.phone }}
-                </span>
-                <span class="info-item">
-                  <el-icon><User /></el-icon>
-                  {{ workerInfo.gender }} / {{ workerInfo.age }}岁
-                </span>
-              </div>
-              <div class="info-row">
-                <span class="info-item">
-                  <el-icon><OfficeBuilding /></el-icon>
-                  {{ workerInfo.factoryName }}
-                </span>
-              </div>
-              <div class="info-row">
-                <span class="info-item">
-                  <el-icon><Location /></el-icon>
-                  {{ workerInfo.factoryArea }} | {{ workerInfo.productionLine }}
-                </span>
-              </div>
-              <div class="info-row">
-                <span class="info-item">
-                  <el-icon><Briefcase /></el-icon>
-                  {{ workerInfo.positionType }} | {{ workerInfo.positionName }}
-                </span>
-              </div>
-              <div class="info-row">
-                <span class="info-item">
-                  <el-icon><OfficeBuilding /></el-icon>
-                  {{ workerInfo.laborCompany }}
-                </span>
+              <div class="info-grid">
+                <div class="info-item">
+                  <span class="label">工号</span>
+                  <span class="value">{{ workerInfo.workerId }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">手机号</span>
+                  <span class="value">{{ workerInfo.phone }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">性别/年龄</span>
+                  <span class="value">{{ workerInfo.gender }} / {{ workerInfo.age }}岁</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">工厂名称</span>
+                  <span class="value">{{ workerInfo.factoryName }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">工作区域</span>
+                  <span class="value">{{ workerInfo.factoryArea }} | {{ workerInfo.productionLine }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">岗位信息</span>
+                  <span class="value">{{ workerInfo.positionType }} | {{ workerInfo.positionName }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="label">劳务公司</span>
+                  <span class="value">{{ workerInfo.laborCompany }}</span>
+                </div>
               </div>
             </div>
           </div>
@@ -345,6 +384,10 @@ onMounted(() => {
         <div v-show="!collapsedSections.basicInfo" class="section-content">
           <div class="info-grid">
             <div class="info-item">
+              <span class="label">工号</span>
+              <span class="value">{{ workerInfo.workerId }}</span>
+            </div>
+            <div class="info-item">
               <span class="label">姓名</span>
               <span class="value">{{ workerInfo.name }}</span>
             </div>
@@ -395,6 +438,8 @@ onMounted(() => {
           </div>
         </div>
       </div>
+
+
 
       <!-- 教育背景 -->
       <div class="info-section">
@@ -462,6 +507,80 @@ onMounted(() => {
             <div class="info-item full-width">
               <span class="label">岗位领导</span>
               <span class="value">{{ workerInfo.workInfo.supervisor }}</span>
+            </div>
+          </div>
+          
+          <!-- 初步面试信息 -->
+          <div class="initial-interview-info">
+            <h4 class="section-subtitle">初步面试信息</h4>
+            <div class="info-grid">
+              <div class="info-item">
+                <span class="label">推荐等级</span>
+                <el-tag type="success">{{ workerInfo.initialInterview.recommendationLevel }}</el-tag>
+              </div>
+              <div class="info-item">
+                <span class="label">形象级别</span>
+                <el-tag type="primary">{{ workerInfo.initialInterview.imageLevel }}</el-tag>
+              </div>
+              <div class="info-item full-width">
+                <span class="label">推荐理由</span>
+                <span class="value">{{ workerInfo.initialInterview.recommendationReason }}</span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 工作相关信息入口 -->
+          <div class="work-related-entries">
+            <h4 class="entries-title">工作相关信息</h4>
+            <div class="entries-grid">
+              <div class="entry-item" @click="openRightPanel('attendance', '假勤情况')">
+                <div class="entry-icon">
+                  <el-icon><Timer /></el-icon>
+                </div>
+                <div class="entry-content">
+                  <div class="entry-title">假勤情况</div>
+                  <div class="entry-subtitle">查看假勤记录</div>
+                </div>
+                <div class="entry-arrow">
+                  <el-icon><ArrowLeft /></el-icon>
+                </div>
+              </div>
+              <div class="entry-item" @click="openRightPanel('transfer', '调岗情况')">
+                <div class="entry-icon">
+                  <el-icon><SwitchButton /></el-icon>
+                </div>
+                <div class="entry-content">
+                  <div class="entry-title">调岗情况</div>
+                  <div class="entry-subtitle">查看调岗记录</div>
+                </div>
+                <div class="entry-arrow">
+                  <el-icon><ArrowLeft /></el-icon>
+                </div>
+              </div>
+              <div class="entry-item" @click="openRightPanel('salary', '工资条')">
+                <div class="entry-icon">
+                  <el-icon><CreditCard /></el-icon>
+                </div>
+                <div class="entry-content">
+                  <div class="entry-title">工资条</div>
+                  <div class="entry-subtitle">查看工资记录</div>
+                </div>
+                <div class="entry-arrow">
+                  <el-icon><ArrowLeft /></el-icon>
+                </div>
+              </div>
+              <div class="entry-item" @click="openRightPanel('claim', '理赔情况')">
+                <div class="entry-icon">
+                  <el-icon><Warning /></el-icon>
+                </div>
+                <div class="entry-content">
+                  <div class="entry-title">理赔情况</div>
+                  <div class="entry-subtitle">查看理赔记录</div>
+                </div>
+                <div class="entry-arrow">
+                  <el-icon><ArrowLeft /></el-icon>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -627,7 +746,7 @@ onMounted(() => {
       <div class="info-section">
         <div class="section-header" @click="toggleSection('experience')">
           <h3 class="section-title">
-            <el-icon><History /></el-icon>
+            <el-icon><Timer /></el-icon>
             个人经历
           </h3>
           <el-icon class="collapse-icon" :class="{ 'collapsed': collapsedSections.experience }">
@@ -667,6 +786,158 @@ onMounted(() => {
       <el-button type="primary" :icon="SwitchButton" @click="handleTransfer">岗位调动</el-button>
       <el-button type="success" :icon="Edit" @click="handleEdit">编辑信息</el-button>
     </div>
+    
+    <!-- 右侧展开面板 -->
+    <div class="right-panel-mask" v-if="rightPanelVisible" @click="closeRightPanel"></div>
+    <div class="right-panel" :class="{ 'visible': rightPanelVisible }">
+      <div class="right-panel-header">
+        <h3 class="panel-title">{{ rightPanelTitle }}</h3>
+        <el-icon class="close-icon" @click="closeRightPanel">
+          <ArrowLeft />
+        </el-icon>
+      </div>
+      <div class="right-panel-content">
+        <!-- 假勤情况 -->
+        <div v-if="rightPanelContent === 'attendance'" class="panel-section">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">总工作天数</span>
+              <span class="value">{{ workerInfo.workInfo.attendance.totalDays }}天</span>
+            </div>
+            <div class="info-item">
+              <span class="label">缺勤天数</span>
+              <span class="value">{{ workerInfo.workInfo.attendance.absentDays }}天</span>
+            </div>
+            <div class="info-item">
+              <span class="label">迟到天数</span>
+              <span class="value">{{ workerInfo.workInfo.attendance.lateDays }}天</span>
+            </div>
+            <div class="info-item">
+              <span class="label">病假天数</span>
+              <span class="value">{{ workerInfo.workInfo.attendance.sickDays }}天</span>
+            </div>
+          </div>
+          <div class="attendance-history">
+            <h4 class="history-title">近期假勤记录</h4>
+            <div class="history-list">
+              <div class="history-item">
+                <div class="history-date">2026-02-10</div>
+                <div class="history-type">迟到</div>
+                <div class="history-reason">交通堵塞</div>
+              </div>
+              <div class="history-item">
+                <div class="history-date">2026-01-15</div>
+                <div class="history-type">病假</div>
+                <div class="history-reason">感冒</div>
+              </div>
+              <div class="history-item">
+                <div class="history-date">2025-12-20</div>
+                <div class="history-type">缺勤</div>
+                <div class="history-reason">个人原因</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 调岗情况 -->
+        <div v-if="rightPanelContent === 'transfer'" class="panel-section">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">调岗次数</span>
+              <span class="value">{{ workerInfo.workInfo.transfer.count }}次</span>
+            </div>
+            <div class="info-item">
+              <span class="label">最近调岗时间</span>
+              <span class="value">{{ workerInfo.workInfo.transfer.lastTransferDate }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">调岗前区域</span>
+              <span class="value">{{ workerInfo.workInfo.transfer.lastTransferFrom }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">调岗后区域</span>
+              <span class="value">{{ workerInfo.workInfo.transfer.lastTransferTo }}</span>
+            </div>
+          </div>
+          <div class="transfer-history">
+            <h4 class="history-title">调岗历史</h4>
+            <div class="history-list">
+              <div class="history-item">
+                <div class="history-date">2023-06-15</div>
+                <div class="history-from">B区</div>
+                <div class="history-to">A区</div>
+                <div class="history-reason">生产需求调整</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 工资条 -->
+        <div v-if="rightPanelContent === 'salary'" class="panel-section">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">月工资</span>
+              <span class="value">{{ workerInfo.workInfo.salary.monthlySalary }}</span>
+            </div>
+            <div class="info-item">
+              <span class="label">最近发薪日期</span>
+              <span class="value">{{ workerInfo.workInfo.salary.lastSalaryDate }}</span>
+            </div>
+            <div class="info-item full-width">
+              <span class="label">工资历史记录</span>
+              <span class="value">{{ workerInfo.workInfo.salary.salaryHistory }}个月</span>
+            </div>
+          </div>
+          <div class="salary-history">
+            <h4 class="history-title">最近工资记录</h4>
+            <div class="history-list">
+              <div class="history-item">
+                <div class="history-date">2026-02-15</div>
+                <div class="history-amount">5500元</div>
+                <div class="history-status">已发放</div>
+              </div>
+              <div class="history-item">
+                <div class="history-date">2026-01-15</div>
+                <div class="history-amount">5500元</div>
+                <div class="history-status">已发放</div>
+              </div>
+              <div class="history-item">
+                <div class="history-date">2025-12-15</div>
+                <div class="history-amount">5500元</div>
+                <div class="history-status">已发放</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 理赔情况 -->
+        <div v-if="rightPanelContent === 'claim'" class="panel-section">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="label">理赔次数</span>
+              <span class="value">{{ workerInfo.workInfo.claim.count }}次</span>
+            </div>
+            <div class="info-item">
+              <span class="label">最近理赔日期</span>
+              <span class="value">{{ workerInfo.workInfo.claim.lastClaimDate || '无' }}</span>
+            </div>
+            <div class="info-item full-width">
+              <span class="label">最近理赔金额</span>
+              <span class="value">{{ workerInfo.workInfo.claim.lastClaimAmount || '无' }}</span>
+            </div>
+          </div>
+          <div v-if="workerInfo.workInfo.claim.count === 0" class="no-data">
+            <el-empty description="暂无理赔记录" />
+          </div>
+          <div v-else class="claim-history">
+            <h4 class="history-title">理赔历史</h4>
+            <div class="history-list">
+              <!-- 理赔记录 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -678,37 +949,10 @@ onMounted(() => {
   flex-direction: column;
   background-color: var(--color-bg-page);
   padding: var(--spacing-xl);
+  box-sizing: border-box;
 }
 
-/* 顶部操作栏 */
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: var(--spacing-xl);
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  padding: var(--spacing-lg) var(--spacing-xl);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
-}
 
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-md);
-}
-
-.page-title {
-  margin: 0;
-  font-size: var(--font-size-large);
-  font-weight: var(--font-weight-bold);
-  color: var(--color-text-primary);
-}
-
-.header-right {
-  display: flex;
-  gap: var(--spacing-md);
-}
 
 /* 加载容器 */
 .loading-container {
@@ -723,9 +967,30 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
-  padding-bottom: 80px;
+  padding-top: 20px;
+  padding-bottom: 100px;
   overflow-y: auto;
   flex: 1;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-primary-light) var(--color-bg-page);
+}
+
+.detail-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.detail-content::-webkit-scrollbar-track {
+  background: var(--color-bg-page);
+  border-radius: 4px;
+}
+
+.detail-content::-webkit-scrollbar-thumb {
+  background-color: var(--color-primary-light);
+  border-radius: 4px;
+}
+
+.detail-content::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-primary);
 }
 
 /* 信息卡片 */
@@ -787,7 +1052,7 @@ onMounted(() => {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
 }
 
 .info-row {
@@ -804,12 +1069,32 @@ onMounted(() => {
   color: var(--color-text-primary);
 }
 
-.info-item {
+/* 顶部卡片中的信息网格 */
+.basic-info .info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--spacing-md);
+  width: 100%;
+}
+
+.basic-info .info-item {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: var(--spacing-xs);
   font-size: var(--font-size-base);
   color: var(--color-text-regular);
+}
+
+.basic-info .info-item .label {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+}
+
+.basic-info .info-item .value {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  font-weight: var(--font-weight-medium);
 }
 
 .info-item :deep(.el-icon) {
@@ -819,15 +1104,16 @@ onMounted(() => {
 
 /* 信息分组 */
 .info-section {
-  background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+  background: #ffffff;
   border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
   overflow: hidden;
   transition: all var(--transition-base);
+  border: 1px solid #f0f0f0;
 }
 
 .info-section:hover {
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   transform: translateY(-2px);
 }
 
@@ -837,12 +1123,13 @@ onMounted(() => {
   align-items: center;
   padding: var(--spacing-lg) var(--spacing-xl);
   cursor: pointer;
-  border-bottom: 1px solid var(--color-border-light);
+  border-bottom: 1px solid #f0f0f0;
   transition: all var(--transition-fast);
+  background-color: #f9fafb;
 }
 
 .section-header:hover {
-  background-color: var(--bg-color-hover);
+  background-color: #f3f4f6;
 }
 
 .section-title {
@@ -863,6 +1150,7 @@ onMounted(() => {
 .collapse-icon {
   transition: transform var(--transition-base);
   color: var(--color-text-secondary);
+  font-size: 18px;
 }
 
 .collapse-icon.collapsed {
@@ -871,6 +1159,7 @@ onMounted(() => {
 
 .section-content {
   padding: var(--spacing-xl);
+  background-color: #ffffff;
 }
 
 /* 信息网格 */
@@ -884,6 +1173,16 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
+  padding: var(--spacing-md);
+  background-color: #f9fafb;
+  border-radius: var(--radius-md);
+  border: 1px solid #f0f0f0;
+  transition: all var(--transition-fast);
+}
+
+.info-item:hover {
+  background-color: #f3f4f6;
+  border-color: var(--color-primary-light);
 }
 
 .info-item.full-width {
@@ -894,33 +1193,38 @@ onMounted(() => {
   font-size: var(--font-size-small);
   color: var(--color-text-secondary);
   font-weight: var(--font-weight-medium);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .info-item .value {
   font-size: var(--font-size-base);
   color: var(--color-text-primary);
   font-weight: var(--font-weight-medium);
+  line-height: 1.4;
 }
 
 /* 生活照片 */
 .life-photos-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: var(--spacing-md);
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--spacing-lg);
 }
 
 .life-photo-item {
   aspect-ratio: 1;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   box-shadow: var(--shadow-sm);
   transition: all var(--transition-fast);
   cursor: pointer;
+  border: 2px solid #f0f0f0;
 }
 
 .life-photo-item:hover {
   transform: scale(1.05);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: var(--color-primary-light);
 }
 
 .life-photo-item :deep(.el-image) {
@@ -1150,6 +1454,240 @@ onMounted(() => {
   }
 }
 
+/* 初步面试信息 */
+.initial-interview-info {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--color-border-lighter);
+}
+
+.section-subtitle {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+/* 工作相关信息入口 */
+.work-related-entries {
+  margin-top: var(--spacing-xl);
+  padding-top: var(--spacing-xl);
+  border-top: 1px solid var(--color-border-lighter);
+}
+
+.entries-title {
+  margin: 0 0 var(--spacing-lg) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.entries-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+.entry-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  background-color: #f9fafb;
+  border-radius: var(--radius-md);
+  border: 1px solid #f0f0f0;
+  transition: all var(--transition-fast);
+  cursor: pointer;
+}
+
+.entry-item:hover {
+  background-color: #f3f4f6;
+  border-color: var(--color-primary-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
+
+.entry-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: var(--color-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.entry-icon :deep(.el-icon) {
+  font-size: 20px;
+  color: var(--color-primary);
+}
+
+.entry-content {
+  flex: 1;
+}
+
+.entry-title {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.entry-subtitle {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+}
+
+.entry-arrow {
+  flex-shrink: 0;
+}
+
+.entry-arrow :deep(.el-icon) {
+  font-size: 16px;
+  color: var(--color-text-secondary);
+  transition: transform var(--transition-base);
+}
+
+.entry-item:hover .entry-arrow :deep(.el-icon) {
+  transform: translateX(4px);
+  color: var(--color-primary);
+}
+
+/* 右侧展开面板 */
+.right-panel-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  transition: opacity var(--transition-base);
+}
+
+.right-panel {
+  position: fixed;
+  top: 0;
+  right: -400px;
+  width: 400px;
+  height: 100vh;
+  background-color: #ffffff;
+  box-shadow: -4px 0 12px rgba(0, 0, 0, 0.15);
+  z-index: 9999;
+  transition: right var(--transition-base);
+  display: flex;
+  flex-direction: column;
+}
+
+.right-panel.visible {
+  right: 0;
+}
+
+.right-panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-lg) var(--spacing-xl);
+  border-bottom: 1px solid #f0f0f0;
+  background-color: #f9fafb;
+}
+
+.panel-title {
+  margin: 0;
+  font-size: var(--font-size-large);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.close-icon {
+  font-size: 20px;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.close-icon:hover {
+  color: var(--color-text-primary);
+  transform: rotate(90deg);
+}
+
+.right-panel-content {
+  flex: 1;
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+}
+
+.panel-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+/* 历史记录样式 */
+.attendance-history,
+.transfer-history,
+.salary-history,
+.claim-history {
+  margin-top: var(--spacing-lg);
+}
+
+.history-title {
+  margin: 0 0 var(--spacing-md) 0;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.history-item {
+  padding: var(--spacing-md);
+  background-color: #f9fafb;
+  border-radius: var(--radius-md);
+  border: 1px solid #f0f0f0;
+  transition: all var(--transition-fast);
+}
+
+.history-item:hover {
+  background-color: #f3f4f6;
+  border-color: var(--color-primary-light);
+}
+
+.history-date {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.history-type,
+.history-from,
+.history-to,
+.history-amount,
+.history-status {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-xs);
+}
+
+.history-reason {
+  font-size: var(--font-size-small);
+  color: var(--color-text-regular);
+}
+
+/* 无数据状态 */
+.no-data {
+  padding: var(--spacing-xl);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 /* 底部按钮栏 */
 .detail-footer {
   position: fixed;
@@ -1158,11 +1696,43 @@ onMounted(() => {
   right: 0;
   display: flex;
   justify-content: center;
-  gap: 12px;
-  padding: 16px;
-  background-color: #f5f7fa;
+  gap: 16px;
+  padding: 20px;
+  background-color: #ffffff;
   border-top: 1px solid #e4e7ed;
   z-index: 100;
   transition: left var(--transition-base);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.detail-footer .el-button {
+  min-width: 120px;
+  padding: 10px 20px;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+}
+
+.detail-footer .el-button :deep(.el-icon) {
+  margin-right: 6px;
+}
+
+/* 响应式设计 - 右侧面板 */
+@media screen and (max-width: 768px) {
+  .entries-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .right-panel {
+    width: 100%;
+    right: -100%;
+  }
+  
+  .right-panel-header {
+    padding: var(--spacing-md);
+  }
+  
+  .right-panel-content {
+    padding: var(--spacing-md);
+  }
 }
 </style>

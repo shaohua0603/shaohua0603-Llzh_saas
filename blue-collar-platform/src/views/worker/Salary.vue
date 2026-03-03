@@ -245,7 +245,7 @@ onMounted(() => {
           </div>
           
           <div class="salary-action">
-            <el-button type="primary" link @click="navigateToDetail(salary.id)">查看详情</el-button>
+            <el-button type="primary" link @click="navigateToDetail(salary.id)">查看</el-button>
           </div>
         </div>
       </div>

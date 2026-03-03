@@ -361,8 +361,8 @@ const fetchWorkers = async () => {
     workersList.value = filteredData.slice(start, end)
     totalWorkers.value = filteredData.length
   } catch (error) {
-    console.error('获取工人列表失败:', error)
-    ElMessage.error('获取工人列表失败')
+    console.error('获取工人信息失败:', error)
+    ElMessage.error('获取工人信息失败')
   } finally {
     loading.value = false
   }

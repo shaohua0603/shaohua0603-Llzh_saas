@@ -85,7 +85,7 @@
           <el-table-column label="操作" width="200" align="center" fixed="right">
             <template #default="{ row }">
               <el-button type="primary" link size="small" @click="handleViewWorker(row)">
-                查看详情
+                查看
               </el-button>
               <el-button type="warning" link size="small" @click="handleInterviewResult(row)">
                 面试结果
@@ -136,16 +136,21 @@
       </el-button>
     </div>
 
+    <!-- 蒙版 -->
+    <div v-if="workerDetailVisible" class="sidebar-mask" @click="workerDetailVisible = false"></div>
+
     <!-- 工人详情右侧栏 -->
     <div class="worker-sidebar" :class="{ 'open': workerDetailVisible }">
       <div class="sidebar-header">
-        <h3>工人详情</h3>
+        <h3>{{ selectedWorker ? `工人详情 - ${selectedWorker.name}` : '工人详情' }}</h3>
         <el-button type="text" @click="workerDetailVisible = false" class="close-btn">
           <el-icon><Close /></el-icon>
         </el-button>
       </div>
       <div class="sidebar-content">
         <el-card v-if="selectedWorker" shadow="never">
+          <!-- 个人基本信息 -->
+          <h4 class="section-title">个人基本信息</h4>
           <el-descriptions :column="1" border>
             <el-descriptions-item label="姓名">{{ selectedWorker.name }}</el-descriptions-item>
             <el-descriptions-item label="手机号">{{ selectedWorker.phone }}</el-descriptions-item>
@@ -170,6 +175,11 @@
             <el-descriptions-item label="岗位类别">{{ selectedWorker.positionCategory }}</el-descriptions-item>
             <el-descriptions-item label="期望工作地址">{{ selectedWorker.expectedLocation }}</el-descriptions-item>
             <el-descriptions-item label="推荐理由">{{ selectedWorker.recommendationReason }}</el-descriptions-item>
+          </el-descriptions>
+          
+          <!-- 面试结果信息 -->
+          <h4 class="section-title">面试结果</h4>
+          <el-descriptions :column="1" border>
             <el-descriptions-item label="面试结果">
               <el-tag :type="getInterviewResultType(selectedWorker.interviewResult)">
                 {{ getInterviewResultText(selectedWorker.interviewResult) }}
@@ -531,7 +541,7 @@ onMounted(() => {
   height: 100vh;
   background-color: #fff;
   box-shadow: -2px 0 8px rgba(0, 0, 0, 0.15);
-  z-index: 200;
+  z-index: 9999;
   transition: right 0.3s ease;
   display: flex;
   flex-direction: column;
@@ -570,6 +580,31 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 16px;
+}
+
+.sidebar-content .section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #303133;
+  margin: 16px 0 8px 0;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e4e7ed;
+}
+
+.sidebar-content .section-title:first-child {
+  margin-top: 0;
+}
+
+/* 蒙版样式 */
+.sidebar-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 9998;
+  transition: opacity 0.3s ease;
 }
 
 /* 响应式设计 */

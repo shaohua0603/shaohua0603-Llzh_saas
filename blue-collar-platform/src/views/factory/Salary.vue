@@ -32,7 +32,7 @@
         <el-table-column prop="settlementDate" label="结算日期" width="120" />
         <el-table-column label="操作" width="150">
           <template #default="scope">
-            <el-button size="small" @click="viewSettlement(scope.row)">查看详情</el-button>
+            <el-button size="small" @click="viewSettlement(scope.row)">查看</el-button>
             <el-button size="small" type="primary" @click="confirmSettlement(scope.row)">
               {{ scope.row.status === '待确认' ? '确认' : '修改' }}
             </el-button>

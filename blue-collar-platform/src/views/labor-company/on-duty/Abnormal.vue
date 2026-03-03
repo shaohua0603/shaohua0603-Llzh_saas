@@ -7,9 +7,6 @@
         <el-form-item label="姓名">
           <el-input v-model="searchForm.workerName" placeholder="请输入姓名" clearable style="width: 160px" />
         </el-form-item>
-        <el-form-item label="手机号">
-          <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable style="width: 160px" />
-        </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="handleSearch">搜索</el-button>
           <el-button @click="handleReset">重置</el-button>
@@ -17,7 +14,15 @@
       </el-form>
     </div>
 
-    <!-- 工具栏 -->
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleConfig">
+        <el-icon><Setting /></el-icon>
+        异常规则配置
+      </el-button>
+    </div>
+
+    <!-- 通用表格 -->
     <CommonTable
       ref="tableRef"
       :data="tableData"
@@ -26,20 +31,14 @@
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
-      :showToolbar="true"
-      :showSelection="false"
-      :showIndex="true"
-      :showActions="false"
+      :show-selection="false"
+      :show-index="true"
+      :show-actions="false"
+      :stats-info="statsInfo"
       @sort-change="handleSortChange"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleConfig">
-          <el-icon><Setting /></el-icon>
-          异常规则配置
-        </el-button>
-      </template>
       <template #column-abnormalName="{ row }">
         <el-tag type="warning">{{ row.abnormalName }}</el-tag>
       </template>
@@ -75,6 +74,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { Setting } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
 
@@ -103,6 +103,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const configVisible = ref(false)
 const configLoading = ref(false)
+const statsInfo = ref<Array<{ label: string; value: string }>>([])
 
 const searchForm = reactive({
   workerName: '',
@@ -187,6 +188,19 @@ const loadData = () => {
     // 分页
     const start = (currentPage.value - 1) * pageSize.value
     tableData.value = filteredData.slice(start, start + pageSize.value)
+    
+    // 计算统计信息
+    const leaveAbnormalCount = filteredData.filter(item => item.abnormalName.includes('请假')).length
+    const punishmentAbnormalCount = filteredData.filter(item => item.abnormalName.includes('惩罚')).length
+    const totalAbnormalCount = filteredData.reduce((sum, item) => sum + item.count, 0)
+    
+    statsInfo.value = [
+      { label: '总计异常记录', value: total.value.toString() },
+      { label: '请假异常', value: leaveAbnormalCount.toString() },
+      { label: '惩罚异常', value: punishmentAbnormalCount.toString() },
+      { label: '总异常次数', value: totalAbnormalCount.toString() }
+    ]
+    
     loading.value = false
   }, 500)
 }
@@ -249,40 +263,61 @@ onMounted(() => {
 
 <style scoped>
 .abnormal-page {
-  padding: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
 .search-filter-section {
   background: #fff;
-  padding: 20px;
+  padding: 16px;
   border-radius: 4px;
   margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-}
-
-.table-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
-}
-
-.toolbar-left {
-  display: flex;
   gap: 12px;
+  align-items: center;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .form-tip {
   font-size: 12px;
   color: #909399;
   margin-top: 5px;
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .search-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .search-form .el-form-item {
+    width: 100%;
+  }
+  
+  .search-form .el-input {
+    width: 100% !important;
+  }
 }
 </style>

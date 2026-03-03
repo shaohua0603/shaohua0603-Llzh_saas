@@ -119,7 +119,7 @@
         </template>
         <template #actions="{ row }">
           <el-button type="primary" link size="small" @click.stop="handleDetail(row)" v-permission="['interview:factory:view']">
-            查看详情
+            查看
           </el-button>
           <el-button type="warning" link size="small" @click.stop="handleEdit(row)" v-permission="['interview:factory:update']">
             编辑
@@ -366,7 +366,7 @@ const handleRowClick = (row: any) => {
   handleDetail(row)
 }
 
-// 查看详情
+// 查看
 const handleDetail = (row: any) => {
   router.push(`/labor-company/interview/factory-interview/${row.id}`)
 }

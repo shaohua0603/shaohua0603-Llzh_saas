@@ -70,6 +70,10 @@
 
     <!-- 底部悬浮操作栏 -->
     <div class="detail-footer">
+      <el-button @click="goBack">
+        <el-icon><ArrowLeft /></el-icon>
+        返回
+      </el-button>
       <el-button @click="handleExport">
         <el-icon><Download /></el-icon>
         导出
@@ -145,7 +149,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Download, Money } from '@element-plus/icons-vue'
+import { Download, Money, ArrowLeft } from '@element-plus/icons-vue'
 
 // 路由
 const route = useRoute()
@@ -283,6 +287,11 @@ const loadData = async () => {
       operator: '管理员'
     }
   ]
+}
+
+// 返回上一页
+const goBack = () => {
+  router.back()
 }
 
 // 生命周期

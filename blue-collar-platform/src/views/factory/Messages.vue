@@ -301,7 +301,7 @@ const handleRowClick = (row: any) => {
   handleViewDetail(row)
 }
 
-// 查看详情
+// 查看
 const handleViewDetail = (row: any) => {
   // 标记为已读
   if (row.readStatus === 'unread') {

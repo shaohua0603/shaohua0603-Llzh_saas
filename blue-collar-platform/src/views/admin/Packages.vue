@@ -40,7 +40,7 @@
         </el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="scope">
-            <el-button size="small" @click="viewPackage(scope.row)">查看详情</el-button>
+            <el-button size="small" @click="viewPackage(scope.row)">查看</el-button>
             <el-button size="small" type="primary" @click="editPackage(scope.row)">编辑</el-button>
           </template>
         </el-table-column>

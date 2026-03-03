@@ -50,7 +50,7 @@
         </el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="scope">
-            <el-button size="small" @click="viewInterview(scope.row)">查看详情</el-button>
+            <el-button size="small" @click="viewInterview(scope.row)">查看</el-button>
             <el-button size="small" type="primary" @click="confirmInterview(scope.row)">确认</el-button>
           </template>
         </el-table-column>
@@ -130,7 +130,7 @@ const getStatusType = (status: string) => {
   }
 }
 
-// 查看详情
+// 查看
 const viewDetails = (row: any) => {
   console.log('查看招聘需求详情:', row)
 }

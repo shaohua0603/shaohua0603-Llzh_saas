@@ -18,7 +18,7 @@
         </div>
         <div class="training-footer">
           <span class="training-date">{{ training.createDate }}</span>
-          <el-button size="small" type="primary" @click="viewTraining(training)">查看详情</el-button>
+          <el-button size="small" type="primary" @click="viewTraining(training)">查看</el-button>
         </div>
       </el-card>
     </div>

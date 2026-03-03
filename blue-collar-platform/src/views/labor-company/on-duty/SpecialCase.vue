@@ -1,24 +1,44 @@
 <!-- 特殊情况管理页面 -->
 <template>
   <div class="special-case-page">
-    <!-- 搜索筛选区域 -->
+    <!-- 搜索和筛选区域 -->
     <div class="search-filter-section">
-      <el-form inline :model="searchForm" class="search-form">
+      <el-form :inline="true" :model="filterForm" class="filter-form">
         <el-form-item label="工人姓名">
-          <el-input v-model="searchForm.workerName" placeholder="请输入工人姓名" clearable style="width: 160px" />
+          <el-input
+            v-model="filterForm.workerName"
+            placeholder="请输入工人姓名"
+            clearable
+            style="width: 160px"
+          />
         </el-form-item>
         <el-form-item label="手机号">
-          <el-input v-model="searchForm.phone" placeholder="请输入手机号" clearable style="width: 160px" />
+          <el-input
+            v-model="filterForm.phone"
+            placeholder="请输入手机号"
+            clearable
+            style="width: 160px"
+          />
         </el-form-item>
         <el-form-item label="特殊情况类型">
-          <el-select v-model="searchForm.caseType" placeholder="请选择" clearable style="width: 150px">
+          <el-select
+            v-model="filterForm.caseType"
+            placeholder="请选择"
+            clearable
+            style="width: 150px"
+          >
             <el-option label="全部" value="" />
             <el-option label="一般情况" value="general" />
             <el-option label="工伤事故" value="work_injury" />
           </el-select>
         </el-form-item>
         <el-form-item label="处理状态">
-          <el-select v-model="searchForm.status" placeholder="请选择" clearable style="width: 150px">
+          <el-select
+            v-model="filterForm.status"
+            placeholder="请选择"
+            clearable
+            style="width: 150px"
+          >
             <el-option label="全部" value="" />
             <el-option label="待处理" value="pending" />
             <el-option label="处理中" value="processing" />
@@ -26,41 +46,73 @@
           </el-select>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="handleReset">重置</el-button>
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>
+            搜索
+          </el-button>
+          <el-button @click="handleReset">
+            <el-icon><Refresh /></el-icon>
+            重置
+          </el-button>
         </el-form-item>
       </el-form>
+      <div class="expand-toggle" @click="toggleFilter">
+        <el-icon :class="{ 'rotate-180': filterExpanded }"><ArrowDown /></el-icon>
+        <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+      </div>
+      <!-- 展开显示更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form :inline="true" :model="filterForm" class="filter-form">
+          <el-form-item label="创建日期范围">
+            <el-date-picker
+              v-model="filterForm.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              style="width: 250px"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
 
-    <!-- 工具栏 -->
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>
+        新增
+      </el-button>
+      <el-button type="success" @click="handleExport">
+        <el-icon><Download /></el-icon>
+        导出
+      </el-button>
+      <el-button type="danger" @click="handleBatchDelete" :disabled="selectedRows.length === 0">
+        <el-icon><Delete /></el-icon>
+        批量删除
+      </el-button>
+    </div>
+
+    <!-- 通用表格 -->
     <CommonTable
       ref="tableRef"
       :data="tableData"
       :columns="columns"
-      :loading="loading"
+      table-id="special-case-table"
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
-      :showToolbar="true"
-      :showSelection="true"
-      :showIndex="true"
-      :showActions="true"
-      action-column-width="200"
+      :loading="loading"
+      :show-selection="true"
+      :show-toolbar="true"
+      :stats-info="statsInfo"
+      @update:current-page="handleCurrentChange"
+      @update:page-size="handleSizeChange"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
-      @current-change="handleCurrentChange"
-      @size-change="handleSizeChange"
+      @global-search="handleGlobalSearch"
     >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增
-        </el-button>
-        <el-button type="success" @click="handleExport">
-          <el-icon><Download /></el-icon>
-          导出
-        </el-button>
-      </template>
       <template #column-caseType="{ row }">
         <el-tag :type="row.caseType === 'work_injury' ? 'danger' : 'info'">
           {{ row.caseType === 'work_injury' ? '工伤事故' : '一般情况' }}
@@ -175,17 +227,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Download } from '@element-plus/icons-vue'
+import { Plus, Download, Search, Refresh, Delete, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 
 // 搜索表单
-const searchForm = reactive({
+const filterExpanded = ref(false)
+const filterForm = reactive({
   workerName: '',
   phone: '',
   caseType: '',
-  status: ''
+  status: '',
+  dateRange: [] as string[]
 })
 
 // 表格数据
@@ -194,6 +248,25 @@ const loading = ref(false)
 const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
+const selectedRows = ref<any[]>([])
+
+// 统计数据
+const stats = reactive({
+  totalCount: 0,
+  pendingCount: 0,
+  processingCount: 0,
+  processedCount: 0
+})
+
+// 统计信息字符串
+const statsInfo = computed(() => {
+  return `总数: ${stats.totalCount} | 待处理: ${stats.pendingCount} | 处理中: ${stats.processingCount} | 已处理: ${stats.processedCount}`
+})
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
 
 // 表格列配置
 const columns = [
@@ -279,10 +352,17 @@ const handleSearch = () => {
 
 // 重置
 const handleReset = () => {
-  searchForm.workerName = ''
-  searchForm.phone = ''
-  searchForm.caseType = ''
-  searchForm.status = ''
+  filterForm.workerName = ''
+  filterForm.phone = ''
+  filterForm.caseType = ''
+  filterForm.status = ''
+  filterForm.dateRange = []
+  handleSearch()
+}
+
+// 全局搜索
+const handleGlobalSearch = (keyword: string) => {
+  filterForm.workerName = keyword
   handleSearch()
 }
 
@@ -347,6 +427,13 @@ const fetchData = async () => {
       }
     ]
     total.value = 3
+    
+    // 更新统计数据
+    stats.totalCount = tableData.value.length
+    stats.pendingCount = tableData.value.filter(item => item.status === 'pending').length
+    stats.processingCount = tableData.value.filter(item => item.status === 'processing').length
+    stats.processedCount = tableData.value.filter(item => item.status === 'processed').length
+    
     loading.value = false
   }, 500)
 }
@@ -369,7 +456,26 @@ const handleSortChange = (sort: { prop: string; order: string }) => {
 
 // 选择
 const handleSelectionChange = (selection: any[]) => {
-  console.log('选择变化:', selection)
+  selectedRows.value = selection
+}
+
+// 批量删除
+const handleBatchDelete = async () => {
+  if (selectedRows.value.length === 0) return
+
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除选中的 ${selectedRows.value.length} 条特殊情况记录吗？`,
+      '批量删除',
+      {
+        type: 'warning'
+      }
+    )
+    ElMessage.success('删除成功')
+    fetchData()
+  } catch {
+    // 用户取消
+  }
 }
 
 // 新增
@@ -469,32 +575,63 @@ onMounted(() => {
 
 <style scoped>
 .special-case-page {
-  padding: 20px;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
 .search-filter-section {
-  background: #fff;
-  padding: 20px;
+  margin-bottom: 16px;
+  background-color: #fff;
   border-radius: 4px;
-  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.search-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+.filter-form {
+  padding: 16px;
+  padding-bottom: 0;
 }
 
-.table-toolbar {
+.expand-toggle {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  justify-content: center;
+  padding: 12px;
+  cursor: pointer;
+  color: #409eff;
+  border-top: 1px solid #e4e7ed;
+  transition: all 0.3s;
 }
 
-.toolbar-left {
+.expand-toggle:hover {
+  background-color: #f5f7fa;
+}
+
+.expand-toggle .el-icon {
+  margin-right: 8px;
+  transition: transform 0.3s;
+}
+
+.expand-toggle .rotate-180 {
+  transform: rotate(180deg);
+}
+
+.filter-content.expanded {
+  padding: 16px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.action-bar {
   display: flex;
-  gap: 10px;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .record-content {
@@ -515,5 +652,29 @@ onMounted(() => {
 .record-info {
   color: #666;
   font-size: 14px;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .special-case-page {
+    padding: 8px;
+  }
+
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .filter-form :deep(.el-form-item) {
+    margin-right: 0;
+    margin-bottom: 12px;
+  }
+
+  .filter-form :deep(.el-input),
+  .filter-form :deep(.el-select),
+  .filter-form :deep(.el-date-picker) {
+    width: 100%;
+  }
 }
 </style>

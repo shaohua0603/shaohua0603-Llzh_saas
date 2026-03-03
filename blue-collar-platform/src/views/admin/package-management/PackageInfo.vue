@@ -338,7 +338,7 @@ const handleEdit = (row: Package) => {
 }
 
 /**
- * 查看详情
+ * 查看
  * @param row 套餐信息
  */
 const handleDetail = (row: Package) => {

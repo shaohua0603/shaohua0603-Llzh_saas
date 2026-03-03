@@ -3,31 +3,55 @@
   <div class="question-bank-page">
     <!-- 搜索筛选区域 -->
     <div class="search-filter-section">
-      <el-form inline :model="searchForm" class="search-form">
-        <el-form-item label="题干">
-          <el-input v-model="searchForm.question" placeholder="请输入题干" clearable style="width: 200px" />
-        </el-form-item>
-        <el-form-item label="题库类型">
-          <el-select v-model="searchForm.questionType" placeholder="请选择" clearable style="width: 150px">
-            <el-option label="全部" value="" />
-            <el-option label="岗前培训" value="pre_job" />
-            <el-option label="日常培训" value="daily" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="答题类型">
-          <el-select v-model="searchForm.answerType" placeholder="请选择" clearable style="width: 150px">
-            <el-option label="全部" value="" />
-            <el-option label="单选题" value="single" />
-            <el-option label="多选题" value="multiple" />
-            <el-option label="判断题" value="true_false" />
-            <el-option label="填空题" value="fill" />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="handleSearch">搜索</el-button>
-          <el-button @click="handleReset">重置</el-button>
-        </el-form-item>
-      </el-form>
+      <el-card :body-style="{ padding: '16px' }" shadow="hover">
+        <el-form inline :model="searchForm" class="search-form">
+          <el-form-item label="题干">
+            <el-input v-model="searchForm.question" placeholder="请输入题干" clearable style="width: 300px" />
+          </el-form-item>
+          <el-form-item label="题库类型" v-show="filterExpanded">
+            <el-select v-model="searchForm.questionType" placeholder="请选择" clearable style="width: 150px">
+              <el-option label="全部" value="" />
+              <el-option label="岗前培训" value="pre_job" />
+              <el-option label="日常培训" value="daily" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="答题类型" v-show="filterExpanded">
+            <el-select v-model="searchForm.answerType" placeholder="请选择" clearable style="width: 150px">
+              <el-option label="全部" value="" />
+              <el-option label="单选题" value="single" />
+              <el-option label="多选题" value="multiple" />
+              <el-option label="判断题" value="true_false" />
+              <el-option label="填空题" value="fill" />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="handleSearch">搜索</el-button>
+            <el-button @click="handleReset">重置</el-button>
+            <el-button type="text" @click="toggleFilter">
+              <el-icon :class="{ 'is-rotated': filterExpanded }">
+                <ArrowDown />
+              </el-icon>
+              {{ filterExpanded ? '收起' : '展开' }}
+            </el-button>
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
+
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button type="primary" @click="handleAdd">
+        <el-icon><Plus /></el-icon>
+        新增
+      </el-button>
+      <el-button type="danger" :disabled="selectedRows.length === 0" @click="handleBatchDelete">
+        <el-icon><Delete /></el-icon>
+        批量删除
+      </el-button>
+      <el-button @click="handleExport">
+        <el-icon><Download /></el-icon>
+        导出
+      </el-button>
     </div>
 
     <!-- 表格 -->
@@ -39,26 +63,16 @@
       :total="total"
       :current-page="currentPage"
       :page-size="pageSize"
-      :showToolbar="true"
       :showSelection="true"
       :showIndex="true"
       :showActions="true"
+      :stats-info="statsInfo"
       action-column-width="200"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleAdd">
-          <el-icon><Plus /></el-icon>
-          新增
-        </el-button>
-        <el-button type="danger" :disabled="selectedRows.length === 0" @click="handleBatchDelete">
-          <el-icon><Delete /></el-icon>
-          批量删除
-        </el-button>
-      </template>
 
       <template #column-questionType="{ row }">
         <el-tag :type="getQuestionTypeTag(row.questionType)">
@@ -78,15 +92,30 @@
           v-model="row.publishStatus"
           active-value="published"
           inactive-value="unpublished"
-          @change="handlePublishStatusChange(row)"
+          @change="(value) => handlePublishStatusChange(row, value)"
         />
       </template>
       <template #actions="{ row }">
-        <el-button link type="primary" size="small" @click="handleDetail(row)">详情</el-button>
-        <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-        <el-button link type="success" size="small" @click="handlePublish(row)" v-if="row.publishStatus === 'unpublished'">发布</el-button>
-        <el-button link type="warning" size="small" @click="handleUnpublish(row)" v-else>取消发布</el-button>
-        <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+        <el-button link type="primary" size="small" @click="handleDetail(row)">
+          <el-icon><View /></el-icon>
+          详情
+        </el-button>
+        <el-button link type="primary" size="small" @click="handleEdit(row)">
+          <el-icon><Edit /></el-icon>
+          编辑
+        </el-button>
+        <el-button link type="success" size="small" @click="handlePublish(row)" v-if="row.publishStatus === 'unpublished'">
+          <el-icon><Check /></el-icon>
+          发布
+        </el-button>
+        <el-button link type="warning" size="small" @click="handleUnpublish(row)" v-else>
+          <el-icon><Close /></el-icon>
+          取消发布
+        </el-button>
+        <el-button link type="danger" size="small" @click="handleDelete(row)">
+          <el-icon><Delete /></el-icon>
+          删除
+        </el-button>
       </template>
     </CommonTable>
 
@@ -184,6 +213,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
 import RichTextEditor from '@/components/RichTextEditor.vue'
+import { Plus, Delete, ArrowDown, Download, Search, Refresh, View, Edit, Check, Close } from '@element-plus/icons-vue'
 
 // 类型定义
 interface QuestionBank {
@@ -201,9 +231,9 @@ interface QuestionBank {
 
 // 表格列配置
 const columns = [
-  { prop: 'question', label: '题干', minWidth: 300 },
   { prop: 'questionType', label: '题库类型', minWidth: 120, sortable: true },
   { prop: 'answerType', label: '答题类型', minWidth: 100, sortable: true },
+  { prop: 'question', label: '题干', minWidth: 400 },
   { prop: 'score', label: '分值', minWidth: 80, sortable: true },
   { prop: 'publishStatus', label: '发布状态', minWidth: 100, sortable: true },
   { prop: 'createTime', label: '创建时间', minWidth: 160, sortable: true }
@@ -221,6 +251,19 @@ const detailVisible = ref(false)
 const submitLoading = ref(false)
 const dialogTitle = ref('新增题库')
 const currentRow = ref<QuestionBank | null>(null)
+const filterExpanded = ref(false)
+const statsInfo = ref<Array<{ label: string; value: string | number }>>([])
+const tableRef = ref()
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
+
+// 导出
+const handleExport = () => {
+  ElMessage.success('导出成功')
+}
 
 const searchForm = reactive({
   question: '',
@@ -372,6 +415,17 @@ const loadData = () => {
       filteredData = filteredData.filter(item => item.answerType === searchForm.answerType)
     }
 
+    // 计算统计信息
+    const totalCount = filteredData.length
+    const publishedCount = filteredData.filter(item => item.publishStatus === 'published').length
+    const unpublishedCount = filteredData.filter(item => item.publishStatus === 'unpublished').length
+    
+    statsInfo.value = [
+      { label: '总题库数', value: totalCount },
+      { label: '已发布', value: publishedCount },
+      { label: '未发布', value: unpublishedCount }
+    ]
+
     total.value = filteredData.length
     // 分页
     const start = (currentPage.value - 1) * pageSize.value
@@ -493,39 +547,48 @@ const handleSubmit = async () => {
 
 // 发布
 const handlePublish = (row: QuestionBank) => {
-  ElMessageBox.confirm('确定要发布该题库吗?', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    const index = mockData.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      mockData[index].publishStatus = 'published'
-      ElMessage.success('发布成功')
-      loadData()
-    }
-  }).catch(() => {})
+  // 检查状态是否已经是published，避免重复操作
+  const originalRow = mockData.find(item => item.id === row.id)
+  if (originalRow && originalRow.publishStatus !== 'published') {
+    ElMessageBox.confirm('确定要发布该题库吗?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(() => {
+      const index = mockData.findIndex(item => item.id === row.id)
+      if (index > -1) {
+        mockData[index].publishStatus = 'published'
+        ElMessage.success('发布成功')
+        loadData()
+      }
+    }).catch(() => {})
+  }
 }
 
 // 取消发布
 const handleUnpublish = (row: QuestionBank) => {
-  ElMessageBox.confirm('确定要取消发布该题库吗?', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    const index = mockData.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      mockData[index].publishStatus = 'unpublished'
-      ElMessage.success('取消发布成功')
-      loadData()
-    }
-  }).catch(() => {})
+  // 检查状态是否已经是unpublished，避免重复操作
+  const originalRow = mockData.find(item => item.id === row.id)
+  if (originalRow && originalRow.publishStatus !== 'unpublished') {
+    ElMessageBox.confirm('确定要取消发布该题库吗?', '提示', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      type: 'warning'
+    }).then(() => {
+      const index = mockData.findIndex(item => item.id === row.id)
+      if (index > -1) {
+        mockData[index].publishStatus = 'unpublished'
+        ElMessage.success('取消发布成功')
+        loadData()
+      }
+    }).catch(() => {})
+  }
 }
 
 // 发布状态开关变化
-const handlePublishStatusChange = (row: QuestionBank) => {
-  if (row.publishStatus === 'published') {
+const handlePublishStatusChange = (row: QuestionBank, value: string) => {
+  // 直接根据新值执行相应操作
+  if (value === 'published') {
     handlePublish(row)
   } else {
     handleUnpublish(row)
@@ -562,35 +625,32 @@ onMounted(() => {
 
 <style scoped>
 .question-bank-page {
-  padding: 20px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  min-height: 100vh;
 }
 
 .search-filter-section {
-  background: #fff;
-  padding: 20px;
-  border-radius: 4px;
   margin-bottom: 16px;
 }
 
 .search-form {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
-}
-
-.table-toolbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-  padding: 12px 16px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
-}
-
-.toolbar-left {
-  display: flex;
   gap: 12px;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .content-view {
@@ -603,5 +663,41 @@ onMounted(() => {
 :deep(.el-divider__text) {
   font-weight: 600;
   color: #303133;
+}
+
+.is-rotated {
+  transform: rotate(180deg);
+  transition: transform 0.3s;
+}
+
+:deep(.el-icon) {
+  transition: transform 0.3s;
+}
+
+/* 响应式适配 */
+@media screen and (max-width: 768px) {
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .search-form {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .el-form-item {
+    width: 100%;
+  }
+  
+  .el-input,
+  .el-select {
+    width: 100% !important;
+  }
+  
+  .content-view {
+    padding: 12px;
+  }
 }
 </style>

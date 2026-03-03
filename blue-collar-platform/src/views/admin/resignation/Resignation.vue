@@ -222,8 +222,13 @@ const columns: ColumnConfig[] = [
         APPROVED: { text: '审核通过', type: 'success' },
         REJECTED: { text: '已驳回', type: 'danger' }
       }
-      return statusMap[value] || value
-    }
+      const status = statusMap[value]
+      if (status) {
+        return `<el-tag type="${status.type}">${status.text}</el-tag>`
+      }
+      return value
+    },
+    showTooltip: true
   },
   {
     prop: 'resignationStatus',
@@ -235,8 +240,13 @@ const columns: ColumnConfig[] = [
         IN_PROGRESS: { text: '离职中', type: 'warning' },
         COMPLETED: { text: '已离职', type: 'success' }
       }
-      return statusMap[value] || value
-    }
+      const status = statusMap[value]
+      if (status) {
+        return `<el-tag type="${status.type}">${status.text}</el-tag>`
+      }
+      return value
+    },
+    showTooltip: true
   },
   { prop: 'applicationTime', label: '申请时间', minWidth: 160, sortable: true }
 ]

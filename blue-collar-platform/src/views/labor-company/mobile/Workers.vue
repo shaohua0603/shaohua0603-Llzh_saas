@@ -23,7 +23,7 @@
       <el-button type="primary" @click="handleSearch" style="width: 100%">搜索</el-button>
     </div>
     
-    <!-- 工人列表 -->
+    <!-- 工人信息 -->
     <div class="workers-list">
       <el-card 
         v-for="worker in workersList" 
@@ -100,7 +100,7 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const totalWorkers = ref(0)
 
-// 工人列表
+// 工人信息
 const workersList = ref<any[]>([])
 
 // 获取状态类型
@@ -153,7 +153,7 @@ const handleCurrentChange = (current: number) => {
   fetchWorkers()
 }
 
-// 获取工人列表
+// 获取工人信息
 const fetchWorkers = async () => {
   try {
     const response = await axios.get('/api/labor-company/workers', {
@@ -167,7 +167,7 @@ const fetchWorkers = async () => {
     workersList.value = response.data.items
     totalWorkers.value = response.data.total
   } catch (error) {
-    console.error('获取工人列表失败:', error)
+    console.error('获取工人信息失败:', error)
   }
 }
 
@@ -194,7 +194,7 @@ onMounted(() => {
   margin-bottom: 20px;
 }
 
-/* 工人列表 */
+/* 工人信息 */
 .workers-list {
   margin-bottom: 20px;
 }

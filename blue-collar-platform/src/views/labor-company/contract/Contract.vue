@@ -5,18 +5,18 @@
       <div class="filter-default">
         <div class="filter-toggle-container">
           <el-form :model="searchForm" inline>
-            <el-form-item label="合同编号">
+            <el-form-item label="姓名">
               <el-input
-                v-model="searchForm.contractNo"
-                placeholder="请输入合同编号"
+                v-model="searchForm.name"
+                placeholder="请输入姓名"
                 clearable
-                style="width: 200px"
+                style="width: 150px"
               />
             </el-form-item>
-            <el-form-item label="乙方姓名">
+            <el-form-item label="手机号">
               <el-input
-                v-model="searchForm.partyBName"
-                placeholder="请输入乙方姓名"
+                v-model="searchForm.phone"
+                placeholder="请输入手机号"
                 clearable
                 style="width: 150px"
               />
@@ -57,12 +57,12 @@
       <el-collapse-transition>
         <div v-show="filterVisible" class="filter-expanded">
           <el-form :model="searchForm" inline>
-            <el-form-item label="乙方手机号">
+            <el-form-item label="证件号">
               <el-input
-                v-model="searchForm.partyBPhone"
-                placeholder="请输入乙方手机号"
+                v-model="searchForm.idCard"
+                placeholder="请输入证件号"
                 clearable
-                style="width: 150px"
+                style="width: 180px"
               />
             </el-form-item>
             <el-form-item label="结算方式">
@@ -78,7 +78,7 @@
             </el-form-item>
             <el-form-item label="签订日期">
               <el-date-picker
-                v-model="searchForm.contractSignDateRange"
+                v-model="searchForm.signDateRange"
                 type="daterange"
                 range-separator="至"
                 start-placeholder="开始日期"
@@ -217,16 +217,15 @@ import type { ColumnConfig } from '@/types/common-table'
 
 interface Contract {
   id: string
-  contractNo: string
-  partyA: string
-  partyBName: string
-  partyBPhone: string
+  name: string
+  phone: string
+  idCard: string
+  signDate: string
   settlementMethod: string
+  responsiblePerson: string
+  groupId: string
+  attachments: any[]
   contractStatus: string
-  contractSignDate: string
-  contractEffectiveDate: string
-  contractExpiryDate: string
-  contractAmount: number
 }
 
 interface ContractQueryParams {
@@ -278,81 +277,75 @@ const importFile = ref<File | null>(null)
 const mockContracts: Contract[] = [
   {
     id: '1',
-    contractNo: 'HT2024010001',
-    partyA: '南通富民劳务服务有限公司',
-    partyBName: '张三',
-    partyBPhone: '138****8001',
+    name: '张三',
+    phone: '138****8001',
+    idCard: '110101199001011234',
+    signDate: '2024-01-15',
     settlementMethod: 'MONTHLY',
-    contractStatus: 'SIGNED',
-    contractSignDate: '2024-01-15',
-    contractEffectiveDate: '2024-01-15',
-    contractExpiryDate: '2025-01-14',
-    contractAmount: 60000
+    responsiblePerson: '李四',
+    groupId: '123456',
+    attachments: [],
+    contractStatus: 'SIGNED'
   },
   {
     id: '2',
-    contractNo: 'HT2024010002',
-    partyA: '南通富民劳务服务有限公司',
-    partyBName: '李四',
-    partyBPhone: '139****8002',
+    name: '李四',
+    phone: '139****8002',
+    idCard: '110101199001011235',
+    signDate: '2024-01-20',
     settlementMethod: 'DAILY',
-    contractStatus: 'SIGNING',
-    contractSignDate: '2024-01-20',
-    contractEffectiveDate: '2024-01-20',
-    contractExpiryDate: '2024-02-19',
-    contractAmount: 9000
+    responsiblePerson: '张三',
+    groupId: '123457',
+    attachments: [],
+    contractStatus: 'SIGNING'
   },
   {
     id: '3',
-    contractNo: 'HT2024010003',
-    partyA: '南通富民劳务服务有限公司',
-    partyBName: '王五',
-    partyBPhone: '137****8003',
+    name: '王五',
+    phone: '137****8003',
+    idCard: '110101199001011236',
+    signDate: '',
     settlementMethod: 'MONTHLY',
-    contractStatus: 'UNSIGNED',
-    contractSignDate: '',
-    contractEffectiveDate: '',
-    contractExpiryDate: '',
-    contractAmount: 65000
+    responsiblePerson: '赵六',
+    groupId: '123458',
+    attachments: [],
+    contractStatus: 'UNSIGNED'
   },
   {
     id: '4',
-    contractNo: 'HT2024010004',
-    partyA: '南通富民劳务服务有限公司',
-    partyBName: '赵六',
-    partyBPhone: '136****8004',
+    name: '赵六',
+    phone: '136****8004',
+    idCard: '110101199001011237',
+    signDate: '2024-01-05',
     settlementMethod: 'DAILY',
-    contractStatus: 'CANCELLED',
-    contractSignDate: '2024-01-05',
-    contractEffectiveDate: '2024-01-05',
-    contractExpiryDate: '2024-02-04',
-    contractAmount: 12000
+    responsiblePerson: '王五',
+    groupId: '123459',
+    attachments: [],
+    contractStatus: 'CANCELLED'
   }
 ]
 
 const searchForm = reactive({
-  contractNo: '',
-  partyBName: '',
-  partyBPhone: '',
+  name: '',
+  phone: '',
+  idCard: '',
   settlementMethod: '',
   contractStatus: '',
-  contractSignDateRange: [],
+  signDateRange: [],
   dataScope: '',
   departmentId: ''
 })
 
 // 合同列表列配置
 const contractColumns: ColumnConfig[] = [
-  { prop: 'contractNo', label: '合同编号', width: 180, sortable: true, showTooltip: true },
-  { prop: 'partyA', label: '甲方', minWidth: 150, showTooltip: true },
-  { prop: 'partyBName', label: '乙方姓名', width: 100, sortable: true, showTooltip: true },
-  { prop: 'partyBPhone', label: '乙方手机号', width: 130, sortable: true, showTooltip: true },
+  { prop: 'name', label: '姓名', width: 100, sortable: true, showTooltip: true },
+  { prop: 'phone', label: '手机号', width: 130, sortable: true, showTooltip: true },
+  { prop: 'idCard', label: '证件号', width: 180, sortable: true, showTooltip: true },
+  { prop: 'signDate', label: '签订日期', width: 120, sortable: true },
   { prop: 'settlementMethod', label: '结算方式', width: 100, sortable: true },
-  { prop: 'contractStatus', label: '合同状态', width: 100, sortable: true },
-  { prop: 'contractSignDate', label: '合同签订日期', width: 120, sortable: true },
-  { prop: 'contractEffectiveDate', label: '合同生效日期', width: 120, sortable: true },
-  { prop: 'contractExpiryDate', label: '合同过期日期', width: 120, sortable: true },
-  { prop: 'contractAmount', label: '合同金额', width: 120, sortable: true }
+  { prop: 'responsiblePerson', label: '负责人', width: 100, sortable: true, showTooltip: true },
+  { prop: 'groupId', label: '群号', width: 100, sortable: true, showTooltip: true },
+  { prop: 'attachments', label: '合同附件', width: 100, sortable: true }
 ]
 
 const getStatusType = (status: string) => {
@@ -383,14 +376,14 @@ const loadContractList = async () => {
     // 筛选数据
     let filteredData = [...mockContracts]
 
-    if (searchForm.contractNo) {
-      filteredData = filteredData.filter(item => item.contractNo.includes(searchForm.contractNo))
+    if (searchForm.name) {
+      filteredData = filteredData.filter(item => item.name.includes(searchForm.name))
     }
-    if (searchForm.partyBName) {
-      filteredData = filteredData.filter(item => item.partyBName.includes(searchForm.partyBName))
+    if (searchForm.phone) {
+      filteredData = filteredData.filter(item => item.phone.includes(searchForm.phone))
     }
-    if (searchForm.partyBPhone) {
-      filteredData = filteredData.filter(item => item.partyBPhone.includes(searchForm.partyBPhone))
+    if (searchForm.idCard) {
+      filteredData = filteredData.filter(item => item.idCard.includes(searchForm.idCard))
     }
     if (searchForm.settlementMethod) {
       filteredData = filteredData.filter(item => item.settlementMethod === searchForm.settlementMethod)
@@ -398,12 +391,12 @@ const loadContractList = async () => {
     if (searchForm.contractStatus) {
       filteredData = filteredData.filter(item => item.contractStatus === searchForm.contractStatus)
     }
-    if (searchForm.contractSignDateRange && searchForm.contractSignDateRange.length === 2) {
-      const startDate = searchForm.contractSignDateRange[0]
-      const endDate = searchForm.contractSignDateRange[1]
+    if (searchForm.signDateRange && searchForm.signDateRange.length === 2) {
+      const startDate = searchForm.signDateRange[0]
+      const endDate = searchForm.signDateRange[1]
       filteredData = filteredData.filter(item => {
-        if (!item.contractSignDate) return false
-        return item.contractSignDate >= startDate && item.contractSignDate <= endDate
+        if (!item.signDate) return false
+        return item.signDate >= startDate && item.signDate <= endDate
       })
     }
 
@@ -498,12 +491,12 @@ const handleSearch = () => {
 }
 
 const handleReset = () => {
-  searchForm.contractNo = ''
-  searchForm.partyBName = ''
-  searchForm.partyBPhone = ''
+  searchForm.name = ''
+  searchForm.phone = ''
+  searchForm.idCard = ''
   searchForm.settlementMethod = ''
   searchForm.contractStatus = ''
-  searchForm.contractSignDateRange = []
+  searchForm.signDateRange = []
   currentPage.value = 1
   loadContractList()
 }

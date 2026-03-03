@@ -95,7 +95,7 @@
           </template>
           <template #actions="{ row }">
             <el-button type="primary" link size="small" @click.stop="handleResumeDetail(row)">
-              查看详情
+              查看
             </el-button>
           </template>
         </CommonTable>

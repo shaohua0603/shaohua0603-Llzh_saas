@@ -129,7 +129,7 @@
         </template>
         <template #actions="{ row }">
           <el-button type="primary" link size="small" @click.stop="handleDetail(row)" v-permission="['interview:initial:view']">
-            查看详情
+            查看
           </el-button>
           <el-button type="warning" link size="small" @click.stop="handleEdit(row)" v-permission="['interview:initial:update']">
             编辑

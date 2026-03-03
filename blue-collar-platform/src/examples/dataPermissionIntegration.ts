@@ -232,7 +232,7 @@ import { useDataPermission } from '@/composables/useDataPermission'
 
 const { generateFilter } = useDataPermission()
 
-// 获取工人列表
+// 获取工人信息
 export const getWorkers = async (params: any = {}) => {
   // 生成数据权限过滤条件
   const dataPermissionFilter = generateFilter()
@@ -286,7 +286,7 @@ export const useWorkerStore = defineStore('worker', () => {
   const workers = ref([])
   const loading = ref(false)
 
-  // 获取工人列表
+  // 获取工人信息
   const fetchWorkers = async () => {
     loading.value = true
     try {

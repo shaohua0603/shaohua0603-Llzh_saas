@@ -144,7 +144,7 @@ export const useContractStore = defineStore('contract', () => {
         return response.data
       }
     } catch (error) {
-      ElMessage.error('获取工人列表失败')
+      ElMessage.error('获取工人信息失败')
       throw error
     }
   }

@@ -81,7 +81,7 @@
       </template>
       <template #actions="{ row }">
         <el-button type="primary" link @click="handleViewDetail(row)">
-          查看详情
+          查看
         </el-button>
       </template>
     </CommonTable>
@@ -207,7 +207,7 @@ const handleSortChange = (sort: { prop: string; order: string | null }) => {
   loadData()
 }
 
-// 查看详情
+// 查看
 const handleViewDetail = (row: WorkerBasicInfo) => {
   selectedWorkerId.value = row.id
   detailDialogVisible.value = true

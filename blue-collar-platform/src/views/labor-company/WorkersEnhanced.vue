@@ -9,11 +9,11 @@
       @reset="handleReset"
     />
 
-    <!-- 工人列表 -->
+    <!-- 工人信息 -->
     <el-card class="workers-card">
       <template #header>
         <div class="card-header">
-          <span class="card-title">工人列表</span>
+          <span class="card-title">工人信息</span>
           <div class="header-actions">
             <el-button type="primary" :icon="Plus" @click="handleAddWorker">
               新增工人
@@ -165,7 +165,7 @@ const defaultSort = { prop: 'createdAt', order: 'descending' }
 // 筛选条件
 const filterParams = ref<any>({})
 
-// 工人列表
+// 工人信息
 const workersList = ref<any[]>([])
 
 // 选项数据
@@ -619,7 +619,7 @@ const getGenderText = (gender: string) => {
   return textMap[gender] || gender
 }
 
-// 获取工人列表
+// 获取工人信息
 const fetchWorkers = async () => {
   loading.value = true
   try {
@@ -693,7 +693,7 @@ const fetchWorkers = async () => {
     ]
     totalWorkers.value = 3
   } catch (error) {
-    ElMessage.error('获取工人列表失败')
+    ElMessage.error('获取工人信息失败')
   } finally {
     loading.value = false
   }

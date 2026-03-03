@@ -87,7 +87,7 @@
         </template>
         <template #actions="{ row }">
           <el-button type="primary" link size="small" @click.stop="handleDetail(row)">
-            查看详情
+            查看
           </el-button>
           <el-button type="warning" link size="small" @click.stop="handleEdit(row)">
             编辑

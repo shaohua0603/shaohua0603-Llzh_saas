@@ -2,33 +2,29 @@
   <div class="registration-management">
     <!-- 搜索和筛选区域 -->
     <div class="search-filter-section">
-      <el-row :gutter="16" align="middle">
-        <el-col :span="6">
+      <el-form :inline="true" :model="filterForm" class="filter-form">
+        <el-form-item label="姓名/手机号">
           <el-input
-            v-model="searchKeyword"
-            placeholder="搜索姓名或手机号"
+            v-model="filterForm.keyword"
+            placeholder="请输入姓名或手机号"
             clearable
-            @input="handleSearch"
-          >
-            <template #prefix>
-              <el-icon><Search /></el-icon>
-            </template>
-          </el-input>
-        </el-col>
-        <el-col :span="4">
+            style="width: 250px"
+          />
+        </el-form-item>
+        <el-form-item label="活动/社团标题">
           <el-input
-            v-model="activityFilter"
+            v-model="filterForm.activity"
             placeholder="搜索活动/社团标题"
             clearable
-            @input="handleSearch"
+            style="width: 250px"
           />
-        </el-col>
-        <el-col :span="4">
+        </el-form-item>
+        <el-form-item label="审核状态">
           <el-select
-            v-model="statusFilter"
+            v-model="filterForm.status"
             placeholder="审核状态"
             clearable
-            @change="handleSearch"
+            style="width: 150px"
           >
             <el-option label="全部" value="" />
             <el-option label="待审核" value="pending" />
@@ -36,20 +32,8 @@
             <el-option label="已通过" value="approved" />
             <el-option label="已驳回" value="rejected" />
           </el-select>
-        </el-col>
-        <el-col :span="4">
-          <el-select
-            v-model="typeFilter"
-            placeholder="报名类型"
-            clearable
-            @change="handleSearch"
-          >
-            <el-option label="全部" value="" />
-            <el-option label="活动报名" value="activity" />
-            <el-option label="社团报名" value="community" />
-          </el-select>
-        </el-col>
-        <el-col :span="6">
+        </el-form-item>
+        <el-form-item>
           <el-button type="primary" @click="handleSearch">
             <el-icon><Search /></el-icon>
             搜索
@@ -58,36 +42,60 @@
             <el-icon><Refresh /></el-icon>
             重置
           </el-button>
-        </el-col>
-      </el-row>
+        </el-form-item>
+      </el-form>
+      <div class="expand-toggle" @click="toggleFilter">
+        <el-icon :class="{ 'rotate-180': filterExpanded }"><ArrowDown /></el-icon>
+        <span>{{ filterExpanded ? '收起' : '展开' }}</span>
+      </div>
+      <!-- 展开显示更多查询条件 -->
+      <div v-if="filterExpanded" class="filter-content expanded">
+        <el-form :inline="true" :model="filterForm" class="filter-form">
+          <el-form-item label="报名类型">
+            <el-select
+              v-model="filterForm.type"
+              placeholder="报名类型"
+              clearable
+              style="width: 150px"
+            >
+              <el-option label="全部" value="" />
+              <el-option label="活动报名" value="activity" />
+              <el-option label="社团报名" value="community" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="提交日期范围">
+            <el-date-picker
+              v-model="filterForm.dateRange"
+              type="daterange"
+              range-separator="至"
+              start-placeholder="开始日期"
+              end-placeholder="结束日期"
+              value-format="YYYY-MM-DD"
+              style="width: 250px"
+            />
+          </el-form-item>
+        </el-form>
+      </div>
     </div>
 
-    <!-- 统计卡片 -->
-    <div class="stats-cards">
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.pendingCount }}</div>
-          <div class="stat-label">待审核</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.processingCount }}</div>
-          <div class="stat-label">审核中</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.approvedCount }}</div>
-          <div class="stat-label">已通过</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ stats.rejectedCount }}</div>
-          <div class="stat-label">已驳回</div>
-        </div>
-      </el-card>
+    <!-- 功能按钮区域 -->
+    <div class="action-bar">
+      <el-button
+        type="success"
+        :disabled="selectedRows.length === 0"
+        @click="handleBatchApprove"
+      >
+        <el-icon><Check /></el-icon>
+        批量通过
+      </el-button>
+      <el-button
+        type="danger"
+        :disabled="selectedRows.length === 0"
+        @click="handleBatchReject"
+      >
+        <el-icon><Close /></el-icon>
+        批量驳回
+      </el-button>
     </div>
 
     <!-- 通用表格 -->
@@ -101,30 +109,13 @@
       :page-size="pageSize"
       :loading="loading"
       :show-selection="true"
-      :show-toolbar="false"
+      :show-toolbar="true"
+      :stats-info="statsInfo"
       @update:current-page="handlePageChange"
       @update:page-size="handleSizeChange"
       @selection-change="handleSelectionChange"
       @global-search="handleGlobalSearch"
     >
-      <template #toolbar-right>
-        <el-button
-          type="success"
-          :disabled="selectedRows.length === 0"
-          @click="handleBatchApprove"
-        >
-          <el-icon><Check /></el-icon>
-          批量通过
-        </el-button>
-        <el-button
-          type="danger"
-          :disabled="selectedRows.length === 0"
-          @click="handleBatchReject"
-        >
-          <el-icon><Close /></el-icon>
-          批量驳回
-        </el-button>
-      </template>
 
       <template #column-registrationType="{ row }">
         <el-tag :type="row.registrationType === 'activity' ? 'primary' : 'success'">
@@ -274,7 +265,7 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Check, Close, View } from '@element-plus/icons-vue'
+import { Search, Refresh, Check, Close, View, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 import ApprovalOperation from '@/components/ApprovalOperation.vue'
 import ApprovalRecordTimeline from '@/components/ApprovalRecordTimeline.vue'
@@ -306,10 +297,14 @@ interface RegistrationRecord {
 }
 
 // 响应式数据
-const searchKeyword = ref('')
-const activityFilter = ref('')
-const statusFilter = ref('')
-const typeFilter = ref('')
+const filterExpanded = ref(false)
+const filterForm = reactive({
+  keyword: '',
+  activity: '',
+  status: '',
+  type: '',
+  dateRange: [] as string[]
+})
 const tableData = ref<RegistrationRecord[]>([])
 const total = ref(0)
 const currentPage = ref(1)
@@ -359,6 +354,16 @@ const stats = reactive({
   approvedCount: 0,
   rejectedCount: 0
 })
+
+// 统计信息字符串
+const statsInfo = computed(() => {
+  return `待审核: ${stats.pendingCount} | 审核中: ${stats.processingCount} | 已通过: ${stats.approvedCount} | 已驳回: ${stats.rejectedCount}`
+})
+
+// 切换筛选区域
+const toggleFilter = () => {
+  filterExpanded.value = !filterExpanded.value
+}
 
 // 模拟数据存储
 const allData = ref<RegistrationRecord[]>([])
@@ -473,10 +478,11 @@ const handleSearch = () => {
 
 // 重置搜索
 const handleReset = () => {
-  searchKeyword.value = ''
-  activityFilter.value = ''
-  statusFilter.value = ''
-  typeFilter.value = ''
+  filterForm.keyword = ''
+  filterForm.activity = ''
+  filterForm.status = ''
+  filterForm.type = ''
+  filterForm.dateRange = []
   handleSearch()
 }
 
@@ -499,7 +505,7 @@ const handleSelectionChange = (selection: RegistrationRecord[]) => {
 
 // 全局搜索
 const handleGlobalSearch = (keyword: string) => {
-  searchKeyword.value = keyword
+  filterForm.keyword = keyword
   handleSearch()
 }
 
@@ -509,8 +515,8 @@ const fetchData = () => {
 
   let filteredData = [...allData.value]
 
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase()
+  if (filterForm.keyword) {
+    const keyword = filterForm.keyword.toLowerCase()
     filteredData = filteredData.filter(
       item =>
         item.workerName.toLowerCase().includes(keyword) ||
@@ -518,18 +524,29 @@ const fetchData = () => {
     )
   }
 
-  if (activityFilter.value) {
+  if (filterForm.activity) {
     filteredData = filteredData.filter(item =>
-      item.activityTitle.toLowerCase().includes(activityFilter.value.toLowerCase())
+      item.activityTitle.toLowerCase().includes(filterForm.activity.toLowerCase())
     )
   }
 
-  if (statusFilter.value) {
-    filteredData = filteredData.filter(item => item.status === statusFilter.value)
+  if (filterForm.status) {
+    filteredData = filteredData.filter(item => item.status === filterForm.status)
   }
 
-  if (typeFilter.value) {
-    filteredData = filteredData.filter(item => item.registrationType === typeFilter.value)
+  if (filterForm.type) {
+    filteredData = filteredData.filter(item => item.registrationType === filterForm.type)
+  }
+
+  // 日期范围过滤
+  if (filterForm.dateRange && filterForm.dateRange.length === 2) {
+    const startDate = new Date(filterForm.dateRange[0])
+    const endDate = new Date(filterForm.dateRange[1])
+    endDate.setHours(23, 59, 59, 999)
+    filteredData = filteredData.filter(item => {
+      const submitDate = new Date(item.submitTime)
+      return submitDate >= startDate && submitDate <= endDate
+    })
   }
 
   // 更新统计
@@ -547,7 +564,7 @@ const fetchData = () => {
   loading.value = false
 }
 
-// 查看详情
+// 查看
 const handleView = (row: RegistrationRecord) => {
   currentRow.value = row
   // 如果需要审批，加载审批记录
@@ -762,43 +779,63 @@ onMounted(() => {
 
 <style scoped>
 .registration-management {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
+  width: 100%;
+  height: 100%;
+  padding: 16px;
+  background-color: #f5f7fa;
 }
 
 .search-filter-section {
-  margin-bottom: 20px;
-  padding: 16px;
-  background-color: #f5f7fa;
+  margin-bottom: 16px;
+  background-color: #fff;
   border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
-.stats-cards {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 20px;
+.filter-form {
+  padding: 16px;
+  padding-bottom: 0;
 }
 
-.stat-card {
-  text-align: center;
-}
-
-.stat-content {
-  padding: 10px 0;
-}
-
-.stat-number {
-  font-size: 24px;
-  font-weight: bold;
+.expand-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  cursor: pointer;
   color: #409eff;
-  margin-bottom: 8px;
+  border-top: 1px solid #e4e7ed;
+  transition: all 0.3s;
 }
 
-.stat-label {
-  font-size: 14px;
-  color: #606266;
+.expand-toggle:hover {
+  background-color: #f5f7fa;
+}
+
+.expand-toggle .el-icon {
+  margin-right: 8px;
+  transition: transform 0.3s;
+}
+
+.expand-toggle .rotate-180 {
+  transform: rotate(180deg);
+}
+
+.filter-content.expanded {
+  padding: 16px;
+  border-top: 1px solid #e4e7ed;
+}
+
+.action-bar {
+  display: flex;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #fff;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .detail-content {
@@ -822,24 +859,26 @@ onMounted(() => {
 }
 
 /* 响应式设计 */
-@media screen and (max-width: 1200px) {
-  .stats-cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
 @media screen and (max-width: 768px) {
-  .search-filter-section :deep(.el-row) {
-    flex-direction: column;
+  .registration-management {
+    padding: 8px;
   }
 
-  .search-filter-section :deep(.el-col) {
-    width: 100%;
+  .action-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .filter-form :deep(.el-form-item) {
+    margin-right: 0;
     margin-bottom: 12px;
   }
 
-  .stats-cards {
-    grid-template-columns: 1fr;
+  .filter-form :deep(.el-input),
+  .filter-form :deep(.el-select),
+  .filter-form :deep(.el-date-picker) {
+    width: 100%;
   }
 
   .detail-content {

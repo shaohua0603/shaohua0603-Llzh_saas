@@ -368,7 +368,7 @@ const handleEdit = (row: Tenant) => {
 }
 
 /**
- * 查看详情
+ * 查看
  * @param row 租户信息
  */
 const handleDetail = (row: Tenant) => {
