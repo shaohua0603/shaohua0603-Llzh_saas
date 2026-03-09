@@ -70,10 +70,7 @@
         <el-icon><Download /></el-icon>
         导出
       </el-button>
-      <el-button type="info" @click="handlePrint">
-        <el-icon><Printer /></el-icon>
-        打印
-      </el-button>
+
     </div>
 
     <!-- 通用表格 -->
@@ -89,12 +86,18 @@
       :show-index="true"
       :show-actions="true"
       :stats-info="statsInfo"
-      action-column-width="200"
+      :action-column-width="200"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
+      <template #column-paymentType="{ row }">
+        <el-tag :type="row.paymentType === 'daily' ? 'warning' : 'success'">
+          {{ row.paymentType === 'daily' ? '日结' : '月结' }}
+        </el-tag>
+      </template>
+
       <template #column-rewardPunishmentType="{ row }">
         <el-tag :type="getRewardPunishmentTypeTag(row.rewardPunishmentType)">
           {{ getRewardPunishmentTypeText(row.rewardPunishmentType) }}
@@ -106,86 +109,12 @@
       <template #actions="{ row }">
         <el-button link type="primary" size="small" @click="handleDetail(row)">详情</el-button>
         <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
+        <el-button link type="success" size="small" @click="handleApprove(row)">审核</el-button>
         <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
       </template>
     </CommonTable>
 
-    <!-- 新增/编辑弹窗 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="700px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="奖惩人员" prop="workerName">
-              <el-input v-model="formData.workerName" placeholder="请输入奖惩人员姓名" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model="formData.phone" placeholder="请输入手机号" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="奖惩类型" prop="rewardPunishmentType">
-              <el-select v-model="formData.rewardPunishmentType" placeholder="请选择奖惩类型" style="width: 100%">
-                <el-option label="荣誉奖励" value="honor" />
-                <el-option label="金额奖励" value="money" />
-                <el-option label="其他奖励" value="other_reward" />
-                <el-option label="口头惩罚" value="verbal" />
-                <el-option label="金额惩罚" value="fine" />
-                <el-option label="其他惩罚" value="other_punishment" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="奖惩时间" prop="rewardPunishmentTime">
-              <el-date-picker
-                v-model="formData.rewardPunishmentTime"
-                type="datetime"
-                placeholder="选择奖惩时间"
-                value-format="YYYY-MM-DD HH:mm:ss"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="奖惩内容" prop="content">
-          <el-input v-model="formData.content" type="textarea" :rows="4" placeholder="请输入奖惩内容" />
-        </el-form-item>
-        <el-form-item label="奖惩备注" prop="remark">
-          <el-input v-model="formData.remark" type="textarea" :rows="3" placeholder="请输入奖惩备注" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
 
-    <!-- 详情弹窗 -->
-    <el-dialog v-model="detailVisible" title="奖惩详情" width="700px">
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="奖惩人员">{{ currentRow?.workerName }}</el-descriptions-item>
-        <el-descriptions-item label="手机号">{{ currentRow?.phone }}</el-descriptions-item>
-        <el-descriptions-item label="奖惩类型">
-          <el-tag :type="getRewardPunishmentTypeTag(currentRow?.rewardPunishmentType)">
-            {{ getRewardPunishmentTypeText(currentRow?.rewardPunishmentType) }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="奖惩时间">{{ formatDate(currentRow?.rewardPunishmentTime) }}</el-descriptions-item>
-        <el-descriptions-item label="奖惩内容" :span="2">{{ currentRow?.content }}</el-descriptions-item>
-        <el-descriptions-item label="奖惩备注" :span="2">{{ currentRow?.remark || '无' }}</el-descriptions-item>
-      </el-descriptions>
-      <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
 
     <!-- 导入弹窗 -->
     <el-dialog v-model="importVisible" title="导入奖惩数据" width="500px">
@@ -219,15 +148,18 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
-import { Plus, Delete, Upload, Download, Printer, ArrowDown } from '@element-plus/icons-vue'
+import { Plus, Delete, Upload, Download, ArrowDown } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import CommonTable from '@/components/CommonTable.vue'
+
+const router = useRouter()
 
 // 类型定义
 interface RewardPunishmentRecord {
   id: string
   workerName: string
   phone: string
+  paymentType: 'daily' | 'monthly'
   rewardPunishmentType: 'honor' | 'money' | 'other_reward' | 'verbal' | 'fine' | 'other_punishment'
   rewardPunishmentTime: string
   content: string
@@ -238,6 +170,7 @@ interface RewardPunishmentRecord {
 const columns = [
   { prop: 'workerName', label: '奖惩人员', minWidth: 100, sortable: true },
   { prop: 'phone', label: '手机号', minWidth: 120, sortable: true },
+  { prop: 'paymentType', label: '结算方式', minWidth: 100 },
   { prop: 'rewardPunishmentType', label: '奖惩类型', minWidth: 120, sortable: true },
   { prop: 'rewardPunishmentTime', label: '奖惩时间', minWidth: 160, sortable: true },
   { prop: 'content', label: '奖惩内容', minWidth: 200, showTooltip: true },
@@ -251,13 +184,8 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedRows = ref<RewardPunishmentRecord[]>([])
-const dialogVisible = ref(false)
-const detailVisible = ref(false)
 const importVisible = ref(false)
-const submitLoading = ref(false)
 const importLoading = ref(false)
-const dialogTitle = ref('新增奖惩')
-const currentRow = ref<RewardPunishmentRecord | null>(null)
 const filterExpanded = ref(false)
 const statsInfo = ref<Array<{ label: string; value: string }>>([])
 
@@ -268,32 +196,13 @@ const searchForm = reactive({
   rewardPunishmentDate: [] as string[]
 })
 
-const formData = reactive<RewardPunishmentRecord>({
-  id: '',
-  workerName: '',
-  phone: '',
-  rewardPunishmentType: 'honor',
-  rewardPunishmentTime: '',
-  content: '',
-  remark: ''
-})
-
-const formRef = ref<FormInstance>()
-
-const formRules: FormRules = {
-  workerName: [{ required: true, message: '请输入奖惩人员姓名', trigger: 'blur' }],
-  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
-  rewardPunishmentType: [{ required: true, message: '请选择奖惩类型', trigger: 'change' }],
-  rewardPunishmentTime: [{ required: true, message: '请选择奖惩时间', trigger: 'change' }],
-  content: [{ required: true, message: '请输入奖惩内容', trigger: 'blur' }]
-}
-
 // Mock数据
 const mockData: RewardPunishmentRecord[] = [
   {
     id: '1',
     workerName: '张三',
     phone: '13800138001',
+    paymentType: 'daily',
     rewardPunishmentType: 'honor',
     rewardPunishmentTime: '2024-02-15 10:00:00',
     content: '优秀员工称号',
@@ -303,6 +212,7 @@ const mockData: RewardPunishmentRecord[] = [
     id: '2',
     workerName: '李四',
     phone: '13800138002',
+    paymentType: 'monthly',
     rewardPunishmentType: 'money',
     rewardPunishmentTime: '2024-02-10 09:30:00',
     content: '完成月度任务奖励',
@@ -312,6 +222,7 @@ const mockData: RewardPunishmentRecord[] = [
     id: '3',
     workerName: '王五',
     phone: '13800138003',
+    paymentType: 'daily',
     rewardPunishmentType: 'verbal',
     rewardPunishmentTime: '2024-02-08 14:00:00',
     content: '工作态度不积极',
@@ -321,6 +232,7 @@ const mockData: RewardPunishmentRecord[] = [
     id: '4',
     workerName: '赵六',
     phone: '13800138004',
+    paymentType: 'monthly',
     rewardPunishmentType: 'fine',
     rewardPunishmentTime: '2024-02-05 16:00:00',
     content: '迟到3次',
@@ -330,6 +242,7 @@ const mockData: RewardPunishmentRecord[] = [
     id: '5',
     workerName: '钱七',
     phone: '13800138005',
+    paymentType: 'daily',
     rewardPunishmentType: 'other_reward',
     rewardPunishmentTime: '2024-02-01 11:00:00',
     content: '提出有效改进建议',
@@ -440,30 +353,22 @@ const toggleFilter = () => {
 
 // 新增
 const handleAdd = () => {
-  dialogTitle.value = '新增奖惩'
-  Object.assign(formData, {
-    id: '',
-    workerName: '',
-    phone: '',
-    rewardPunishmentType: 'honor',
-    rewardPunishmentTime: '',
-    content: '',
-    remark: ''
-  })
-  dialogVisible.value = true
+  router.push('/tenant/on-duty/reward-punishment-add')
 }
 
 // 编辑
 const handleEdit = (row: RewardPunishmentRecord) => {
-  dialogTitle.value = '编辑奖惩'
-  Object.assign(formData, { ...row })
-  dialogVisible.value = true
+  router.push(`/tenant/on-duty/reward-punishment-edit/${row.id}`)
 }
 
 // 详情
 const handleDetail = (row: RewardPunishmentRecord) => {
-  currentRow.value = row
-  detailVisible.value = true
+  router.push(`/tenant/on-duty/reward-punishment-detail/${row.id}`)
+}
+
+// 审核
+const handleApprove = (row: RewardPunishmentRecord) => {
+  router.push(`/tenant/on-duty/reward-punishment-approve/${row.id}`)
 }
 
 // 删除
@@ -499,36 +404,6 @@ const handleBatchDelete = () => {
     ElMessage.success('批量删除成功')
     loadData()
   }).catch(() => {})
-}
-
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      submitLoading.value = true
-      setTimeout(() => {
-        if (formData.id) {
-          // 编辑
-          const index = mockData.findIndex(item => item.id === formData.id)
-          if (index > -1) {
-            mockData[index] = { ...formData }
-          }
-          ElMessage.success('编辑成功')
-        } else {
-          // 新增
-          mockData.unshift({
-            ...formData,
-            id: Date.now().toString()
-          })
-          ElMessage.success('新增成功')
-        }
-        submitLoading.value = false
-        dialogVisible.value = false
-        loadData()
-      }, 500)
-    }
-  })
 }
 
 // 导入
@@ -567,10 +442,7 @@ const handleExport = () => {
   ElMessage.info('导出功能开发中')
 }
 
-// 打印
-const handlePrint = () => {
-  ElMessage.info('打印功能开发中')
-}
+
 
 // 排序变化
 const handleSortChange = (sort: { prop: string; order: string | null }) => {

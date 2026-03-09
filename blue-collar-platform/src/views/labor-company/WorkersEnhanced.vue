@@ -441,14 +441,14 @@ const handleEditWorker = (worker: any) => {
 const handleViewWorker = (worker: any) => {
   console.log('查看工人:', worker)
   // 跳转到工人详情页
-  // router.push(`/labor-company/workers/${worker.id}`)
+  // router.push(`/tenant/workers/${worker.id}`)
 }
 
 // 调动工人
 const handleTransfer = (worker: any) => {
   console.log('调动工人:', worker)
   // 跳转到岗位调动页面
-  // router.push(`/labor-company/worker-transfer?workerId=${worker.id}`)
+  // router.push(`/tenant/workers/${worker.id}/transfer`)
 }
 
 // 删除工人

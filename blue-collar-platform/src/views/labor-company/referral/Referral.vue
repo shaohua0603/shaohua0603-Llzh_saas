@@ -296,17 +296,17 @@ const handleReset = () => {
 
 // 新增
 const handleAdd = () => {
-  router.push({ name: 'LaborCompanyReferralAdd' })
+  router.push({ name: 'TenantReferralAdd' })
 }
 
 // 编辑
 const handleEdit = (row: any) => {
-  router.push({ name: 'LaborCompanyReferralEdit', params: { id: row.id } })
+  router.push({ name: 'TenantReferralEdit', params: { id: row.id } })
 }
 
 // 详情
 const handleView = (row: any) => {
-  router.push({ name: 'LaborCompanyReferralDetail', params: { id: row.id } })
+  router.push({ name: 'TenantReferralDetail', params: { id: row.id } })
 }
 
 // 删除
@@ -328,7 +328,7 @@ const handleExport = () => {
 
 // 佣金规则配置
 const handleRuleConfig = () => {
-  router.push({ name: 'LaborCompanyCommissionRule' })
+  router.push({ name: 'TenantCommissionRule' })
 }
 
 // 排序变化

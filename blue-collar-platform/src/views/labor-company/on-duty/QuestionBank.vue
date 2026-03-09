@@ -67,7 +67,7 @@
       :showIndex="true"
       :showActions="true"
       :stats-info="statsInfo"
-      action-column-width="200"
+      :action-column-width="200"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
@@ -118,102 +118,15 @@
         </el-button>
       </template>
     </CommonTable>
-
-    <!-- 新增/编辑弹窗 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="900px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="题库类型" prop="questionType">
-              <el-select v-model="formData.questionType" placeholder="请选择题库类型" style="width: 100%">
-                <el-option label="岗前培训" value="pre_job" />
-                <el-option label="日常培训" value="daily" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="答题类型" prop="answerType">
-              <el-select v-model="formData.answerType" placeholder="请选择答题类型" style="width: 100%">
-                <el-option label="单选题" value="single" />
-                <el-option label="多选题" value="multiple" />
-                <el-option label="判断题" value="true_false" />
-                <el-option label="填空题" value="fill" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="题干" prop="question">
-          <el-input v-model="formData.question" type="textarea" :rows="3" placeholder="请输入题干" />
-        </el-form-item>
-        <el-form-item label="题库内容" prop="content">
-          <RichTextEditor v-model="formData.content" placeholder="请输入题库内容（如选项等）" />
-        </el-form-item>
-        <el-form-item label="正确答案" prop="correctAnswer">
-          <el-input v-model="formData.correctAnswer" type="textarea" :rows="2" placeholder="请输入正确答案，多个答案用逗号分隔" />
-        </el-form-item>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="分值" prop="score">
-              <el-input-number v-model="formData.score" :min="1" :max="100" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="解析" prop="analysis">
-              <el-input v-model="formData.analysis" type="textarea" :rows="2" placeholder="请输入解析" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 详情弹窗 -->
-    <el-dialog v-model="detailVisible" title="题库详情" width="800px">
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="题库类型">
-          <el-tag :type="getQuestionTypeTag(currentRow?.questionType)">
-            {{ getQuestionTypeText(currentRow?.questionType) }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="答题类型">
-          <el-tag :type="getAnswerTypeTag(currentRow?.answerType)">
-            {{ getAnswerTypeText(currentRow?.answerType) }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="分值">{{ currentRow?.score }}分</el-descriptions-item>
-        <el-descriptions-item label="发布状态">
-          <el-tag :type="currentRow?.publishStatus === 'published' ? 'success' : 'info'">
-            {{ currentRow?.publishStatus === 'published' ? '已发布' : '未发布' }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="题干" :span="2">{{ currentRow?.question }}</el-descriptions-item>
-        <el-descriptions-item label="正确答案" :span="2">{{ currentRow?.correctAnswer }}</el-descriptions-item>
-        <el-descriptions-item label="解析" :span="2">{{ currentRow?.analysis || '无' }}</el-descriptions-item>
-      </el-descriptions>
-      <el-divider content-position="left">题库内容</el-divider>
-      <div class="content-view" v-html="currentRow?.content"></div>
-      <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
-import RichTextEditor from '@/components/RichTextEditor.vue'
-import { Plus, Delete, ArrowDown, Download, Search, Refresh, View, Edit, Check, Close } from '@element-plus/icons-vue'
+import { Plus, Delete, ArrowDown, Download, View, Edit, Check, Close } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 
 // 类型定义
 interface QuestionBank {
@@ -228,6 +141,8 @@ interface QuestionBank {
   publishStatus: 'published' | 'unpublished'
   createTime: string
 }
+
+const router = useRouter()
 
 // 表格列配置
 const columns = [
@@ -246,11 +161,6 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedRows = ref<QuestionBank[]>([])
-const dialogVisible = ref(false)
-const detailVisible = ref(false)
-const submitLoading = ref(false)
-const dialogTitle = ref('新增题库')
-const currentRow = ref<QuestionBank | null>(null)
 const filterExpanded = ref(false)
 const statsInfo = ref<Array<{ label: string; value: string | number }>>([])
 const tableRef = ref()
@@ -270,29 +180,6 @@ const searchForm = reactive({
   questionType: '',
   answerType: ''
 })
-
-const formData = reactive<QuestionBank>({
-  id: '',
-  questionType: 'pre_job',
-  answerType: 'single',
-  question: '',
-  content: '',
-  correctAnswer: '',
-  score: 5,
-  analysis: '',
-  publishStatus: 'unpublished',
-  createTime: ''
-})
-
-const formRef = ref<FormInstance>()
-
-const formRules: FormRules = {
-  questionType: [{ required: true, message: '请选择题库类型', trigger: 'change' }],
-  answerType: [{ required: true, message: '请选择答题类型', trigger: 'change' }],
-  question: [{ required: true, message: '请输入题干', trigger: 'blur' }],
-  correctAnswer: [{ required: true, message: '请输入正确答案', trigger: 'blur' }],
-  score: [{ required: true, message: '请输入分值', trigger: 'blur' }]
-}
 
 // Mock数据
 const mockData: QuestionBank[] = [
@@ -450,33 +337,17 @@ const handleReset = () => {
 
 // 新增
 const handleAdd = () => {
-  dialogTitle.value = '新增题库'
-  Object.assign(formData, {
-    id: '',
-    questionType: 'pre_job',
-    answerType: 'single',
-    question: '',
-    content: '',
-    correctAnswer: '',
-    score: 5,
-    analysis: '',
-    publishStatus: 'unpublished',
-    createTime: ''
-  })
-  dialogVisible.value = true
+  router.push('/tenant/on-duty/question-bank/form')
 }
 
 // 编辑
 const handleEdit = (row: QuestionBank) => {
-  dialogTitle.value = '编辑题库'
-  Object.assign(formData, { ...row })
-  dialogVisible.value = true
+  router.push(`/tenant/on-duty/question-bank/form/${row.id}`)
 }
 
 // 详情
 const handleDetail = (row: QuestionBank) => {
-  currentRow.value = row
-  detailVisible.value = true
+  router.push(`/tenant/on-duty/question-bank/detail/${row.id}`)
 }
 
 // 删除
@@ -512,37 +383,6 @@ const handleBatchDelete = () => {
     ElMessage.success('批量删除成功')
     loadData()
   }).catch(() => {})
-}
-
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      submitLoading.value = true
-      setTimeout(() => {
-        if (formData.id) {
-          // 编辑
-          const index = mockData.findIndex(item => item.id === formData.id)
-          if (index > -1) {
-            mockData[index] = { ...formData }
-          }
-          ElMessage.success('编辑成功')
-        } else {
-          // 新增
-          mockData.unshift({
-            ...formData,
-            id: Date.now().toString(),
-            createTime: new Date().toLocaleString()
-          })
-          ElMessage.success('新增成功')
-        }
-        submitLoading.value = false
-        dialogVisible.value = false
-        loadData()
-      }, 500)
-    }
-  })
 }
 
 // 发布

@@ -11,15 +11,8 @@ import permission from './directives/permission'
 
 // 引入Mock.js模拟数据
 console.log('开始加载Mock数据...')
-try {
-  import('../mock/index.js').then(() => {
-    console.log('Mock数据加载成功')
-  }).catch((error) => {
-    console.error('Mock数据加载失败:', error)
-  })
-} catch (error) {
-  console.error('Mock数据加载失败:', error)
-}
+import '../mock/index.js'
+console.log('Mock数据加载成功')
 
 const app = createApp(App)
 

@@ -1,4 +1,3 @@
-import request from '@/utils/request'
 import type {
   AttachmentRecord,
   AttachmentUploadParams,
@@ -7,32 +6,73 @@ import type {
 } from '@/types/attachment'
 import type { Response } from '@/types/response'
 
-const BASE_URL = '/api/v1/attachments'
+// 模拟延迟
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
+// Mock数据
+const mockAttachments: AttachmentRecord[] = [
+  {
+    id: '1',
+    fileName: '测试文件1.pdf',
+    fileSize: 1024000,
+    fileType: 'application/pdf',
+    url: 'https://example.com/attachments/1.pdf',
+    thumbUrl: '',
+    configId: '1',
+    businessId: '1',
+    businessType: 'contract',
+    uploadTime: '2024-01-01 10:00:00',
+    uploader: '管理员'
+  },
+  {
+    id: '2',
+    fileName: '测试文件2.jpg',
+    fileSize: 2048000,
+    fileType: 'image/jpeg',
+    url: 'https://example.com/attachments/2.jpg',
+    thumbUrl: 'https://example.com/attachments/2_thumb.jpg',
+    configId: '1',
+    businessId: '1',
+    businessType: 'contract',
+    uploadTime: '2024-01-02 11:00:00',
+    uploader: '管理员'
+  }
+]
 
 export const attachmentApi = {
   uploadAttachment: async (params: AttachmentUploadParams) => {
     const { file, configId, businessId, businessType, onProgress } = params
-    const formData = new FormData()
-    formData.append('file', file)
-    formData.append('configId', configId)
-    formData.append('businessId', businessId)
-    formData.append('businessType', businessType)
-
-    return request.post<ApiResponse<AttachmentRecord>>(
-      `${BASE_URL}/upload`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
-        onUploadProgress: (progressEvent) => {
-          if (onProgress && progressEvent.total) {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            onProgress(progress)
-          }
-        }
+    
+    // 模拟上传进度
+    for (let i = 0; i <= 100; i += 10) {
+      if (onProgress) {
+        onProgress(i)
       }
-    )
+      await delay(100)
+    }
+    
+    const newAttachment: AttachmentRecord = {
+      id: (mockAttachments.length + 1).toString(),
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      url: `https://example.com/attachments/${mockAttachments.length + 1}.${file.name.split('.').pop()}`,
+      thumbUrl: file.type.startsWith('image/') ? `https://example.com/attachments/${mockAttachments.length + 1}_thumb.${file.name.split('.').pop()}` : '',
+      configId,
+      businessId,
+      businessType,
+      uploadTime: new Date().toISOString(),
+      uploader: '管理员'
+    }
+    
+    mockAttachments.push(newAttachment)
+    
+    return {
+      code: 200,
+      message: '成功',
+      data: newAttachment,
+      timestamp: Date.now()
+    }
   },
 
   batchUploadAttachments: async (params: {
@@ -43,57 +83,112 @@ export const attachmentApi = {
     onProgress?: (progress: number) => void
   }) => {
     const { files, configId, businessId, businessType, onProgress } = params
-    const formData = new FormData()
-    files.forEach(file => {
-      formData.append('files', file)
-    })
-    formData.append('configId', configId)
-    formData.append('businessId', businessId)
-    formData.append('businessType', businessType)
-
-    return request.post<ApiResponse<{
-      success: AttachmentRecord[]
-      failed: {
-        file: File
-        error: string
-      }[]
-    }>>(
-      `${BASE_URL}/batch-upload`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        },
-        onUploadProgress: (progressEvent) => {
-          if (onProgress && progressEvent.total) {
-            const progress = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-            onProgress(progress)
-          }
-        }
+    
+    // 模拟上传进度
+    for (let i = 0; i <= 100; i += 20) {
+      if (onProgress) {
+        onProgress(i)
       }
-    )
+      await delay(200)
+    }
+    
+    const success: AttachmentRecord[] = []
+    const failed: { file: File; error: string }[] = []
+    
+    files.forEach((file, index) => {
+      if (index % 2 === 0) {
+        const newAttachment: AttachmentRecord = {
+          id: (mockAttachments.length + 1 + index).toString(),
+          fileName: file.name,
+          fileSize: file.size,
+          fileType: file.type,
+          url: `https://example.com/attachments/${mockAttachments.length + 1 + index}.${file.name.split('.').pop()}`,
+          thumbUrl: file.type.startsWith('image/') ? `https://example.com/attachments/${mockAttachments.length + 1 + index}_thumb.${file.name.split('.').pop()}` : '',
+          configId,
+          businessId,
+          businessType,
+          uploadTime: new Date().toISOString(),
+          uploader: '管理员'
+        }
+        success.push(newAttachment)
+        mockAttachments.push(newAttachment)
+      } else {
+        failed.push({ file, error: '上传失败' })
+      }
+    })
+    
+    return {
+      code: 200,
+      message: '成功',
+      data: { success, failed },
+      timestamp: Date.now()
+    }
   },
 
-  getAttachmentList: (params: {
+  getAttachmentList: async (params: {
     configId: string
     businessId: string
     businessType: string
   }) => {
-    return request.get<ApiResponse<AttachmentRecord[]>>(BASE_URL, { params })
+    await delay(300)
+    const filteredAttachments = mockAttachments.filter(attachment => 
+      attachment.configId === params.configId &&
+      attachment.businessId === params.businessId &&
+      attachment.businessType === params.businessType
+    )
+    
+    return {
+      code: 200,
+      message: '成功',
+      data: filteredAttachments,
+      timestamp: Date.now()
+    }
   },
 
-  deleteAttachment: (id: string) => {
-    return request.delete<ApiResponse<null>>(`${BASE_URL}/${id}`)
+  deleteAttachment: async (id: string) => {
+    await delay(200)
+    const index = mockAttachments.findIndex(a => a.id === id)
+    if (index !== -1) {
+      mockAttachments.splice(index, 1)
+    }
+    
+    return {
+      code: 200,
+      message: '成功',
+      data: null,
+      timestamp: Date.now()
+    }
   },
 
-  getAttachmentPreview: (id: string) => {
-    return request.get<ApiResponse<AttachmentPreviewResponse>>(`${BASE_URL}/${id}/preview`)
+  getAttachmentPreview: async (id: string) => {
+    await delay(200)
+    const attachment = mockAttachments.find(a => a.id === id)
+    if (!attachment) {
+      return {
+        code: 404,
+        message: '附件不存在',
+        data: null,
+        timestamp: Date.now()
+      }
+    }
+    
+    return {
+      code: 200,
+      message: '成功',
+      data: {
+        url: attachment.url,
+        fileType: attachment.fileType,
+        fileName: attachment.fileName
+      },
+      timestamp: Date.now()
+    }
   },
 
-  downloadAttachment: (id: string) => {
-    return request.get(`${BASE_URL}/${id}/download`, {
-      responseType: 'blob'
-    })
+  downloadAttachment: async (id: string) => {
+    await delay(500)
+    // 模拟下载文件
+    const blob = new Blob(['文件内容'], { type: 'application/octet-stream' })
+    return blob
   },
 
   chunkUpload: async (params: {
@@ -107,26 +202,14 @@ export const attachmentApi = {
     businessId: string
     businessType: string
   }) => {
-    const formData = new FormData()
-    formData.append('chunk', params.chunk)
-    formData.append('chunkIndex', params.chunkIndex.toString())
-    formData.append('totalChunks', params.totalChunks.toString())
-    formData.append('uploadId', params.uploadId)
-    formData.append('fileName', params.fileName)
-    formData.append('fileSize', params.fileSize.toString())
-    formData.append('configId', params.configId)
-    formData.append('businessId', params.businessId)
-    formData.append('businessType', params.businessType)
-
-    return request.post<ApiResponse<{ chunkIndex: number }>>(
-      `${BASE_URL}/chunk-upload`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }
-    )
+    await delay(100)
+    
+    return {
+      code: 200,
+      message: '成功',
+      data: { chunkIndex: params.chunkIndex },
+      timestamp: Date.now()
+    }
   },
 
   mergeChunks: async (params: {
@@ -138,33 +221,51 @@ export const attachmentApi = {
     businessId: string
     businessType: string
   }) => {
-    const formData = new FormData()
-    formData.append('uploadId', params.uploadId)
-    formData.append('fileName', params.fileName)
-    formData.append('fileSize', params.fileSize.toString())
-    formData.append('totalChunks', params.totalChunks.toString())
-    formData.append('configId', params.configId)
-    formData.append('businessId', params.businessId)
-    formData.append('businessType', params.businessType)
-
-    return request.post<ApiResponse<AttachmentRecord>>(
-      `${BASE_URL}/merge-chunks`,
-      formData,
-      {
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      }
-    )
+    await delay(300)
+    
+    const newAttachment: AttachmentRecord = {
+      id: (mockAttachments.length + 1).toString(),
+      fileName: params.fileName,
+      fileSize: params.fileSize,
+      fileType: 'application/octet-stream',
+      url: `https://example.com/attachments/${mockAttachments.length + 1}.${params.fileName.split('.').pop()}`,
+      thumbUrl: '',
+      configId: params.configId,
+      businessId: params.businessId,
+      businessType: params.businessType,
+      uploadTime: new Date().toISOString(),
+      uploader: '管理员'
+    }
+    
+    mockAttachments.push(newAttachment)
+    
+    return {
+      code: 200,
+      message: '成功',
+      data: newAttachment,
+      timestamp: Date.now()
+    }
   },
 
-  getUploadStatus: (uploadId: string) => {
-    return request.get<ApiResponse<{ uploadedChunks: number[] }>>(
-      `${BASE_URL}/upload-status/${uploadId}`
-    )
+  getUploadStatus: async (uploadId: string) => {
+    await delay(100)
+    
+    return {
+      code: 200,
+      message: '成功',
+      data: { uploadedChunks: [0, 1, 2] },
+      timestamp: Date.now()
+    }
   },
 
-  cancelUpload: (uploadId: string) => {
-    return request.delete<ApiResponse<null>>(`${BASE_URL}/upload/${uploadId}`)
+  cancelUpload: async (uploadId: string) => {
+    await delay(100)
+    
+    return {
+      code: 200,
+      message: '成功',
+      data: null,
+      timestamp: Date.now()
+    }
   }
 }

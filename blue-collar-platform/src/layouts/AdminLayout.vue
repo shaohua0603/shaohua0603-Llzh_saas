@@ -146,7 +146,7 @@
             
             <!-- 套餐管理二级菜单 -->
             <template v-else-if="selectedFirstMenu === 'packages'">
-              <el-menu-item index="/admin/packages">
+              <el-menu-item index="/admin/package-management/package-info">
                 <el-icon><Present /></el-icon>
                 <span>套餐信息</span>
               </el-menu-item>
@@ -154,7 +154,7 @@
             
             <!-- 租户管理二级菜单 -->
             <template v-else-if="selectedFirstMenu === 'tenants'">
-              <el-menu-item index="/admin/tenants">
+              <el-menu-item index="/admin/tenant-management/tenant-info">
                 <el-icon><OfficeBuilding /></el-icon>
                 <span>租户信息</span>
               </el-menu-item>
@@ -162,11 +162,11 @@
             
             <!-- 招聘管理二级菜单 -->
             <template v-else-if="selectedFirstMenu === 'recruitment'">
-              <el-menu-item index="/admin/recruitment/demand">
+              <el-menu-item index="/admin/recruitment-management/recruitment-requirements">
                 <el-icon><Document /></el-icon>
                 <span>招聘需求</span>
               </el-menu-item>
-              <el-menu-item index="/admin/recruitment/resume">
+              <el-menu-item index="/admin/recruitment-management/resume-management">
                 <el-icon><User /></el-icon>
                 <span>简历管理</span>
               </el-menu-item>
@@ -246,7 +246,7 @@
             
             <!-- 系统管理二级菜单 -->
             <template v-else-if="selectedFirstMenu === 'system'">
-              <el-menu-item index="/admin/users">
+              <el-menu-item index="/admin/system/registered-users">
                 <el-icon><User /></el-icon>
                 <span>注册用户</span>
               </el-menu-item>
@@ -352,25 +352,25 @@ const selectedFirstMenu = ref('work-center')
 // 菜单项配置
 const menuItems = [
   { path: '/admin/home', label: '首页', icon: HomeFilled },
-  { path: '/admin/tenants', label: '租户管理', icon: OfficeBuilding },
-  { path: '/admin/packages', label: '套餐配置', icon: Present },
-  { path: '/admin/recruitment', label: '招聘管理', icon: Position },
-  { path: '/admin/users', label: '注册用户', icon: User },
-  { path: '/admin/idle-workers', label: '空闲工人', icon: Warning },
-  { path: '/admin/company-culture', label: '企业文化介绍', icon: Document },
-  { path: '/admin/position-culture', label: '岗位文化介绍', icon: Position },
-  { path: '/admin/departments', label: '部门管理', icon: OfficeBuilding },
-  { path: '/admin/employees', label: '正式员工', icon: UserFilled },
-  { path: '/admin/positions', label: '岗位管理', icon: Position },
-  { path: '/admin/rules', label: '规则配置', icon: Document },
-  { path: '/admin/menu-config', label: '菜单配置', icon: Menu },
-  { path: '/admin/dictionary', label: '字典管理', icon: Notebook },
-  { path: '/admin/system-params', label: '系统参数', icon: Cpu },
-  { path: '/admin/processes', label: '流程管理', icon: RefreshLeft },
-  { path: '/admin/process-config', label: '流程配置', icon: Operation },
-  { path: '/admin/attachments', label: '附件管理', icon: Paperclip },
-  { path: '/admin/print', label: '打印管理', icon: Printer },
-  { path: '/admin/roles', label: '角色管理', icon: Key }
+  { path: '/admin/tenant-management/tenant-info', label: '租户管理', icon: OfficeBuilding },
+  { path: '/admin/package-management/package-info', label: '套餐配置', icon: Present },
+  { path: '/admin/recruitment-management/recruitment-requirements', label: '招聘管理', icon: Position },
+  { path: '/admin/system/registered-users', label: '注册用户', icon: User },
+  { path: '/admin/operation/idle-workers', label: '空闲工人', icon: Warning },
+  { path: '/admin/system/company-culture', label: '企业文化介绍', icon: Document },
+  { path: '/admin/system/job-culture', label: '岗位文化介绍', icon: Position },
+  { path: '/admin/system/department', label: '部门管理', icon: OfficeBuilding },
+  { path: '/admin/system/employee', label: '正式员工', icon: UserFilled },
+  { path: '/admin/system/role', label: '角色管理', icon: Key },
+  { path: '/admin/system/rule-config', label: '规则配置', icon: Document },
+  { path: '/admin/system/menu-config', label: '菜单配置', icon: Menu },
+  { path: '/admin/system/dictionary', label: '字典管理', icon: Notebook },
+  { path: '/admin/system/system-param', label: '系统参数', icon: Cpu },
+  { path: '/admin/system/process', label: '流程管理', icon: RefreshLeft },
+  { path: '/admin/system/process-config', label: '流程配置', icon: Operation },
+  { path: '/admin/system/attachment', label: '附件管理', icon: Paperclip },
+  { path: '/admin/system/print-template', label: '打印管理', icon: Printer },
+  { path: '/admin/settlement/referral', label: '工作转介绍', icon: Connection }
 ]
 
 // 计算当前激活的一级菜单
@@ -380,12 +380,12 @@ const activeFirstMenu = computed(() => {
   
   const path = route.path
   if (path.startsWith('/admin/todo') || path.startsWith('/admin/messages') || path.startsWith('/admin/warnings')) return 'work-center'
-  if (path.startsWith('/admin/packages')) return 'packages'
-  if (path.startsWith('/admin/tenants')) return 'tenants'
-  if (path.startsWith('/admin/recruitment')) return 'recruitment'
+  if (path.startsWith('/admin/package-management')) return 'packages'
+  if (path.startsWith('/admin/tenant-management')) return 'tenants'
+  if (path.startsWith('/admin/recruitment-management')) return 'recruitment'
   if (path.startsWith('/admin/settlement')) return 'settlement'
   if (path.startsWith('/admin/operation')) return 'operation'
-  if (path.startsWith('/admin/users') || path.startsWith('/admin/system')) return 'system'
+  if (path.startsWith('/admin/system')) return 'system'
   return 'work-center'
 })
 
@@ -494,23 +494,28 @@ const getTabTitle = (path) => {
     '/admin/todo': '待办任务',
     '/admin/messages': '消息中心',
     '/admin/warnings': '预警消息',
-    '/admin/tenants': '租户管理',
-    '/admin/tenants/detail': '租户详情',
-    '/admin/packages': '套餐管理',
-    '/admin/packages/detail': '套餐详情',
-    '/admin/recruitment/demand': '招聘需求',
-    '/admin/recruitment/demand/detail': '招聘需求详情',
-    '/admin/recruitment/resume': '简历管理',
-    '/admin/recruitment/resume/detail': '简历详情',
+    '/admin/tenant-management/tenant-info': '租户管理',
+    '/admin/tenant-management/tenant-info/add': '新增租户',
+    '/admin/tenant-management/tenant-info/edit/:id': '编辑租户',
+    '/admin/tenant-management/tenant-info/:id': '租户详情',
+    '/admin/package-management/package-info': '套餐管理',
+    '/admin/package-management/package-info/add': '新增套餐',
+    '/admin/package-management/package-info/edit/:id': '编辑套餐',
+    '/admin/package-management/package-info/:id': '套餐详情',
+    '/admin/recruitment-management/recruitment-requirements': '招聘需求',
+    '/admin/recruitment-management/recruitment-requirements/:id': '招聘需求详情',
+    '/admin/recruitment-management/resume-management': '简历管理',
+    '/admin/recruitment-management/resume-management/:id': '简历详情',
     '/admin/settlement/referral': '工作转介绍',
     '/admin/settlement/commission': '佣金发放',
     '/admin/settlement/pull-new-reward': '拉新奖励',
     '/admin/operation/expense-query': '费用查询',
     '/admin/operation/idle-workers': '空闲工人',
     '/admin/operation/activity': '活动信息',
-    '/admin/operation/activity/detail': '活动详情',
+    '/admin/operation/activity/add': '新增活动',
+    '/admin/operation/activity/edit/:id': '编辑活动',
+    '/admin/operation/activity/:id': '活动详情',
     '/admin/operation/activity-registration': '报名信息',
-    '/admin/operation/activity-registration/detail': '报名详情',
     '/admin/operation/ranking/work-duration': '在岗时长排名',
     '/admin/operation/ranking/turnover-rate': '离职率排名',
     '/admin/operation/ranking/punishment-rate': '惩罚率排名',
@@ -519,31 +524,39 @@ const getTabTitle = (path) => {
     '/admin/operation/ranking/complaint-rate': '投诉率排名',
     '/admin/operation/ranking/leave-rate': '请假率排名',
     '/admin/operation/ranking/overtime': '加班时长排名',
-    '/admin/users': '注册用户',
-    '/admin/users/detail': '用户详情',
+    '/admin/system/registered-users': '注册用户',
     '/admin/system/tenant-tag': '租户标签',
     '/admin/system/warning-template': '预警消息模版',
     '/admin/system/education-job': '学历对应岗位',
     '/admin/system/platform-account': '平台账号管理',
-    '/admin/system/platform-account/detail': '账号详情',
     '/admin/system/company-culture': '企业文化介绍',
     '/admin/system/job-culture': '岗位文化介绍',
     '/admin/system/department': '部门管理',
-    '/admin/system/department/detail': '部门详情',
-    '/admin/system/employee': '正式员工',
-    '/admin/system/employee/detail': '员工详情',
-    '/admin/system/role': '岗位管理',
-    '/admin/system/role/detail': '岗位详情',
+    '/admin/system/employee': '正式员工管理',
+    '/admin/system/role': '角色管理',
     '/admin/system/rule-config': '规则配置',
     '/admin/system/menu-config': '菜单配置',
     '/admin/system/dictionary': '字典管理',
     '/admin/system/system-param': '系统参数',
     '/admin/system/process': '流程管理',
-    '/admin/system/process/detail': '流程详情',
+    '/admin/system/flow-management': '流程管理',
+    '/admin/system/flow-management/add': '新增流程',
+    '/admin/system/flow-management/edit/:id': '编辑流程',
+    '/admin/system/flow-management/view/:id': '流程详情',
     '/admin/system/process-config': '流程配置',
-    '/admin/system/attachment': '附件管理',
-    '/admin/system/print-template': '模版配置',
-    '/admin/system/print-config': '打印配置'
+    '/admin/system/flow-config': '流程配置管理',
+    '/admin/system/attachment': '附件配置管理',
+    '/admin/attachment-config-create': '新增附件配置',
+    '/admin/attachment-config-edit': '编辑附件配置',
+    '/admin/attachment-config-view': '附件配置详情',
+    '/admin/system/attachment-template': '附件模板管理',
+    '/admin/system/attachment-template/upload': '上传附件模板',
+    '/admin/system/attachment-template/edit/:id': '编辑附件模板',
+    '/admin/system/print-template': '打印模版配置',
+    '/admin/system/print-config': '打印配置',
+    '/admin/system/workflow-config': '工作流配置',
+    '/admin/system/workflow-config/add': '新增工作流配置',
+    '/admin/system/workflow-config/edit/:id': '编辑工作流配置'
   }
   
   // 首先尝试精确匹配

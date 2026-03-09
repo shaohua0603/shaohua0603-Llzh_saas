@@ -307,7 +307,7 @@ const handleViewDetail = (row: any) => {
   if (row.readStatus === 'unread') {
     handleMarkRead(row)
   }
-  router.push(`/labor-company/message-detail/${row.id}`)
+  router.push(`/tenant/message-detail/${row.id}`)
 }
 
 // 标记为已读

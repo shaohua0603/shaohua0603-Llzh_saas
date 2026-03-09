@@ -265,10 +265,10 @@ import {
 import type {
   TodoTask,
   TodoTaskQueryParams,
-  TaskType,
   TaskPriority,
   TaskStatus,
 } from '@/types/work-center'
+import { TaskType } from '@/types/work-center'
 import type { ApprovalRecord } from '@/types/flow-config'
 import { useDataPermission } from '@/composables/useDataPermission'
 

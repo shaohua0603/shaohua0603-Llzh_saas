@@ -107,9 +107,15 @@
       </template>
 
       <template #column-processingRecords="{ row }">
-        <el-button type="primary" link @click="viewProcessingRecords(row)">
+        <el-button type="primary" link @click="handleView(row)">
           查看记录 ({{ row.processingRecords?.length || 0 }})
         </el-button>
+      </template>
+
+      <template #column-paymentType="{ row }">
+        <el-tag :type="row.paymentType === 'daily' ? 'warning' : 'success'">
+          {{ row.paymentType === 'daily' ? '日结' : '月结' }}
+        </el-tag>
       </template>
 
       <template #column-submitTime="{ row }">
@@ -121,8 +127,12 @@
           <el-icon><View /></el-icon>
           查看
         </el-button>
-        <el-button type="success" link @click="handleProcess(row)">
+        <el-button type="success" link @click="handleEdit(row)">
           <el-icon><Edit /></el-icon>
+          编辑
+        </el-button>
+        <el-button type="warning" link @click="handleProcess(row)">
+          <el-icon><Check /></el-icon>
           处理
         </el-button>
         <el-button type="danger" link @click="handleDelete(row)">
@@ -132,185 +142,7 @@
       </template>
     </CommonTable>
 
-    <!-- 新增/编辑对话框 -->
-    <el-dialog
-      v-model="formDialogVisible"
-      :title="isEdit ? '编辑沟通记录' : '新增沟通记录'"
-      width="600px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
-        <el-form-item label="工人姓名" prop="workerName">
-          <el-input v-model="formData.workerName" placeholder="请输入工人姓名" />
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="formData.phone" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item label="遇到的困难" prop="difficulty">
-          <el-input
-            v-model="formData.difficulty"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入遇到的困难"
-          />
-        </el-form-item>
-        <el-form-item label="需要的帮助" prop="helpNeeded">
-          <el-input
-            v-model="formData.helpNeeded"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入需要的帮助"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="formDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitForm" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
 
-    <!-- 处理记录对话框 -->
-    <el-dialog
-      v-model="processDialogVisible"
-      title="填写处理记录"
-      width="600px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="processFormRef" :model="processForm" :rules="processRules" label-width="120px">
-        <el-form-item label="处理状态" prop="status">
-          <el-radio-group v-model="processForm.status">
-            <el-radio label="processing">处理中</el-radio>
-            <el-radio label="completed">已处理</el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="处理说明" prop="processContent">
-          <el-input
-            v-model="processForm.processContent"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入处理说明"
-          />
-        </el-form-item>
-        <el-form-item label="处理结果" prop="result">
-          <el-input
-            v-model="processForm.result"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入处理结果"
-          />
-        </el-form-item>
-      </el-form>
-
-      <!-- 历史处理记录 -->
-      <div v-if="currentRow?.processingRecords?.length" class="history-records">
-        <h4>历史处理记录</h4>
-        <el-timeline>
-          <el-timeline-item
-            v-for="(record, index) in currentRow.processingRecords"
-            :key="index"
-            :timestamp="formatDateTime(record.processTime)"
-            placement="top"
-          >
-            <el-card>
-              <p><strong>处理人：</strong>{{ record.processor }}</p>
-              <p><strong>处理说明：</strong>{{ record.content }}</p>
-              <p v-if="record.result"><strong>处理结果：</strong>{{ record.result }}</p>
-            </el-card>
-          </el-timeline-item>
-        </el-timeline>
-      </div>
-
-      <template #footer>
-        <el-button @click="processDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitProcess" :loading="submitLoading">提交处理</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 查看对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      title="沟通记录详情"
-      width="700px"
-    >
-      <div v-if="currentRow" class="detail-content">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="工人姓名">
-            {{ currentRow.workerName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="手机号">
-            {{ currentRow.phone }}
-          </el-descriptions-item>
-          <el-descriptions-item label="遇到困难" :span="2">
-            {{ currentRow.difficulty }}
-          </el-descriptions-item>
-          <el-descriptions-item label="需要帮助" :span="2">
-            {{ currentRow.helpNeeded }}
-          </el-descriptions-item>
-          <el-descriptions-item label="处理状态">
-            <el-tag :type="getStatusType(currentRow.status)">
-              {{ getStatusText(currentRow.status) }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="提交时间">
-            {{ formatDateTime(currentRow.submitTime) }}
-          </el-descriptions-item>
-        </el-descriptions>
-
-        <!-- 处理记录 -->
-        <div v-if="currentRow.processingRecords?.length" class="processing-records">
-          <h4>处理记录</h4>
-          <el-timeline>
-            <el-timeline-item
-              v-for="(record, index) in currentRow.processingRecords"
-              :key="index"
-              :timestamp="formatDateTime(record.processTime)"
-              placement="top"
-            >
-              <el-card>
-                <p><strong>处理人：</strong>{{ record.processor }}</p>
-                <p><strong>处理说明：</strong>{{ record.content }}</p>
-                <p v-if="record.result"><strong>处理结果：</strong>{{ record.result }}</p>
-              </el-card>
-            </el-timeline-item>
-          </el-timeline>
-        </div>
-      </div>
-      <template #footer>
-        <el-button @click="goBack">
-          <el-icon><ArrowLeft /></el-icon>
-          返回
-        </el-button>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 处理记录列表对话框 -->
-    <el-dialog
-      v-model="recordsDialogVisible"
-      title="处理记录列表"
-      width="700px"
-    >
-      <div v-if="currentRow?.processingRecords?.length">
-        <el-timeline>
-          <el-timeline-item
-            v-for="(record, index) in currentRow.processingRecords"
-            :key="index"
-            :timestamp="formatDateTime(record.processTime)"
-            placement="top"
-          >
-            <el-card>
-              <p><strong>处理人：</strong>{{ record.processor }}</p>
-              <p><strong>处理说明：</strong>{{ record.content }}</p>
-              <p v-if="record.result"><strong>处理结果：</strong>{{ record.result }}</p>
-            </el-card>
-          </el-timeline-item>
-        </el-timeline>
-      </div>
-      <el-empty v-else description="暂无处理记录" />
-      <template #footer>
-        <el-button @click="recordsDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -337,6 +169,7 @@ interface CommunicationRecord {
   id: string
   workerName: string
   phone: string
+  paymentType: 'daily' | 'monthly'
   difficulty: string
   helpNeeded: string
   status: 'pending' | 'processing' | 'completed'
@@ -359,50 +192,13 @@ const loading = ref(false)
 const selectedRows = ref<CommunicationRecord[]>([])
 const currentRow = ref<CommunicationRecord | null>(null)
 
-// 对话框控制
-const formDialogVisible = ref(false)
-const processDialogVisible = ref(false)
-const detailDialogVisible = ref(false)
-const recordsDialogVisible = ref(false)
-const isEdit = ref(false)
-const submitLoading = ref(false)
-const formRef = ref<FormInstance>()
-const processFormRef = ref<FormInstance>()
 
-// 表单数据
-const formData = reactive({
-  workerName: '',
-  phone: '',
-  difficulty: '',
-  helpNeeded: ''
-})
-
-// 表单验证规则
-const formRules: FormRules = {
-  workerName: [{ required: true, message: '请输入工人姓名', trigger: 'blur' }],
-  phone: [
-    { required: true, message: '请输入手机号', trigger: 'blur' },
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号', trigger: 'blur' }
-  ],
-  difficulty: [{ required: true, message: '请输入遇到的困难', trigger: 'blur' }]
-}
-
-// 处理表单
-const processForm = reactive({
-  status: 'processing',
-  processContent: '',
-  result: ''
-})
-
-// 处理表单验证规则
-const processRules: FormRules = {
-  processContent: [{ required: true, message: '请输入处理说明', trigger: 'blur' }]
-}
 
 // 表格列配置
 const columns: ColumnConfig[] = [
   { prop: 'workerName', label: '姓名', minWidth: 120, sortable: true },
   { prop: 'phone', label: '手机号', minWidth: 120, sortable: true },
+  { prop: 'paymentType', label: '结算方式', minWidth: 100 },
   { prop: 'difficulty', label: '遇到的困难', minWidth: 200 },
   { prop: 'helpNeeded', label: '需要的帮助', minWidth: 200 },
   { prop: 'status', label: '处理状态', minWidth: 100 },
@@ -513,6 +309,7 @@ const generateMockData = (): CommunicationRecord[] => {
       id: `COMM${String(i + 1).padStart(6, '0')}`,
       workerName: names[Math.floor(Math.random() * names.length)],
       phone: `138${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
+      paymentType: Math.random() > 0.5 ? 'daily' : 'monthly',
       difficulty: difficulties[Math.floor(Math.random() * difficulties.length)],
       helpNeeded: helpNeededList[Math.floor(Math.random() * helpNeededList.length)],
       status,
@@ -603,113 +400,22 @@ const fetchData = () => {
 
 // 新增记录
 const handleAdd = () => {
-  isEdit.value = false
-  formData.workerName = ''
-  formData.phone = ''
-  formData.difficulty = ''
-  formData.helpNeeded = ''
-  formDialogVisible.value = true
+  router.push('/tenant/on-duty/communication/form')
 }
 
 // 编辑记录
 const handleEdit = (row: CommunicationRecord) => {
-  isEdit.value = true
-  formData.workerName = row.workerName
-  formData.phone = row.phone
-  formData.difficulty = row.difficulty
-  formData.helpNeeded = row.helpNeeded
-  currentRow.value = row
-  formDialogVisible.value = true
-}
-
-// 提交表单
-const handleSubmitForm = async () => {
-  if (!formRef.value) return
-
-  await formRef.value.validate()
-
-  submitLoading.value = true
-
-  try {
-    if (isEdit.value && currentRow.value) {
-      // 编辑
-      const index = allData.value.findIndex(item => item.id === currentRow.value!.id)
-      if (index > -1) {
-        allData.value[index] = { ...allData.value[index], ...formData }
-      }
-      ElMessage.success('修改成功')
-    } else {
-      // 新增
-      const newRecord: CommunicationRecord = {
-        id: `COMM${Date.now()}`,
-        ...formData,
-        status: 'pending',
-        submitTime: new Date().toISOString(),
-        processingRecords: []
-      }
-      allData.value.unshift(newRecord)
-      ElMessage.success('新增成功')
-    }
-
-    formDialogVisible.value = false
-    fetchData()
-  } finally {
-    submitLoading.value = false
-  }
+  router.push(`/tenant/on-duty/communication/form/${row.id}`)
 }
 
 // 查看
 const handleView = (row: CommunicationRecord) => {
-  currentRow.value = row
-  detailDialogVisible.value = true
+  router.push(`/tenant/on-duty/communication/detail/${row.id}`)
 }
 
 // 处理
 const handleProcess = (row: CommunicationRecord) => {
-  currentRow.value = row
-  processForm.status = row.status === 'pending' ? 'processing' : row.status
-  processForm.processContent = ''
-  processForm.result = ''
-  processDialogVisible.value = true
-}
-
-// 提交处理
-const handleSubmitProcess = async () => {
-  if (!processFormRef.value) return
-
-  await processFormRef.value.validate()
-
-  submitLoading.value = true
-
-  try {
-    const newRecord: ProcessingRecord = {
-      processTime: new Date().toISOString(),
-      processor: '管理员',
-      content: processForm.processContent,
-      result: processForm.result || undefined
-    }
-
-    const index = allData.value.findIndex(item => item.id === currentRow.value!.id)
-    if (index > -1) {
-      if (!allData.value[index].processingRecords) {
-        allData.value[index].processingRecords = []
-      }
-      allData.value[index].processingRecords.push(newRecord)
-      allData.value[index].status = processForm.status as CommunicationRecord['status']
-    }
-
-    ElMessage.success('处理记录提交成功')
-    processDialogVisible.value = false
-    fetchData()
-  } finally {
-    submitLoading.value = false
-  }
-}
-
-// 查看处理记录
-const viewProcessingRecords = (row: CommunicationRecord) => {
-  currentRow.value = row
-  recordsDialogVisible.value = true
+  router.push(`/tenant/on-duty/communication/detail/${row.id}?mode=process`)
 }
 
 // 删除

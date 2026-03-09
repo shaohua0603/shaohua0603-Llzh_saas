@@ -40,33 +40,29 @@
         :before-upload="handleBeforeUpload"
         :http-request="customRequest"
       >
-        <!-- 拖拽上传区域 -->
-        <template v-if="drag">
-          <div class="upload-dragger">
-            <el-icon class="upload-icon"><UploadFilled /></el-icon>
-            <div class="upload-text">
-              <p>将文件拖到此处，或<em>点击上传</em></p>
-              <p class="upload-tip">{{ uploadTip }}</p>
-            </div>
-          </div>
-        </template>
-
-        <!-- 按钮上传区域 -->
-        <template v-else>
-          <el-button type="primary">
-            <el-icon><Upload /></el-icon>
-            {{ buttonText }}
-          </el-button>
-        </template>
-
         <!-- 自定义上传按钮插槽 -->
         <template #trigger>
-          <slot name="trigger"></slot>
+          <slot name="trigger">
+            <!-- 按钮上传区域 -->
+            <el-button v-if="!drag" type="primary">
+              <el-icon><Upload /></el-icon>
+              {{ buttonText }}
+            </el-button>
+          </slot>
         </template>
 
         <!-- 自定义上传区域插槽 -->
         <template #default>
-          <slot name="default"></slot>
+          <slot name="default">
+            <!-- 拖拽上传区域 -->
+            <div v-if="drag" class="upload-dragger">
+              <el-icon class="upload-icon"><UploadFilled /></el-icon>
+              <div class="upload-text">
+                <p>将文件拖到此处，或<em>点击上传</em></p>
+                <p class="upload-tip">{{ uploadTip }}</p>
+              </div>
+            </div>
+          </slot>
         </template>
       </el-upload>
 

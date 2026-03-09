@@ -66,7 +66,7 @@
       :show-index="true"
       :show-actions="true"
       :stats-info="statsInfo"
-      action-column-width="220"
+      :action-column-width="220"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
@@ -97,66 +97,6 @@
         <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
       </template>
     </CommonTable>
-
-    <!-- 新增/编辑弹窗 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="900px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="学习材料标题" prop="title">
-              <el-input v-model="formData.title" placeholder="请输入学习材料标题" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="学习材料类型" prop="materialType">
-              <el-select v-model="formData.materialType" placeholder="请选择类型" style="width: 100%">
-                <el-option label="岗前培训" value="pre_job" />
-                <el-option label="日常培训" value="daily" />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="学习材料摘要" prop="summary">
-          <el-input v-model="formData.summary" type="textarea" :rows="3" placeholder="请输入学习材料摘要" />
-        </el-form-item>
-        <el-form-item label="学习材料内容" prop="content">
-          <RichTextEditor v-model="formData.content" placeholder="请输入学习材料内容" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 详情弹窗 -->
-    <el-dialog v-model="detailVisible" title="学习材料详情" width="900px">
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="学习材料标题">{{ currentRow?.title }}</el-descriptions-item>
-        <el-descriptions-item label="学习材料类型">
-          <el-tag :type="getMaterialTypeTag(currentRow?.materialType)">
-            {{ getMaterialTypeText(currentRow?.materialType) }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="发布状态">
-          <el-tag :type="currentRow?.publishStatus === 'published' ? 'success' : 'info'">
-            {{ currentRow?.publishStatus === 'published' ? '已发布' : '未发布' }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="创建时间">{{ currentRow?.createTime }}</el-descriptions-item>
-        <el-descriptions-item label="学习材料摘要" :span="2">{{ currentRow?.summary }}</el-descriptions-item>
-      </el-descriptions>
-      <el-divider content-position="left">学习材料内容</el-divider>
-      <div class="content-view" v-html="currentRow?.content"></div>
-      <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -164,9 +104,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Delete, ArrowDown } from '@element-plus/icons-vue'
-import type { FormInstance, FormRules } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
-import RichTextEditor from '@/components/RichTextEditor.vue'
+import { useRouter } from 'vue-router'
 
 // 类型定义
 interface LearningMaterial {
@@ -178,6 +117,8 @@ interface LearningMaterial {
   publishStatus: 'published' | 'unpublished'
   createTime: string
 }
+
+const router = useRouter()
 
 // 表格列配置
 const columns = [
@@ -195,11 +136,6 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedRows = ref<LearningMaterial[]>([])
-const dialogVisible = ref(false)
-const detailVisible = ref(false)
-const submitLoading = ref(false)
-const dialogTitle = ref('新增学习材料')
-const currentRow = ref<LearningMaterial | null>(null)
 const filterExpanded = ref(false)
 const statsInfo = ref<Array<{ label: string; value: string }>>([])
 
@@ -208,25 +144,6 @@ const searchForm = reactive({
   materialType: '',
   publishStatus: ''
 })
-
-const formData = reactive<LearningMaterial>({
-  id: '',
-  title: '',
-  materialType: 'pre_job',
-  summary: '',
-  content: '',
-  publishStatus: 'unpublished',
-  createTime: ''
-})
-
-const formRef = ref<FormInstance>()
-
-const formRules: FormRules = {
-  title: [{ required: true, message: '请输入学习材料标题', trigger: 'blur' }],
-  materialType: [{ required: true, message: '请选择学习材料类型', trigger: 'change' }],
-  summary: [{ required: true, message: '请输入学习材料摘要', trigger: 'blur' }],
-  content: [{ required: true, message: '请输入学习材料内容', trigger: 'blur' }]
-}
 
 // Mock数据
 const mockData: LearningMaterial[] = [
@@ -347,30 +264,17 @@ const toggleFilter = () => {
 
 // 新增
 const handleAdd = () => {
-  dialogTitle.value = '新增学习材料'
-  Object.assign(formData, {
-    id: '',
-    title: '',
-    materialType: 'pre_job',
-    summary: '',
-    content: '',
-    publishStatus: 'unpublished',
-    createTime: ''
-  })
-  dialogVisible.value = true
+  router.push('/tenant/on-duty/learning-material/form')
 }
 
 // 编辑
 const handleEdit = (row: LearningMaterial) => {
-  dialogTitle.value = '编辑学习材料'
-  Object.assign(formData, { ...row })
-  dialogVisible.value = true
+  router.push(`/tenant/on-duty/learning-material/form/${row.id}`)
 }
 
 // 详情
 const handleDetail = (row: LearningMaterial) => {
-  currentRow.value = row
-  detailVisible.value = true
+  router.push(`/tenant/on-duty/learning-material/detail/${row.id}`)
 }
 
 // 删除
@@ -406,37 +310,6 @@ const handleBatchDelete = () => {
     ElMessage.success('批量删除成功')
     loadData()
   }).catch(() => {})
-}
-
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      submitLoading.value = true
-      setTimeout(() => {
-        if (formData.id) {
-          // 编辑
-          const index = mockData.findIndex(item => item.id === formData.id)
-          if (index > -1) {
-            mockData[index] = { ...formData }
-          }
-          ElMessage.success('编辑成功')
-        } else {
-          // 新增
-          mockData.unshift({
-            ...formData,
-            id: Date.now().toString(),
-            createTime: new Date().toLocaleString()
-          })
-          ElMessage.success('新增成功')
-        }
-        submitLoading.value = false
-        dialogVisible.value = false
-        loadData()
-      }, 500)
-    }
-  })
 }
 
 // 发布

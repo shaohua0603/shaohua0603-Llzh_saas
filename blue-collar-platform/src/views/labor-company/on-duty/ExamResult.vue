@@ -49,15 +49,12 @@
         <el-icon><Download /></el-icon>
         导出
       </el-button>
-      <el-button type="info" @click="handlePrint">
-        <el-icon><Printer /></el-icon>
-        打印
-      </el-button>
     </div>
 
     <!-- 表格 -->
     <CommonTable
       ref="tableRef"
+      table-id="exam-result"
       :data="tableData"
       :columns="columns"
       :loading="loading"
@@ -67,7 +64,7 @@
       :showSelection="true"
       :showIndex="true"
       :showActions="true"
-      action-column-width="180"
+      :action-column-width="180"
       :stats-info="statsInfo"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
@@ -75,7 +72,20 @@
       @size-change="handleSizeChange"
     >
       <template #column-score="{ row }">
-        <span :class="getScoreClass(row.score, row.totalScore)">{{ row.score }}分</span>
+        <span :class="getScoreClass(row.score, row.passScore)">{{ row.score }}分</span>
+      </template>
+      <template #column-passScore="{ row }">
+        {{ row.passScore }}分
+      </template>
+      <template #column-paymentType="{ row }">
+        <el-tag :type="row.paymentType === 'daily' ? 'warning' : 'success'" size="small">
+          {{ row.paymentType === 'daily' ? '日结' : '月结' }}
+        </el-tag>
+      </template>
+      <template #column-status="{ row }">
+        <el-tag :type="row.score >= row.passScore ? 'success' : 'danger'" size="small">
+          {{ row.score >= row.passScore ? '通过' : '未通过' }}
+        </el-tag>
       </template>
       <template #actions="{ row }">
         <el-button link type="primary" size="small" @click="handleDetail(row)">
@@ -85,50 +95,7 @@
       </template>
     </CommonTable>
 
-    <!-- 详情弹窗 -->
-    <el-dialog v-model="detailVisible" title="考试成绩详情" width="900px">
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="姓名">{{ currentRow?.workerName }}</el-descriptions-item>
-        <el-descriptions-item label="工号">{{ currentRow?.workerNo }}</el-descriptions-item>
-        <el-descriptions-item label="考卷名称">{{ currentRow?.examName }}</el-descriptions-item>
-        <el-descriptions-item label="总分数">{{ currentRow?.totalScore }}分</el-descriptions-item>
-        <el-descriptions-item label="实得分数">
-          <span :class="getScoreClass(currentRow?.score || 0, currentRow?.totalScore || 100)">
-            {{ currentRow?.score }}分
-          </span>
-        </el-descriptions-item>
-        <el-descriptions-item label="总时长">{{ currentRow?.totalTime }}分钟</el-descriptions-item>
-        <el-descriptions-item label="总题数">{{ currentRow?.totalQuestions }}道</el-descriptions-item>
-        <el-descriptions-item label="报考开始时间">{{ currentRow?.startTime }}</el-descriptions-item>
-        <el-descriptions-item label="报考结束时间">{{ currentRow?.endTime }}</el-descriptions-item>
-      </el-descriptions>
-      <el-divider content-position="left">试卷题目及回答结果</el-divider>
-      <el-table :data="currentRow?.questions || []" border>
-        <el-table-column type="index" label="序号" width="60" />
-        <el-table-column prop="questionType" label="题目类型" width="100">
-          <template #default="{ row }">
-            {{ getQuestionTypeText(row.questionType) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="answerType" label="答题类型" width="100">
-          <template #default="{ row }">
-            {{ getAnswerTypeText(row.answerType) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="question" label="题干" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="score" label="分数" width="80" />
-        <el-table-column prop="answerResult" label="回答结果" width="150">
-          <template #default="{ row }">
-            <el-tag :type="row.answerResult === '正确' ? 'success' : 'danger'" size="small">
-              {{ row.answerResult }}
-            </el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
-      <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
+
 
     <!-- 导入弹窗 -->
     <el-dialog v-model="importVisible" title="导入考试成绩" width="500px">
@@ -163,7 +130,10 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
-import { Upload, Download, Printer, Search, Refresh, View, ArrowDown } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
+import { Upload, Download, Search, Refresh, View, ArrowDown } from '@element-plus/icons-vue'
+
+const router = useRouter()
 
 // 类型定义
 interface ExamQuestionResult {
@@ -178,8 +148,10 @@ interface ExamResultRecord {
   id: string
   workerName: string
   workerNo: string
+  paymentType: 'daily' | 'monthly'
   examName: string
   totalScore: number
+  passScore: number
   score: number
   totalTime: number
   totalQuestions: number
@@ -192,11 +164,14 @@ interface ExamResultRecord {
 const columns = [
   { prop: 'workerName', label: '姓名', minWidth: 100, sortable: true },
   { prop: 'workerNo', label: '工号', minWidth: 120, sortable: true },
+  { prop: 'paymentType', label: '结算方式', minWidth: 100, sortable: true },
   { prop: 'examName', label: '考卷名称', minWidth: 180, sortable: true },
   { prop: 'totalScore', label: '总分数', minWidth: 100, sortable: true },
+  { prop: 'passScore', label: '考试通过分数', minWidth: 120, sortable: true },
   { prop: 'score', label: '实得分数', minWidth: 120, sortable: true },
   { prop: 'totalTime', label: '总时长(分钟)', minWidth: 120, sortable: true },
   { prop: 'totalQuestions', label: '总题数', minWidth: 100, sortable: true },
+  { prop: 'status', label: '通过状态', minWidth: 100, sortable: true },
   { prop: 'startTime', label: '报考开始时间', minWidth: 160 },
   { prop: 'endTime', label: '报考结束时间', minWidth: 160 }
 ]
@@ -208,10 +183,8 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedRows = ref<ExamResultRecord[]>([])
-const detailVisible = ref(false)
 const importVisible = ref(false)
 const importLoading = ref(false)
-const currentRow = ref<ExamResultRecord | null>(null)
 const filterExpanded = ref(false)
 const statsInfo = ref<Array<{ label: string; value: string }>>([])
 const tableRef = ref<InstanceType<typeof CommonTable> | null>(null)
@@ -228,6 +201,7 @@ const mockData: ExamResultRecord[] = [
     id: '1',
     workerName: '张三',
     workerNo: 'W001',
+    paymentType: 'daily',
     examName: '安全生产知识测试',
     totalScore: 100,
     score: 85,
@@ -245,6 +219,7 @@ const mockData: ExamResultRecord[] = [
     id: '2',
     workerName: '李四',
     workerNo: 'W002',
+    paymentType: 'monthly',
     examName: '安全生产知识测试',
     totalScore: 100,
     score: 92,
@@ -262,6 +237,7 @@ const mockData: ExamResultRecord[] = [
     id: '3',
     workerName: '王五',
     workerNo: 'W003',
+    paymentType: 'daily',
     examName: '岗位技能考核',
     totalScore: 100,
     score: 78,
@@ -278,6 +254,7 @@ const mockData: ExamResultRecord[] = [
     id: '4',
     workerName: '赵六',
     workerNo: 'W004',
+    paymentType: 'monthly',
     examName: '职业健康培训测试',
     totalScore: 80,
     score: 65,
@@ -294,6 +271,7 @@ const mockData: ExamResultRecord[] = [
     id: '5',
     workerName: '钱七',
     workerNo: 'W005',
+    paymentType: 'daily',
     examName: '安全生产知识测试',
     totalScore: 100,
     score: 55,
@@ -331,11 +309,11 @@ const getAnswerTypeText = (type: string) => {
 }
 
 // 获取分数样式
-const getScoreClass = (score: number, totalScore: number) => {
-  const percentage = (score / totalScore) * 100
-  if (percentage >= 90) return 'score-excellent'
-  if (percentage >= 60) return 'score-pass'
-  return 'score-fail'
+const getScoreClass = (score: number, passScore: number) => {
+  const percentage = (score / passScore) * 100
+  if (percentage >= 150) return 'score-excellent' // 超过通过分数150%
+  if (percentage >= 100) return 'score-pass' // 达到或超过通过分数
+  return 'score-fail' // 未达到通过分数
 }
 
 // 加载数据
@@ -343,6 +321,22 @@ const loadData = () => {
   loading.value = true
   setTimeout(() => {
     let filteredData = [...mockData]
+
+    // 为每个记录添加 passScore
+    filteredData = filteredData.map(item => {
+      let passScore = 60 // 默认通过分数
+      if (item.examName === '安全生产知识测试') {
+        passScore = 60
+      } else if (item.examName === '岗位技能考核') {
+        passScore = 60
+      } else if (item.examName === '职业健康培训测试') {
+        passScore = 48
+      }
+      return {
+        ...item,
+        passScore
+      }
+    })
 
     // 筛选
     if (searchForm.workerName) {
@@ -361,10 +355,10 @@ const loadData = () => {
     tableData.value = filteredData.slice(start, start + pageSize.value)
     
     // 计算统计信息
-    const totalRecords = mockData.length
-    const excellentCount = mockData.filter(item => (item.score / item.totalScore) * 100 >= 90).length
-    const passCount = mockData.filter(item => (item.score / item.totalScore) * 100 >= 60).length
-    const failCount = mockData.filter(item => (item.score / item.totalScore) * 100 < 60).length
+    const totalRecords = filteredData.length
+    const excellentCount = filteredData.filter(item => (item.score / item.passScore) * 100 >= 150).length
+    const passCount = filteredData.filter(item => (item.score / item.passScore) * 100 >= 100).length
+    const failCount = filteredData.filter(item => (item.score / item.passScore) * 100 < 100).length
     statsInfo.value = [
       { label: '总记录数', value: totalRecords.toString() },
       { label: '优秀', value: excellentCount.toString() },
@@ -397,8 +391,10 @@ const handleReset = () => {
 
 // 详情
 const handleDetail = (row: ExamResultRecord) => {
-  currentRow.value = row
-  detailVisible.value = true
+  router.push({
+    path: `/tenant/on-duty/exam-result/detail/${row.id}`,
+    meta: { title: '考试成绩详情' }
+  })
 }
 
 // 导入
@@ -437,10 +433,7 @@ const handleExport = () => {
   ElMessage.info('导出功能开发中')
 }
 
-// 打印
-const handlePrint = () => {
-  ElMessage.info('打印功能开发中')
-}
+
 
 // 排序变化
 const handleSortChange = (sort: { prop: string; order: string | null }) => {

@@ -395,4 +395,24 @@ onMounted(() => {
   z-index: 100;
   transition: left var(--transition-base, 0.3s);
 }
+
+@media screen and (max-width: 768px) {
+  .form-content {
+    padding: 12px;
+    padding-bottom: 120px;
+  }
+
+  .form-footer {
+    left: 0;
+    flex-direction: column;
+  }
+  
+  .form-footer .el-button {
+    width: 100%;
+  }
+
+  .form-content {
+    padding-bottom: 120px;
+  }
+}
 </style>

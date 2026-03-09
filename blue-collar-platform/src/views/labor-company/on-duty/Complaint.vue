@@ -60,7 +60,7 @@
       :show-index="true"
       :show-actions="true"
       :stats-info="statsInfo"
-      action-column-width="180"
+      :action-column-width="180"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
@@ -69,6 +69,11 @@
       <template #column-status="{ row }">
         <el-tag :type="getStatusTag(row.status)">
           {{ getStatusText(row.status) }}
+        </el-tag>
+      </template>
+      <template #column-paymentType="{ row }">
+        <el-tag :type="row.paymentType === 'daily' ? 'warning' : 'success'" size="small">
+          {{ row.paymentType === 'daily' ? '日结' : '月结' }}
         </el-tag>
       </template>
       <template #column-title="{ row }">
@@ -140,6 +145,7 @@ interface ComplaintRecord {
   id: string
   complainant: string
   phone: string
+  paymentType: 'daily' | 'monthly'
   title: string
   content: string
   status: 'pending' | 'processing' | 'processed' | 'rejected'
@@ -153,6 +159,7 @@ interface ComplaintRecord {
 const columns = [
   { prop: 'complainant', label: '投诉/建议人', minWidth: 100, sortable: true },
   { prop: 'phone', label: '手机号', minWidth: 130, sortable: true },
+  { prop: 'paymentType', label: '结算方式', minWidth: 100, sortable: true },
   { prop: 'title', label: '标题', minWidth: 200 },
   { prop: 'content', label: '内容', minWidth: 250, showTooltip: true },
   { prop: 'status', label: '处理状态', minWidth: 100, sortable: true },
@@ -196,6 +203,7 @@ const mockData: ComplaintRecord[] = [
     id: '1',
     complainant: '张三',
     phone: '13800138001',
+    paymentType: 'daily',
     title: '建议增加夜班补贴',
     content: '希望公司能够考虑增加夜班补贴，提高工人的工作积极性',
     status: 'pending',
@@ -205,6 +213,7 @@ const mockData: ComplaintRecord[] = [
     id: '2',
     complainant: '李四',
     phone: '13800138002',
+    paymentType: 'monthly',
     title: '投诉宿舍环境问题',
     content: '宿舍空调经常故障，影响休息，希望尽快维修',
     status: 'processing',
@@ -216,6 +225,7 @@ const mockData: ComplaintRecord[] = [
     id: '3',
     complainant: '王五',
     phone: '13800138003',
+    paymentType: 'daily',
     title: '建议改善食堂菜品',
     content: '希望食堂能够增加更多素菜选择，满足不同工人的需求',
     status: 'processed',
@@ -228,6 +238,7 @@ const mockData: ComplaintRecord[] = [
     id: '4',
     complainant: '赵六',
     phone: '13800138004',
+    paymentType: 'monthly',
     title: '投诉工资发放延迟',
     content: '上个月工资延迟了3天发放，影响了生活安排',
     status: 'processed',
@@ -240,6 +251,7 @@ const mockData: ComplaintRecord[] = [
     id: '5',
     complainant: '钱七',
     phone: '13800138005',
+    paymentType: 'daily',
     title: '建议增加培训课程',
     content: '希望公司能够提供更多技能提升的培训课程',
     status: 'rejected',
@@ -252,6 +264,7 @@ const mockData: ComplaintRecord[] = [
     id: '6',
     complainant: '孙八',
     phone: '13800138006',
+    paymentType: 'monthly',
     title: '投诉车间噪音问题',
     content: '生产车间噪音太大，长期工作对听力有影响',
     status: 'pending',

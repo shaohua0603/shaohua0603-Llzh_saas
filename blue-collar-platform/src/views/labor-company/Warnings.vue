@@ -324,12 +324,12 @@ const handleRowClick = (row: any) => {
 
 // 查看
 const handleViewDetail = (row: any) => {
-  router.push(`/labor-company/warning-detail/${row.id}`)
+  router.push(`/tenant/warning-detail/${row.id}`)
 }
 
 // 处理预警
 const handleProcess = (row: any) => {
-  router.push(`/labor-company/warning-detail/${row.id}`)
+  router.push(`/tenant/warning-detail/${row.id}`)
 }
 
 // 忽略预警

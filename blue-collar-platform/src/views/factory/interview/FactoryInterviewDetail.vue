@@ -59,7 +59,7 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="imageLevel" label="形象级别" width="120">
+          <el-table-column prop="imageLevel" label="形象" width="120">
             <template #default="{ row }">
               {{ formatImageLevel(row.imageLevel) }}
             </template>

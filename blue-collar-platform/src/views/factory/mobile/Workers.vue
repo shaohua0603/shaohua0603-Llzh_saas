@@ -19,7 +19,10 @@
               <span class="worker-position">{{ worker.position }}</span>
             </div>
           </div>
-          <el-tag :type="getStatusType(worker.status)">{{ worker.status }}</el-tag>
+          <div class="worker-tags">
+            <el-tag :type="getStatusType(worker.status)">{{ worker.status }}</el-tag>
+            <el-tag :type="getPaymentType(worker.employmentType)">{{ worker.employmentType }}</el-tag>
+          </div>
         </div>
         <div class="worker-actions">
           <el-button size="small" @click="viewWorkerDetails(worker)">查看</el-button>
@@ -141,6 +144,11 @@ const getStatusType = (status: string) => {
   }
 }
 
+// 获取支付类型
+const getPaymentType = (paymentType: string) => {
+  return paymentType === '日结' ? 'warning' : 'success'
+}
+
 // 查看工人详情
 const viewWorkerDetails = (worker: any) => {
   console.log('查看工人详情:', worker)
@@ -187,6 +195,13 @@ const handleCurrentChange = (current: number) => {
   align-items: flex-start;
   gap: 12px;
   margin-bottom: 12px;
+}
+
+.worker-tags {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
 }
 
 .worker-details {

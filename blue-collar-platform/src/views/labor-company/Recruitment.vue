@@ -68,6 +68,18 @@
                 />
               </el-select>
             </el-form-item>
+            <el-form-item label="岗位类型">
+              <el-select
+                v-model="queryParams.positionCategory"
+                placeholder="请选择岗位类型"
+                clearable
+                style="width: 150px"
+              >
+                <el-option label="普工" value="普工" />
+                <el-option label="技工" value="技工" />
+                <el-option label="干部" value="干部" />
+              </el-select>
+            </el-form-item>
             <el-form-item label="发布时间">
               <el-date-picker
                 v-model="dateRange"
@@ -115,6 +127,7 @@
         </el-button>
         <template #dropdown>
           <el-dropdown-menu>
+            <el-dropdown-item command="share">批量分享</el-dropdown-item>
             <el-dropdown-item command="export">批量导出</el-dropdown-item>
             <el-dropdown-item command="delete" divided>批量删除</el-dropdown-item>
           </el-dropdown-menu>
@@ -154,13 +167,17 @@
       </template>
 
       <template #actions="{ row }">
-        <el-button size="small" type="primary" link @click="handleView(row)">
+        <el-button size="small" type="primary" link @click.stop="handleView(row)">
           查看
         </el-button>
-        <el-button size="small" type="primary" link @click="handleEdit(row)">
+        <el-button size="small" type="primary" link @click.stop="handleEdit(row)">
           编辑
         </el-button>
-        <el-button size="small" type="danger" link @click="handleDelete(row)">
+        <el-button size="small" type="primary" link @click.stop="handleShare(row)">
+          <el-icon><Share /></el-icon>
+          分享
+        </el-button>
+        <el-button size="small" type="danger" link @click.stop="handleDelete(row)">
           删除
         </el-button>
       </template>
@@ -173,7 +190,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Upload, Download, ArrowDown, ArrowUp, Delete } from '@element-plus/icons-vue'
+import { Plus, Upload, Download, ArrowDown, ArrowUp, Delete, Share, ChatDotRound, ChatLineRound, Link } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 import type { ColumnConfig } from '@/types/common-table'
 
@@ -200,6 +217,7 @@ const queryParams = reactive({
   keyword: '',
   status: undefined,
   factoryId: undefined,
+  positionCategory: undefined,
   startDate: undefined,
   endDate: undefined
 })
@@ -224,6 +242,7 @@ const columns: ColumnConfig[] = [
   { prop: 'title', label: '招聘标题', minWidth: 150, showTooltip: true },
   { prop: 'factoryName', label: '工厂名称', width: 180, showTooltip: true },
   { prop: 'department', label: '部门', width: 120 },
+  { prop: 'positionCategory', label: '岗位类型', width: 100, sortable: true },
   { prop: 'recruitCount', label: '需求人数', width: 100, sortable: true },
   { prop: 'salary', label: '薪资范围', width: 150, showTooltip: true },
   { prop: 'status', label: '状态', width: 100, sortable: true },
@@ -287,6 +306,7 @@ const handleReset = () => {
   queryParams.keyword = ''
   queryParams.status = undefined
   queryParams.factoryId = undefined
+  queryParams.positionCategory = undefined
   dateRange.value = null
   queryParams.startDate = undefined
   queryParams.endDate = undefined
@@ -300,15 +320,15 @@ const handleRefresh = () => {
 }
 
 const handleAdd = () => {
-  router.push('/labor-company/recruitment/add')
+  router.push('/tenant/recruitment/add')
 }
 
 const handleView = (row: any) => {
-  router.push(`/labor-company/recruitment/detail/${row.id}`)
+  router.push(`/tenant/recruitment/detail/${row.id}`)
 }
 
 const handleEdit = (row: any) => {
-  router.push(`/labor-company/recruitment/edit/${row.id}`)
+  router.push(`/tenant/recruitment/edit/${row.id}`)
 }
 
 const handleDelete = (row: any) => {
@@ -352,6 +372,9 @@ const handleImport = () => {
 // 批量操作
 const handleBatchCommand = (command: string) => {
   switch (command) {
+    case 'share':
+      handleBatchShare()
+      break
     case 'export':
       ElMessage.info('批量导出功能开发中')
       break
@@ -359,6 +382,98 @@ const handleBatchCommand = (command: string) => {
       handleBatchDelete()
       break
   }
+}
+
+// 单个岗位分享
+const handleShare = (row: any) => {
+  // 实现单个岗位分享功能
+  const shareUrl = `http://localhost:5175/tenant/recruitment/detail/${row.id}`
+  
+  ElMessageBox.alert(
+    `<div style="padding: 20px;">
+      <h3 style="margin-bottom: 16px;">分享到</h3>
+      <div style="margin-bottom: 16px;">
+        <p><strong>分享链接：</strong></p>
+        <input type="text" value="${shareUrl}" readonly style="width: 100%; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px;" />
+      </div>
+      <div style="margin-bottom: 16px;">
+        <p>选择分享平台</p>
+        <div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap;">
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            📱 微信
+          </button>
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            💬 QQ
+          </button>
+          <button type="button" style="width: 100px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            💼 企业微信
+          </button>
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            📧 飞书
+          </button>
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            📱 钉钉
+          </button>
+          <button type="button" style="width: 100px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            🔗 复制链接
+          </button>
+        </div>
+      </div>
+    </div>`,
+    '分享招聘需求',
+    {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '关闭',
+      customClass: 'share-dialog',
+      showCancelButton: false
+    }
+  )
+}
+
+// 批量分享
+const handleBatchShare = () => {
+  // 实现批量分享功能
+  const shareUrl = `http://localhost:5175/tenant/recruitment?ids=${selectedIds.value.join(',')}`
+  
+  ElMessageBox.alert(
+    `<div style="padding: 20px;">
+      <h3 style="margin-bottom: 16px;">分享到</h3>
+      <div style="margin-bottom: 16px;">
+        <p><strong>分享链接：</strong></p>
+        <input type="text" value="${shareUrl}" readonly style="width: 100%; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px;" />
+      </div>
+      <div style="margin-bottom: 16px;">
+        <p>选择分享平台</p>
+        <div style="display: flex; gap: 16px; margin-top: 12px; flex-wrap: wrap;">
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            📱 微信
+          </button>
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            💬 QQ
+          </button>
+          <button type="button" style="width: 100px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            💼 企业微信
+          </button>
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            📧 飞书
+          </button>
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            📱 钉钉
+          </button>
+          <button type="button" style="width: 100px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;" onclick="navigator.clipboard.writeText('${shareUrl}').then(() => alert('链接已复制'))">
+            🔗 复制链接
+          </button>
+        </div>
+      </div>
+    </div>`,
+    '批量分享招聘需求',
+    {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '关闭',
+      customClass: 'share-dialog',
+      showCancelButton: false
+    }
+  )
 }
 
 // 行点击
@@ -383,9 +498,11 @@ const fetchData = async () => {
       tab: activeTab.value,
       page: currentPage.value,
       pageSize: pageSize.value,
-      keyword: searchKeyword.value
+      keyword: searchKeyword.value,
+      positionCategory: queryParams.positionCategory
     })
-    tableData.value = [
+    // 模拟数据，根据岗位类型过滤
+    let mockData = [
       {
         id: 'REQ20240225001',
         title: '普工招聘',
@@ -394,6 +511,7 @@ const fetchData = async () => {
         recruitCount: 50,
         salary: '5000-7000元/月',
         status: 'published',
+        positionCategory: '普工',
         createdAt: '2024-02-20 10:00:00'
       },
       {
@@ -404,10 +522,29 @@ const fetchData = async () => {
         recruitCount: 20,
         salary: '7000-10000元/月',
         status: 'active',
+        positionCategory: '技工',
         createdAt: '2024-02-19 10:00:00'
+      },
+      {
+        id: 'REQ20240225003',
+        title: '生产主管招聘',
+        factoryName: '某某电子有限公司',
+        department: '生产部',
+        recruitCount: 5,
+        salary: '8000-12000元/月',
+        status: 'published',
+        positionCategory: '干部',
+        createdAt: '2024-02-18 10:00:00'
       }
     ]
-    total.value = 2
+    
+    // 根据岗位类型过滤数据
+    if (queryParams.positionCategory) {
+      mockData = mockData.filter(item => item.positionCategory === queryParams.positionCategory)
+    }
+    
+    tableData.value = mockData
+    total.value = mockData.length
   } finally {
     loading.value = false
   }
@@ -493,7 +630,7 @@ onMounted(() => {
   border-radius: 4px;
   border-left: 4px solid #409eff;
   font-size: 14px;
-  color: #606266;
+  color: #f56c6c;
 }
 
 .table-stats p {

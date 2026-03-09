@@ -81,20 +81,12 @@
     <!-- 功能按钮区域 -->
     <div class="action-bar">
       <el-button
-        type="success"
+        type="warning"
         :disabled="selectedRows.length === 0"
         @click="handleBatchApprove"
       >
         <el-icon><Check /></el-icon>
-        批量通过
-      </el-button>
-      <el-button
-        type="danger"
-        :disabled="selectedRows.length === 0"
-        @click="handleBatchReject"
-      >
-        <el-icon><Close /></el-icon>
-        批量驳回
+        批量审核
       </el-button>
     </div>
 
@@ -123,6 +115,12 @@
         </el-tag>
       </template>
 
+      <template #column-paymentType="{ row }">
+        <el-tag :type="row.paymentType === 'daily' ? 'warning' : 'success'">
+          {{ row.paymentType === 'daily' ? '日结' : '月结' }}
+        </el-tag>
+      </template>
+
       <template #column-status="{ row }">
         <el-tag :type="getStatusType(row.status)">
           {{ getStatusText(row.status) }}
@@ -140,123 +138,17 @@
         </el-button>
         <el-button
           v-if="row.status === 'pending' || row.status === 'processing'"
-          type="success"
+          type="warning"
           link
           @click="handleApprove(row)"
         >
           <el-icon><Check /></el-icon>
-          通过
-        </el-button>
-        <el-button
-          v-if="row.status === 'pending' || row.status === 'processing'"
-          type="danger"
-          link
-          @click="handleReject(row)"
-        >
-          <el-icon><Close /></el-icon>
-          驳回
+          审核
         </el-button>
       </template>
     </CommonTable>
 
-    <!-- 详情对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      title="报名详情"
-      width="900px"
-      :close-on-click-modal="false"
-    >
-      <div v-if="currentRow" class="detail-content">
-        <!-- 业务基本信息 -->
-        <el-card class="detail-card" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span>基本信息</span>
-              <el-tag :type="getStatusType(currentRow.status)">
-                {{ getStatusText(currentRow.status) }}
-              </el-tag>
-            </div>
-          </template>
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="姓名">
-              {{ currentRow.workerName }}
-            </el-descriptions-item>
-            <el-descriptions-item label="手机号">
-              {{ currentRow.phone }}
-            </el-descriptions-item>
-            <el-descriptions-item label="报名类型">
-              <el-tag :type="currentRow.registrationType === 'activity' ? 'primary' : 'success'">
-                {{ currentRow.registrationType === 'activity' ? '活动报名' : '社团报名' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="活动/社团标题">
-              {{ currentRow.activityTitle }}
-            </el-descriptions-item>
-            <el-descriptions-item label="提交报名时间">
-              {{ formatDateTime(currentRow.submitTime) }}
-            </el-descriptions-item>
-            <el-descriptions-item label="是否需要审核">
-              <el-tag :type="currentRow.needsApproval ? 'warning' : 'info'">
-                {{ currentRow.needsApproval ? '是' : '否' }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="报名说明" :span="2">
-              {{ currentRow.description || '-' }}
-            </el-descriptions-item>
-            <el-descriptions-item v-if="currentRow.rejectReason" label="驳回原因" :span="2">
-              {{ currentRow.rejectReason }}
-            </el-descriptions-item>
-          </el-descriptions>
-        </el-card>
 
-        <!-- 审批记录时间线 -->
-        <el-card v-if="currentRow.needsApproval" class="detail-card" shadow="never">
-          <template #header>
-            <div class="card-header">
-              <span>审批记录</span>
-            </div>
-          </template>
-          <ApprovalRecordTimeline
-            :records="currentRow.approvalRecords || []"
-            :show-header="false"
-            :show-expand-button="true"
-          />
-        </el-card>
-
-        <!-- 审批操作 -->
-        <el-card
-          v-if="currentRow.needsApproval && (currentRow.status === 'pending' || currentRow.status === 'processing')"
-          class="detail-card"
-          shadow="never"
-        >
-          <template #header>
-            <div class="card-header">
-              <span>审批操作</span>
-            </div>
-          </template>
-          <ApprovalOperation
-            :business-id="currentRow.id"
-            business-type="REGISTRATION"
-            :business-data="currentRow"
-            :business-fields="getBusinessFields()"
-            :approval-records="currentRow.approvalRecords || []"
-            :show-business-detail="false"
-            :can-approve="true"
-            :show-view-history="false"
-            :show-transfer-button="true"
-            :show-delegate-button="true"
-            @approve="handleApproveSubmit"
-            @reject="handleRejectSubmit"
-            @transfer="handleTransferSubmit"
-            @delegate="handleDelegateSubmit"
-            @refresh="handleRefreshApproval"
-          />
-        </el-card>
-      </div>
-      <template #footer>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
 
 
   </div>
@@ -266,9 +158,8 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, Refresh, Check, Close, View, ArrowDown } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import CommonTable from '@/components/CommonTable.vue'
-import ApprovalOperation from '@/components/ApprovalOperation.vue'
-import ApprovalRecordTimeline from '@/components/ApprovalRecordTimeline.vue'
 import type { ColumnConfig } from '../../types/common-table'
 import type { FormInstance, FormRules } from 'element-plus'
 import {
@@ -286,6 +177,7 @@ interface RegistrationRecord {
   id: string
   workerName: string
   phone: string
+  paymentType: 'daily' | 'monthly'
   registrationType: 'activity' | 'community'
   activityTitle: string
   status: 'pending' | 'processing' | 'approved' | 'rejected'
@@ -297,6 +189,7 @@ interface RegistrationRecord {
 }
 
 // 响应式数据
+const router = useRouter()
 const filterExpanded = ref(false)
 const filterForm = reactive({
   keyword: '',
@@ -341,6 +234,7 @@ const getBusinessFields = () => {
 const columns: ColumnConfig[] = [
   { prop: 'workerName', label: '姓名', minWidth: 100, sortable: true },
   { prop: 'phone', label: '手机号', minWidth: 120, sortable: true },
+  { prop: 'paymentType', label: '结算方式', minWidth: 100 },
   { prop: 'registrationType', label: '报名类型', minWidth: 100 },
   { prop: 'activityTitle', label: '活动/社团标题', minWidth: 200 },
   { prop: 'status', label: '审核状态', minWidth: 100 },
@@ -456,6 +350,7 @@ const generateMockData = (): RegistrationRecord[] => {
       id: `REG${String(i + 1).padStart(6, '0')}`,
       workerName: names[Math.floor(Math.random() * names.length)],
       phone: `138${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
+      paymentType: Math.random() > 0.5 ? 'daily' : 'monthly',
       registrationType,
       activityTitle: activityTitles[Math.floor(Math.random() * activityTitles.length)],
       status,
@@ -566,111 +461,10 @@ const fetchData = () => {
 
 // 查看
 const handleView = (row: RegistrationRecord) => {
-  currentRow.value = row
-  // 如果需要审批，加载审批记录
-  if (row.needsApproval) {
-    loadApprovalRecords(row.id)
-  }
-  detailDialogVisible.value = true
-}
-
-// 加载审批记录
-const loadApprovalRecords = async (businessId: string) => {
-  try {
-    const response = await getApprovalRecords({
-      businessId,
-      businessType: 'REGISTRATION'
-    })
-    if (response.data && currentRow.value) {
-      currentRow.value.approvalRecords = response.data
-    }
-  } catch (error) {
-    console.error('加载审批记录失败:', error)
-    ElMessage.error('加载审批记录失败')
-  }
-}
-
-// 审批通过提交
-const handleApproveSubmit = async (data: any) => {
-  try {
-    await approveApproval({
-      businessId: data.businessId,
-      businessType: data.businessType,
-      result: data.result,
-      comment: data.comment,
-      rejectReason: data.rejectReason,
-      attachments: data.attachments
-    })
-    ElMessage.success('审批通过成功')
-    await loadApprovalRecords(data.businessId)
-    fetchData()
-  } catch (error) {
-    console.error('审批通过失败:', error)
-    ElMessage.error('审批通过失败')
-  }
-}
-
-// 审批驳回提交
-const handleRejectSubmit = async (data: any) => {
-  try {
-    await rejectApproval({
-      businessId: data.businessId,
-      businessType: data.businessType,
-      result: data.result,
-      comment: data.comment,
-      rejectReason: data.rejectReason,
-      attachments: data.attachments
-    })
-    ElMessage.success('审批驳回成功')
-    await loadApprovalRecords(data.businessId)
-    fetchData()
-  } catch (error) {
-    console.error('审批驳回失败:', error)
-    ElMessage.error('审批驳回失败')
-  }
-}
-
-// 转办提交
-const handleTransferSubmit = async (data: any) => {
-  try {
-    await transferApproval({
-      businessId: data.businessId,
-      businessType: data.businessType,
-      toUser: data.toUser,
-      remark: data.remark
-    })
-    ElMessage.success('转办成功')
-    await loadApprovalRecords(data.businessId)
-    fetchData()
-  } catch (error) {
-    console.error('转办失败:', error)
-    ElMessage.error('转办失败')
-  }
-}
-
-// 委派提交
-const handleDelegateSubmit = async (data: any) => {
-  try {
-    await delegateApproval({
-      businessId: data.businessId,
-      businessType: data.businessType,
-      toUser: data.toUser,
-      remark: data.remark
-    })
-    ElMessage.success('委派成功')
-    await loadApprovalRecords(data.businessId)
-    fetchData()
-  } catch (error) {
-    console.error('委派失败:', error)
-    ElMessage.error('委派失败')
-  }
-}
-
-// 刷新审批信息
-const handleRefreshApproval = async () => {
-  if (currentRow.value && currentRow.value.needsApproval) {
-    await loadApprovalRecords(currentRow.value.id)
-  }
+  router.push({
+    name: 'TenantRegistrationDetail',
+    params: { id: row.id }
+  })
 }
 
 // 审核通过（列表页快速操作）
@@ -679,8 +473,11 @@ const handleApprove = (row: RegistrationRecord) => {
     ElMessage.warning('该报名不需要审核')
     return
   }
-  currentRow.value = row
-  detailDialogVisible.value = true
+  router.push({
+    name: 'TenantRegistrationDetail',
+    params: { id: row.id },
+    query: { mode: 'approve' }
+  })
 }
 
 // 审核驳回（列表页快速操作）
@@ -689,11 +486,14 @@ const handleReject = (row: RegistrationRecord) => {
     ElMessage.warning('该报名不需要审核')
     return
   }
-  currentRow.value = row
-  detailDialogVisible.value = true
+  router.push({
+    name: 'TenantRegistrationDetail',
+    params: { id: row.id },
+    query: { mode: 'approve' }
+  })
 }
 
-// 批量通过
+// 批量审核
 const handleBatchApprove = async () => {
   if (selectedRows.value.length === 0) return
 
@@ -707,16 +507,17 @@ const handleBatchApprove = async () => {
   }
 
   try {
+    // 让用户选择审核结果
     ElMessageBox.confirm(
-      `确定要通过选中的 ${pendingRows.length} 条报名记录吗？`,
+      `请选择审核结果`,
       '批量审核',
       {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'info'
+        confirmButtonText: '通过',
+        cancelButtonText: '驳回',
+        type: 'warning'
       }
     ).then(async () => {
-      // 调用批量审批API
+      // 批量通过
       await approveApproval({
         businessId: pendingRows.map(row => row.id).join(','),
         businessType: 'REGISTRATION',
@@ -725,48 +526,29 @@ const handleBatchApprove = async () => {
       })
       ElMessage.success('批量审核通过成功')
       fetchData()
-    }).catch(() => {})
+    }).catch(async () => {
+      // 批量驳回
+      ElMessageBox.prompt('请输入驳回原因', '批量审核', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+        inputPattern: /.{5,}/,
+        inputErrorMessage: '驳回原因至少5个字符'
+      }).then(async ({ value }) => {
+        await rejectApproval({
+          businessId: pendingRows.map(row => row.id).join(','),
+          businessType: 'REGISTRATION',
+          result: 'rejected',
+          rejectReason: value,
+          comment: '批量审核驳回'
+        })
+        ElMessage.success('批量驳回成功')
+        fetchData()
+      }).catch(() => {})
+    })
   } catch (error) {
-    console.error('批量审核通过失败:', error)
-    ElMessage.error('批量审核通过失败')
-  }
-}
-
-// 批量驳回
-const handleBatchReject = async () => {
-  if (selectedRows.value.length === 0) return
-
-  const pendingRows = selectedRows.value.filter(
-    row => row.needsApproval && (row.status === 'pending' || row.status === 'processing')
-  )
-
-  if (pendingRows.length === 0) {
-    ElMessage.warning('没有待审核的记录')
-    return
-  }
-
-  try {
-    ElMessageBox.prompt('请输入驳回原因', '批量审核', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning',
-      inputPattern: /.{5,}/,
-      inputErrorMessage: '驳回原因至少5个字符'
-    }).then(async ({ value }) => {
-      // 调用批量驳回API
-      await rejectApproval({
-        businessId: pendingRows.map(row => row.id).join(','),
-        businessType: 'REGISTRATION',
-        result: 'rejected',
-        rejectReason: value,
-        comment: '批量审核驳回'
-      })
-      ElMessage.success('批量驳回成功')
-      fetchData()
-    }).catch(() => {})
-  } catch (error) {
-    console.error('批量驳回失败:', error)
-    ElMessage.error('批量驳回失败')
+    console.error('批量审核失败:', error)
+    ElMessage.error('批量审核失败')
   }
 }
 

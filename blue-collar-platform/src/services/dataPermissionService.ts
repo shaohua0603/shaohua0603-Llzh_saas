@@ -20,18 +20,23 @@ export class DataPermissionService {
     const departmentId = permission.departmentId || ''
     const departmentPath = permission.departmentPath || []
 
-    const filter = DataPermissionUtil.generateFilter(
-      dataPermission,
-      userId,
-      departmentId,
-      departmentPath.map(id => ({ id, name: '', children: [] }))
-    )
+    try {
+      const filter = DataPermissionUtil.generateFilter(
+        dataPermission,
+        userId,
+        departmentId,
+        departmentPath.map(id => ({ id, name: '', children: [] }))
+      )
 
-    const queryParams = DataPermissionUtil.filterToQueryParams(filter)
-    
-    return {
-      ...params,
-      ...queryParams
+      const queryParams = DataPermissionUtil.filterToQueryParams(filter)
+      
+      return {
+        ...params,
+        ...queryParams
+      }
+    } catch (error) {
+      // 如果生成过滤条件失败，返回原始参数
+      return params
     }
   }
 
@@ -49,7 +54,7 @@ export class DataPermissionService {
 
   static canEdit(data: Record<string, any>): boolean {
     const permission = PermissionUtil.getUserPermission()
-    if (!permission) return false
+    if (!permission) return true
     
     if (permission.role === 'platform_admin') return true
     
@@ -66,7 +71,7 @@ export class DataPermissionService {
 
   static filterDataByPermission<T extends Record<string, any>>(dataList: T[]): T[] {
     const permission = PermissionUtil.getUserPermission()
-    if (!permission) return []
+    if (!permission) return dataList
     
     if (permission.role === 'platform_admin') return dataList
     
@@ -97,7 +102,7 @@ export class DataPermissionService {
   static hasFullAccess(): boolean {
     const permission = PermissionUtil.getUserPermission()
     if (!permission || !permission.dataPermission) {
-      return false
+      return true
     }
     return permission.dataPermission.type === 'ALL'
   }

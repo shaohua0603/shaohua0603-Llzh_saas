@@ -109,20 +109,50 @@
         <span class="amount">¥{{ row.basicSalary.toFixed(2) }}</span>
       </template>
 
-      <template #column-overtimeSalary="{ row }">
-        <span class="amount">¥{{ row.overtimeSalary.toFixed(2) }}</span>
+      <template #column-performanceBonus="{ row }">
+        <span class="amount">¥{{ (row.performanceBonus || 0).toFixed(2) }}</span>
       </template>
 
-      <template #column-bonus="{ row }">
-        <span class="amount">¥{{ row.bonus.toFixed(2) }}</span>
+      <template #column-regularOvertimePay="{ row }">
+        <span class="amount">¥{{ (row.regularOvertimePay || 0).toFixed(2) }}</span>
+      </template>
+
+      <template #column-holidayOvertimePay="{ row }">
+        <span class="amount">¥{{ (row.holidayOvertimePay || 0).toFixed(2) }}</span>
       </template>
 
       <template #column-deduction="{ row }">
         <span class="amount deduction">¥{{ row.deduction.toFixed(2) }}</span>
       </template>
 
+      <template #column-workDays="{ row }">
+        <span>{{ row.workDays }}天</span>
+      </template>
+
+      <template #column-mealAllowance="{ row }">
+        <span class="amount">¥{{ row.mealAllowance.toFixed(2) }}</span>
+      </template>
+
+      <template #column-socialInsurancePersonal="{ row }">
+        <span class="amount deduction">¥{{ row.socialInsurancePersonal.toFixed(2) }}</span>
+      </template>
+
+      <template #column-housingFundPersonal="{ row }">
+        <span class="amount deduction">¥{{ row.housingFundPersonal.toFixed(2) }}</span>
+      </template>
+
+      <template #column-otherPostTaxDeductions="{ row }">
+        <span class="amount deduction">¥{{ (row.otherPostTaxDeductions || 0).toFixed(2) }}</span>
+      </template>
+
       <template #column-totalSalary="{ row }">
         <span class="amount total">¥{{ row.totalSalary.toFixed(2) }}</span>
+      </template>
+
+      <template #column-settlementType="{ row }">
+        <el-tag :type="row.settlementType === 'daily' ? 'info' : 'success'">
+          {{ row.settlementType === 'daily' ? '日结' : '月结' }}
+        </el-tag>
       </template>
 
       <template #column-status="{ row }">
@@ -152,179 +182,6 @@
       </template>
       </CommonTable>
     </el-card>
-
-    <!-- 新增/编辑发放对话框 -->
-    <el-dialog
-      v-model="issueDialogVisible"
-      :title="isEdit ? '编辑工资发放' : '新增工资发放'"
-      width="800px"
-    >
-      <el-form :model="salaryForm" label-width="120px">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="发放年月" required>
-              <el-date-picker
-                v-model="salaryForm.salaryMonth"
-                type="month"
-                placeholder="选择月份"
-                value-format="YYYY-MM"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="发放时间" required>
-              <el-date-picker
-                v-model="salaryForm.issueDate"
-                type="datetime"
-                placeholder="选择发放时间"
-                value-format="YYYY-MM-DD HH:mm:ss"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="发放说明">
-          <el-input
-            v-model="salaryForm.description"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入发放说明"
-          />
-        </el-form-item>
-        <el-divider>工资明细</el-divider>
-        <el-form-item label="选择工人">
-          <el-button type="primary" @click="handleSelectWorkers">选择工人</el-button>
-          <span class="form-tip">已选择 {{ salaryForm.workers.length }} 名工人</span>
-        </el-form-item>
-
-        <!-- 工人工资明细表格 -->
-        <el-table
-          v-if="salaryForm.workers.length > 0"
-          :data="salaryForm.workers"
-          border
-          stripe
-          max-height="300"
-        >
-          <el-table-column type="index" label="序号" width="60" />
-          <el-table-column prop="workerName" label="姓名" min-width="100" />
-          <el-table-column prop="idCard" label="身份证号" min-width="160" />
-          <el-table-column prop="bankCard" label="银行卡号" min-width="180" />
-          <el-table-column label="基本工资" min-width="100">
-            <template #default="{ row }">
-              <el-input-number
-                v-model="row.basicSalary"
-                :min="0"
-                :precision="2"
-                size="small"
-                controls-position="right"
-              />
-            </template>
-          </el-table-column>
-          <el-table-column label="加班工资" min-width="100">
-            <template #default="{ row }">
-              <el-input-number
-                v-model="row.overtimeSalary"
-                :min="0"
-                :precision="2"
-                size="small"
-                controls-position="right"
-              />
-            </template>
-          </el-table-column>
-          <el-table-column label="奖金" min-width="100">
-            <template #default="{ row }">
-              <el-input-number
-                v-model="row.bonus"
-                :min="0"
-                :precision="2"
-                size="small"
-                controls-position="right"
-              />
-            </template>
-          </el-table-column>
-          <el-table-column label="扣除" min-width="100">
-            <template #default="{ row }">
-              <el-input-number
-                v-model="row.deduction"
-                :min="0"
-                :precision="2"
-                size="small"
-                controls-position="right"
-              />
-            </template>
-          </el-table-column>
-          <el-table-column label="实发工资" min-width="100">
-            <template #default="{ row }">
-              <span class="amount total">
-                ¥{{ (row.basicSalary + row.overtimeSalary + row.bonus - row.deduction).toFixed(2) }}
-              </span>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="80">
-            <template #default="{ $index }">
-              <el-button type="danger" link @click="salaryForm.workers.splice($index, 1)">
-                删除
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-      </el-form>
-      <template #footer>
-        <el-button @click="issueDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitSalary">保存</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 详情对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      title="工资发放详情"
-      width="900px"
-    >
-      <div v-if="currentRow" class="detail-content">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="工人姓名">
-            {{ currentRow.workerName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="身份证号">
-            {{ currentRow.idCard }}
-          </el-descriptions-item>
-          <el-descriptions-item label="银行卡号">
-            {{ currentRow.bankCard }}
-          </el-descriptions-item>
-          <el-descriptions-item label="手机号">
-            {{ currentRow.phone }}
-          </el-descriptions-item>
-          <el-descriptions-item label="基本工资">
-            ¥{{ currentRow.basicSalary.toFixed(2) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="加班工资">
-            ¥{{ currentRow.overtimeSalary.toFixed(2) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="奖金">
-            ¥{{ currentRow.bonus.toFixed(2) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="扣除">
-            ¥{{ currentRow.deduction.toFixed(2) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="实发工资" :span="2">
-            <span class="amount total">¥{{ currentRow.totalSalary.toFixed(2) }}</span>
-          </el-descriptions-item>
-          <el-descriptions-item label="发放状态">
-            <el-tag :type="getStatusType(currentRow.status)">
-              {{ getStatusText(currentRow.status) }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="发放时间">
-            {{ currentRow.issueDate || '-' }}
-          </el-descriptions-item>
-        </el-descriptions>
-      </div>
-      <template #footer>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
 
     <!-- 导入对话框 -->
     <el-dialog
@@ -360,34 +217,12 @@
         <el-button type="primary" @click="handleSubmitImport">确定导入</el-button>
       </template>
     </el-dialog>
-
-    <!-- 工人选择对话框 -->
-    <el-dialog
-      v-model="workerSelectVisible"
-      title="选择工人"
-      width="800px"
-    >
-      <el-table
-        :data="availableWorkers"
-        @selection-change="handleWorkerSelectionChange"
-        max-height="400"
-      >
-        <el-table-column type="selection" width="55" />
-        <el-table-column prop="workerName" label="姓名" min-width="100" />
-        <el-table-column prop="idCard" label="身份证号" min-width="160" />
-        <el-table-column prop="phone" label="手机号" min-width="120" />
-        <el-table-column prop="factoryName" label="所在工厂" min-width="120" />
-      </el-table>
-      <template #footer>
-        <el-button @click="workerSelectVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleConfirmWorkerSelect">确定</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Search, RefreshLeft, Upload, Document, Money, View, Edit, Download, ArrowUp, ArrowDown, Plus } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
@@ -401,29 +236,50 @@ interface SalaryRecord {
   phone: string
   bankCard: string
   factoryName: string
+  positionName: string
+  settlementType: 'daily' | 'monthly'
   basicSalary: number
-  overtimeSalary: number
-  bonus: number
+  performanceBonus: number
+  supervisorAllowance: number
+  positionAllowance: number
+  regularOvertimePay: number
+  holidayOvertimePay: number
+  nationalHolidayOvertimePay: number
+  seniorityBonus: number
+  attendanceBonus: number
+  mealAllowance: number
+  nightShiftAllowance: number
+  referralBonus: number
+  bonus1: number
+  bonus2: number
+  trainingAllowance: number
+  highTemperatureAllowance: number
+  otherAdditions: number
+  negativeSalaryAdjustment: number
+  miscarriageLeaveHours: number
+  maternityLeaveHours: number
+  personalLeaveHours: number
+  absenteeismHours: number
+  preTaxLeaveDeductions: number
+  sickLeaveHours: number
+  preTaxSickLeaveDeductions: number
+  previousMonthNegativeSalary: number
+  socialInsurancePersonal: number
+  housingFundPersonal: number
+  otherPostTaxDeductions: number
+  postTaxMealDeductions: number
+  postTaxDormitoryDeductions: number
   deduction: number
   totalSalary: number
+  workDays: number
   status: 'pending' | 'issued'
   salaryMonth: string
   issueDate?: string
   description?: string
 }
 
-interface WorkerInfo {
-  workerName: string
-  idCard: string
-  phone: string
-  bankCard: string
-  basicSalary: number
-  overtimeSalary: number
-  bonus: number
-  deduction: number
-}
-
 // 响应式数据
+const router = useRouter()
 const filterVisible = ref(false)
 const filterForm = reactive({
   keyword: '',
@@ -436,14 +292,9 @@ const currentPage = ref(1)
 const pageSize = ref(10)
 const loading = ref(false)
 const selectedRows = ref<SalaryRecord[]>([])
-const currentRow = ref<SalaryRecord | null>(null)
-const isEdit = ref(false)
 
 // 对话框控制
-const issueDialogVisible = ref(false)
-const detailDialogVisible = ref(false)
 const importDialogVisible = ref(false)
-const workerSelectVisible = ref(false)
 
 // 工资信息
 const salaryInfo = reactive({
@@ -451,18 +302,6 @@ const salaryInfo = reactive({
   issueDate: '',
   description: ''
 })
-
-// 工资表单
-const salaryForm = reactive({
-  salaryMonth: '',
-  issueDate: '',
-  description: '',
-  workers: [] as WorkerInfo[]
-})
-
-// 可选择的工人信息
-const availableWorkers = ref<WorkerInfo[]>([])
-const selectedWorkers = ref<WorkerInfo[]>([])
 
 // 统计数据
 const stats = reactive({
@@ -483,10 +322,18 @@ const columns: ColumnConfig[] = [
   { prop: 'idCard', label: '身份证号', minWidth: 160, sortable: true },
   { prop: 'phone', label: '手机号', minWidth: 120 },
   { prop: 'factoryName', label: '所在工厂', minWidth: 120 },
-  { prop: 'basicSalary', label: '基本工资', minWidth: 100, sortable: true },
-  { prop: 'overtimeSalary', label: '加班工资', minWidth: 100, sortable: true },
-  { prop: 'bonus', label: '奖金', minWidth: 80, sortable: true },
-  { prop: 'deduction', label: '扣除', minWidth: 80, sortable: true },
+  { prop: 'positionName', label: '岗位名称', minWidth: 120 },
+  { prop: 'settlementType', label: '结算类型', minWidth: 100 },
+  { prop: 'workDays', label: '工作天数', minWidth: 100, sortable: true },
+  { prop: 'basicSalary', label: '基本薪资', minWidth: 100, sortable: true },
+  { prop: 'performanceBonus', label: '绩效奖金', minWidth: 100, sortable: true },
+  { prop: 'regularOvertimePay', label: '平时加班费', minWidth: 100, sortable: true },
+  { prop: 'holidayOvertimePay', label: '假日加班费', minWidth: 100, sortable: true },
+  { prop: 'mealAllowance', label: '餐费补助', minWidth: 100, sortable: true },
+  { prop: 'socialInsurancePersonal', label: '社保个人', minWidth: 100, sortable: true },
+  { prop: 'housingFundPersonal', label: '公积金个人', minWidth: 100, sortable: true },
+  { prop: 'otherPostTaxDeductions', label: '其他扣款', minWidth: 100, sortable: true },
+  { prop: 'deduction', label: '总扣除', minWidth: 80, sortable: true },
   { prop: 'totalSalary', label: '实发工资', minWidth: 120, sortable: true },
   { prop: 'status', label: '状态', minWidth: 100 },
   { prop: 'salaryMonth', label: '发放月份', minWidth: 100, sortable: true }
@@ -496,14 +343,22 @@ const columns: ColumnConfig[] = [
 const generateMockData = (): SalaryRecord[] => {
   const names = ['张三', '李四', '王五', '赵六', '孙七', '周八', '吴九', '郑十', '钱十一', '陈十二']
   const factories = ['深圳电子厂', '东莞制造厂', '广州服装厂', '佛山五金厂', '惠州电子厂']
+  const positions = ['普工', '技术工', '质检员', '班组长', '主管']
+  const settlementTypes = ['daily', 'monthly']
   const data: SalaryRecord[] = []
 
   for (let i = 0; i < 80; i++) {
     const status = Math.random() > 0.3 ? 'issued' : 'pending'
     const basicSalary = Math.floor(Math.random() * 3000 + 2000)
-    const overtimeSalary = Math.floor(Math.random() * 1000)
-    const bonus = Math.floor(Math.random() * 500)
-    const deduction = Math.floor(Math.random() * 200)
+    const performanceBonus = Math.floor(Math.random() * 500)
+    const regularOvertimePay = Math.floor(Math.random() * 500)
+    const holidayOvertimePay = Math.floor(Math.random() * 300)
+    const mealAllowance = 450
+    const socialInsurancePersonal = 27.38
+    const housingFundPersonal = 15
+    const otherPostTaxDeductions = 115.24
+    const deduction = socialInsurancePersonal + housingFundPersonal + otherPostTaxDeductions
+    const workDays = Math.floor(Math.random() * 5) + 25
     const salaryMonth = `${2026}-${String(Math.floor(Math.random() * 3) + 1).padStart(2, '0')}`
 
     data.push({
@@ -513,11 +368,19 @@ const generateMockData = (): SalaryRecord[] => {
       phone: `138${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
       bankCard: `62${Math.floor(Math.random() * 10000000000000000)}`,
       factoryName: factories[Math.floor(Math.random() * factories.length)],
+      positionName: positions[Math.floor(Math.random() * positions.length)],
+      settlementType: settlementTypes[Math.floor(Math.random() * settlementTypes.length)] as 'daily' | 'monthly',
       basicSalary,
-      overtimeSalary,
-      bonus,
+      performanceBonus,
+      regularOvertimePay,
+      holidayOvertimePay,
+      mealAllowance,
+      socialInsurancePersonal,
+      housingFundPersonal,
+      otherPostTaxDeductions,
       deduction,
-      totalSalary: basicSalary + overtimeSalary + bonus - deduction,
+      totalSalary: basicSalary + performanceBonus + regularOvertimePay + holidayOvertimePay + mealAllowance - deduction,
+      workDays,
       status,
       salaryMonth,
       issueDate: status === 'issued' ? '2026-02-15 10:00:00' : undefined,
@@ -526,27 +389,6 @@ const generateMockData = (): SalaryRecord[] => {
   }
 
   return data
-}
-
-// 生成可选工人数据
-const generateAvailableWorkers = (): WorkerInfo[] => {
-  const names = ['张三', '李四', '王五', '赵六', '孙七', '周八', '吴九', '郑十']
-  const workers: WorkerInfo[] = []
-
-  for (let i = 0; i < names.length; i++) {
-    workers.push({
-      workerName: names[i],
-      idCard: `${Math.floor(Math.random() * 100000 + 100000)}${Math.floor(Math.random() * 10000000000)}`,
-      phone: `138${Math.floor(Math.random() * 100000000).toString().padStart(8, '0')}`,
-      bankCard: `62${Math.floor(Math.random() * 10000000000000000)}`,
-      basicSalary: Math.floor(Math.random() * 3000 + 2000),
-      overtimeSalary: Math.floor(Math.random() * 1000),
-      bonus: Math.floor(Math.random() * 500),
-      deduction: Math.floor(Math.random() * 200)
-    })
-  }
-
-  return workers
 }
 
 // 所有模拟数据
@@ -637,76 +479,19 @@ const fetchData = () => {
   loading.value = false
 }
 
-// 打开发放对话框
+// 打开发放页面
 const handleOpenIssueDialog = () => {
-  isEdit.value = false
-  salaryForm.salaryMonth = salaryInfo.salaryMonth || new Date().toISOString().slice(0, 7)
-  salaryForm.issueDate = salaryInfo.issueDate || new Date().toISOString().replace('T', ' ').slice(0, 19)
-  salaryForm.description = salaryInfo.description
-  salaryForm.workers = []
-  availableWorkers.value = generateAvailableWorkers()
-  issueDialogVisible.value = true
-}
-
-// 选择工人
-const handleSelectWorkers = () => {
-  workerSelectVisible.value = true
-}
-
-// 工人选择变化
-const handleWorkerSelectionChange = (selection: WorkerInfo[]) => {
-  selectedWorkers.value = selection
-}
-
-// 确认工人选择
-const handleConfirmWorkerSelect = () => {
-  salaryForm.workers = [...selectedWorkers.value]
-  workerSelectVisible.value = false
-}
-
-// 提交工资
-const handleSubmitSalary = () => {
-  if (!salaryForm.salaryMonth || !salaryForm.issueDate) {
-    ElMessage.warning('请填写完整的发放信息')
-    return
-  }
-
-  if (salaryForm.workers.length === 0) {
-    ElMessage.warning('请选择工人')
-    return
-  }
-
-  // 添加到数据中
-  salaryForm.workers.forEach(worker => {
-    const newRecord: SalaryRecord = {
-      id: `SAL${String(allData.value.length + 1).padStart(6, '0')}`,
-      workerName: worker.workerName,
-      idCard: worker.idCard,
-      phone: worker.phone,
-      bankCard: worker.bankCard,
-      factoryName: '未知工厂',
-      basicSalary: worker.basicSalary,
-      overtimeSalary: worker.overtimeSalary,
-      bonus: worker.bonus,
-      deduction: worker.deduction,
-      totalSalary: worker.basicSalary + worker.overtimeSalary + worker.bonus - worker.deduction,
-      status: 'pending',
-      salaryMonth: salaryForm.salaryMonth,
-      issueDate: salaryForm.issueDate,
-      description: salaryForm.description
-    }
-    allData.value.unshift(newRecord)
+  router.push({
+    path: '/tenant/on-duty/salary/form',
+    query: { mode: 'add' }
   })
-
-  ElMessage.success('工资发放创建成功')
-  issueDialogVisible.value = false
-  fetchData()
 }
 
 // 查看
 const handleView = (row: SalaryRecord) => {
-  currentRow.value = row
-  detailDialogVisible.value = true
+  router.push({
+    path: `/tenant/on-duty/salary/detail/${row.id}`
+  })
 }
 
 // 发放
@@ -728,22 +513,10 @@ const handleIssue = (row: SalaryRecord) => {
 
 // 编辑
 const handleEdit = (row: SalaryRecord) => {
-  isEdit.value = true
-  currentRow.value = row
-  salaryForm.salaryMonth = row.salaryMonth
-  salaryForm.issueDate = row.issueDate || ''
-  salaryForm.description = row.description || ''
-  salaryForm.workers = [{
-    workerName: row.workerName,
-    idCard: row.idCard,
-    phone: row.phone,
-    bankCard: row.bankCard,
-    basicSalary: row.basicSalary,
-    overtimeSalary: row.overtimeSalary,
-    bonus: row.bonus,
-    deduction: row.deduction
-  }]
-  issueDialogVisible.value = true
+  router.push({
+    path: '/tenant/on-duty/salary/form',
+    query: { mode: 'edit', id: row.id }
+  })
 }
 
 // 批量发放
@@ -871,7 +644,7 @@ onMounted(() => {
   border-radius: 4px;
   border-left: 4px solid #409eff;
   font-size: 14px;
-  color: #606266;
+  color: #f56c6c;
 }
 
 .amount {

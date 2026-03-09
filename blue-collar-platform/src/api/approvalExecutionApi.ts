@@ -3,7 +3,6 @@
  * 包含提交审批、审批操作、查询审批状态、查询审批记录、撤回审批等功能
  */
 
-import request from '@/utils/request'
 import type {
   SubmitApprovalRequest,
   SubmitApprovalResponse,
@@ -14,6 +13,70 @@ import type {
   WithdrawApprovalRequest
 } from '@/types/flow-config'
 import type { ApiResponse, PageResponse } from '@/types/response'
+
+// Mock数据
+const mockApprovalRecords: ApprovalRecord[] = [
+  {
+    id: 1,
+    approvalId: 1,
+    nodeId: 1,
+    nodeName: '部门经理审批',
+    approverId: 'EMP001',
+    approverName: '张三',
+    approvalTime: new Date().toISOString(),
+    approvalResult: 'approved',
+    approvalComment: '同意',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  },
+  {
+    id: 2,
+    approvalId: 1,
+    nodeId: 2,
+    nodeName: '总经理审批',
+    approverId: 'EMP002',
+    approverName: '李四',
+    approvalTime: new Date().toISOString(),
+    approvalResult: 'approved',
+    approvalComment: '同意',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+]
+
+const mockApprovalTasks = [
+  {
+    id: 1,
+    approvalId: 1,
+    taskId: 'TASK001',
+    businessId: 1,
+    businessCode: 'LEAVE',
+    businessName: '请假申请',
+    currentNodeId: 1,
+    currentNodeName: '部门经理审批',
+    assigneeId: 'EMP001',
+    assigneeName: '张三',
+    status: 'pending',
+    createdAt: new Date().toISOString()
+  }
+]
+
+const mockSubmissions = [
+  {
+    id: 1,
+    approvalId: 1,
+    businessId: 1,
+    businessCode: 'LEAVE',
+    businessName: '请假申请',
+    applicantId: 'EMP003',
+    applicantName: '王五',
+    status: 'completed',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+]
+
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 // ============================================
 // 1. 提交审批接口
@@ -28,8 +91,18 @@ import type { ApiResponse, PageResponse } from '@/types/response'
  * 生成第一个节点的待办任务
  * 返回审批状态和待办任务信息
  */
-export const submitApproval = (data: SubmitApprovalRequest) => {
-  return request.post<ApiResponse<SubmitApprovalResponse>>('/approvals/submit', data)
+export const submitApproval = async (data: SubmitApprovalRequest) => {
+  await delay(300)
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      approvalId: 1,
+      status: 'pending',
+      taskId: 'TASK001'
+    } as SubmitApprovalResponse,
+    timestamp: Date.now()
+  } as ApiResponse<SubmitApprovalResponse>
 }
 
 // ============================================
@@ -47,8 +120,18 @@ export const submitApproval = (data: SubmitApprovalRequest) => {
  * 如果通过且是最后一个节点，完成审批流程
  * 返回更新后的审批状态和审批记录
  */
-export const approveApproval = (approvalId: number, data: ApprovalActionRequest) => {
-  return request.post<ApiResponse<ApprovalActionResponse>>(`/approvals/${approvalId}/approve`, data)
+export const approveApproval = async (approvalId: number, data: ApprovalActionRequest) => {
+  await delay(300)
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      approvalId: approvalId,
+      status: 'completed',
+      records: mockApprovalRecords
+    } as ApprovalActionResponse,
+    timestamp: Date.now()
+  } as ApiResponse<ApprovalActionResponse>
 }
 
 /**
@@ -61,8 +144,18 @@ export const approveApproval = (approvalId: number, data: ApprovalActionRequest)
  * 驳回时终止审批流程
  * 返回更新后的审批状态和审批记录
  */
-export const rejectApproval = (approvalId: number, data: ApprovalActionRequest) => {
-  return request.post<ApiResponse<ApprovalActionResponse>>(`/approvals/${approvalId}/reject`, data)
+export const rejectApproval = async (approvalId: number, data: ApprovalActionRequest) => {
+  await delay(300)
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      approvalId: approvalId,
+      status: 'rejected',
+      records: mockApprovalRecords
+    } as ApprovalActionResponse,
+    timestamp: Date.now()
+  } as ApiResponse<ApprovalActionResponse>
 }
 
 /**
@@ -74,8 +167,18 @@ export const rejectApproval = (approvalId: number, data: ApprovalActionRequest) 
  * 将审批任务转交给其他审批人
  * 返回更新后的审批状态和审批记录
  */
-export const transferApproval = (approvalId: number, data: ApprovalActionRequest) => {
-  return request.post<ApiResponse<ApprovalActionResponse>>(`/approvals/${approvalId}/transfer`, data)
+export const transferApproval = async (approvalId: number, data: ApprovalActionRequest) => {
+  await delay(300)
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      approvalId: approvalId,
+      status: 'pending',
+      records: mockApprovalRecords
+    } as ApprovalActionResponse,
+    timestamp: Date.now()
+  } as ApiResponse<ApprovalActionResponse>
 }
 
 /**
@@ -87,8 +190,18 @@ export const transferApproval = (approvalId: number, data: ApprovalActionRequest
  * 将审批任务委派给其他审批人
  * 返回更新后的审批状态和审批记录
  */
-export const delegateApproval = (approvalId: number, data: ApprovalActionRequest) => {
-  return request.post<ApiResponse<ApprovalActionResponse>>(`/approvals/${approvalId}/delegate`, data)
+export const delegateApproval = async (approvalId: number, data: ApprovalActionRequest) => {
+  await delay(300)
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      approvalId: approvalId,
+      status: 'pending',
+      records: mockApprovalRecords
+    } as ApprovalActionResponse,
+    timestamp: Date.now()
+  } as ApiResponse<ApprovalActionResponse>
 }
 
 // ============================================
@@ -101,10 +214,24 @@ export const delegateApproval = (approvalId: number, data: ApprovalActionRequest
  * 查询业务的审批状态
  * 返回审批状态信息，包括当前节点、当前审批人、审批记录列表
  */
-export const getApprovalStatus = (businessId: number, businessCode: string) => {
-  return request.get<ApiResponse<ApprovalStatusResponse>>('/approvals/status', {
-    params: { businessId, businessCode }
-  })
+export const getApprovalStatus = async (businessId: number, businessCode: string) => {
+  await delay(200)
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      approvalId: 1,
+      businessId: businessId,
+      businessCode: businessCode,
+      status: 'completed',
+      currentNodeId: 2,
+      currentNodeName: '总经理审批',
+      currentApproverId: 'EMP002',
+      currentApproverName: '李四',
+      records: mockApprovalRecords
+    } as ApprovalStatusResponse,
+    timestamp: Date.now()
+  } as ApiResponse<ApprovalStatusResponse>
 }
 
 // ============================================
@@ -118,10 +245,14 @@ export const getApprovalStatus = (businessId: number, businessCode: string) => {
  * 支持分页查询
  * 返回审批记录列表
  */
-export const getApprovalRecords = (businessId: number, businessCode: string) => {
-  return request.get<ApiResponse<ApprovalRecord[]>>('/approvals/records', {
-    params: { businessId, businessCode }
-  })
+export const getApprovalRecords = async (businessId: number, businessCode: string) => {
+  await delay(200)
+  return {
+    code: 200,
+    message: 'success',
+    data: mockApprovalRecords,
+    timestamp: Date.now()
+  } as ApiResponse<ApprovalRecord[]>
 }
 
 /**
@@ -130,14 +261,39 @@ export const getApprovalRecords = (businessId: number, businessCode: string) => 
  * 支持分页查询审批记录
  * 支持按业务代码、审批结果等条件筛选
  */
-export const getApprovalRecordsPage = (params: {
+export const getApprovalRecordsPage = async (params: {
   page: number
   pageSize: number
   businessCode?: string
   approvalResult?: string
   approverId?: number
 }) => {
-  return request.get<PageResponse<ApprovalRecord>>('/approvals/records', { params })
+  await delay(300)
+  let filteredData = [...mockApprovalRecords]
+  
+  if (params.businessCode) {
+    // 模拟按业务代码筛选
+  }
+  
+  if (params.approvalResult) {
+    filteredData = filteredData.filter(item => item.approvalResult === params.approvalResult)
+  }
+  
+  const start = (params.page - 1) * params.pageSize
+  const end = start + params.pageSize
+  const list = filteredData.slice(start, end)
+  
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      list,
+      total: filteredData.length,
+      page: params.page,
+      pageSize: params.pageSize
+    },
+    timestamp: Date.now()
+  } as PageResponse<ApprovalRecord>
 }
 
 // ============================================
@@ -153,8 +309,14 @@ export const getApprovalRecordsPage = (params: {
  * 删除待办任务
  * 返回撤回结果
  */
-export const withdrawApproval = (approvalId: number, data: WithdrawApprovalRequest) => {
-  return request.post<ApiResponse<void>>(`/approvals/${approvalId}/withdraw`, data)
+export const withdrawApproval = async (approvalId: number, data: WithdrawApprovalRequest) => {
+  await delay(300)
+  return {
+    code: 200,
+    message: 'success',
+    data: null,
+    timestamp: Date.now()
+  } as ApiResponse<void>
 }
 
 // ============================================
@@ -166,12 +328,33 @@ export const withdrawApproval = (approvalId: number, data: WithdrawApprovalReque
  * GET /api/v1/approvals/my-tasks
  * 获取当前用户的待办审批任务列表
  */
-export const getMyApprovalTasks = (params: {
+export const getMyApprovalTasks = async (params: {
   page: number
   pageSize: number
   taskStatus?: string
 }) => {
-  return request.get<PageResponse<any>>('/approvals/my-tasks', { params })
+  await delay(300)
+  let filteredData = [...mockApprovalTasks]
+  
+  if (params.taskStatus) {
+    filteredData = filteredData.filter(item => item.status === params.taskStatus)
+  }
+  
+  const start = (params.page - 1) * params.pageSize
+  const end = start + params.pageSize
+  const list = filteredData.slice(start, end)
+  
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      list,
+      total: filteredData.length,
+      page: params.page,
+      pageSize: params.pageSize
+    },
+    timestamp: Date.now()
+  } as PageResponse<any>
 }
 
 /**
@@ -179,12 +362,33 @@ export const getMyApprovalTasks = (params: {
  * GET /api/v1/approvals/my-submissions
  * 获取当前用户提交的审批申请列表
  */
-export const getMySubmissions = (params: {
+export const getMySubmissions = async (params: {
   page: number
   pageSize: number
   approvalStatus?: string
 }) => {
-  return request.get<PageResponse<any>>('/approvals/my-submissions', { params })
+  await delay(300)
+  let filteredData = [...mockSubmissions]
+  
+  if (params.approvalStatus) {
+    filteredData = filteredData.filter(item => item.status === params.approvalStatus)
+  }
+  
+  const start = (params.page - 1) * params.pageSize
+  const end = start + params.pageSize
+  const list = filteredData.slice(start, end)
+  
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      list,
+      total: filteredData.length,
+      page: params.page,
+      pageSize: params.pageSize
+    },
+    timestamp: Date.now()
+  } as PageResponse<any>
 }
 
 /**
@@ -192,8 +396,27 @@ export const getMySubmissions = (params: {
  * GET /api/v1/approvals/{approvalId}
  * 获取审批详情信息
  */
-export const getApprovalDetail = (approvalId: number) => {
-  return request.get<ApiResponse<any>>(`/approvals/${approvalId}`)
+export const getApprovalDetail = async (approvalId: number) => {
+  await delay(200)
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      id: approvalId,
+      businessId: 1,
+      businessCode: 'LEAVE',
+      businessName: '请假申请',
+      applicantId: 'EMP003',
+      applicantName: '王五',
+      status: 'completed',
+      currentNodeId: 2,
+      currentNodeName: '总经理审批',
+      records: mockApprovalRecords,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    },
+    timestamp: Date.now()
+  } as ApiResponse<any>
 }
 
 /**
@@ -201,11 +424,20 @@ export const getApprovalDetail = (approvalId: number) => {
  * POST /api/v1/approvals/batch-approve
  * 批量审批通过
  */
-export const batchApprove = (data: {
+export const batchApprove = async (data: {
   approvalIds: number[]
   approvalComment?: string
 }) => {
-  return request.post<ApiResponse<{ successCount: number; failureCount: number }>>('/approvals/batch-approve', data)
+  await delay(300)
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      successCount: data.approvalIds.length,
+      failureCount: 0
+    },
+    timestamp: Date.now()
+  } as ApiResponse<{ successCount: number; failureCount: number }>
 }
 
 /**
@@ -213,11 +445,20 @@ export const batchApprove = (data: {
  * POST /api/v1/approvals/batch-reject
  * 批量审批驳回
  */
-export const batchReject = (data: {
+export const batchReject = async (data: {
   approvalIds: number[]
   approvalComment?: string
 }) => {
-  return request.post<ApiResponse<{ successCount: number; failureCount: number }>>('/approvals/batch-reject', data)
+  await delay(300)
+  return {
+    code: 200,
+    message: 'success',
+    data: {
+      successCount: data.approvalIds.length,
+      failureCount: 0
+    },
+    timestamp: Date.now()
+  } as ApiResponse<{ successCount: number; failureCount: number }>
 }
 
 // ============================================

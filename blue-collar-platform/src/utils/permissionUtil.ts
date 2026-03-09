@@ -143,6 +143,9 @@ export class PermissionUtil {
     // 平台管理员拥有所有权限
     if (permission.role === 'platform_admin') return true
 
+    // 如果没有按钮权限配置，默认显示所有按钮
+    if (!permission.buttons) return true
+
     const button = permission.buttons.find(btn => btn.code === code)
     if (!button) return true
 
@@ -161,6 +164,9 @@ export class PermissionUtil {
 
     // 平台管理员拥有所有权限
     if (permission.role === 'platform_admin') return true
+
+    // 如果没有按钮权限配置，默认显示所有按钮
+    if (!permission.buttons) return true
 
     return permission.buttons.some(btn => {
       if (btn.type !== type) return false
@@ -244,7 +250,7 @@ export class PermissionUtil {
    */
   static filterVisibleMenus(menus: MenuPermission[]): MenuPermission[] {
     const permission = this.getUserPermission()
-    if (!permission) return []
+    if (!permission) return menus
 
     // 平台管理员显示所有菜单
     if (permission.role === 'platform_admin') return menus
@@ -258,7 +264,7 @@ export class PermissionUtil {
    */
   static filterVisibleButtons(buttons: ButtonPermission[], menuPath?: string): ButtonPermission[] {
     const permission = this.getUserPermission()
-    if (!permission) return []
+    if (!permission) return buttons
 
     // 平台管理员显示所有按钮
     if (permission.role === 'platform_admin') return buttons

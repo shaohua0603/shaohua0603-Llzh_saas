@@ -55,6 +55,7 @@
     <!-- 表格 -->
     <CommonTable
       ref="tableRef"
+      table-id="exam-management"
       :data="tableData"
       :columns="columns"
       :loading="loading"
@@ -64,7 +65,7 @@
       :showSelection="true"
       :showIndex="true"
       :showActions="true"
-      action-column-width="200"
+      :action-column-width="200"
       :stats-info="statsInfo"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
@@ -74,11 +75,17 @@
       <template #column-totalScore="{ row }">
         {{ row.totalScore }}分
       </template>
+      <template #column-passScore="{ row }">
+        {{ row.passScore }}分
+      </template>
       <template #column-totalTime="{ row }">
         {{ row.totalTime }}分钟
       </template>
       <template #column-totalQuestions="{ row }">
         {{ row.totalQuestions }}道
+      </template>
+      <template #column-passRate="{ row }">
+        {{ (row.passRate || 0) }}%
       </template>
       <template #column-publishStatus="{ row }">
         <el-tag :type="row.publishStatus === 'published' ? 'success' : 'info'">
@@ -109,148 +116,7 @@
       </template>
     </CommonTable>
 
-    <!-- 新增/编辑弹窗 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="900px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="140px">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="考卷名称" prop="examName">
-              <el-input v-model="formData.examName" placeholder="请输入考卷名称" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="总分数" prop="totalScore">
-              <el-input-number v-model="formData.totalScore" :min="1" :max="200" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="总时长(分钟)" prop="totalTime">
-              <el-input-number v-model="formData.totalTime" :min="1" :max="180" style="width: 100%" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="报考开始时间" prop="startTime">
-              <el-date-picker
-                v-model="formData.startTime"
-                type="datetime"
-                placeholder="选择报考开始时间"
-                value-format="YYYY-MM-DD HH:mm:ss"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="报考结束时间" prop="endTime">
-              <el-date-picker
-                v-model="formData.endTime"
-                type="datetime"
-                placeholder="选择报考结束时间"
-                value-format="YYYY-MM-DD HH:mm:ss"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-divider content-position="left">试卷题目</el-divider>
-        <div class="questions-section">
-          <div class="questions-header">
-            <el-button type="primary" size="small" @click="handleAddQuestion">
-              <el-icon><Plus /></el-icon>
-              添加题目
-            </el-button>
-            <el-button type="success" size="small" @click="handleDistributeScore">
-              <el-icon><Plus /></el-icon>
-              平均分配分数
-            </el-button>
-          </div>
-          <el-table :data="formData.questions" border style="width: 100%; margin-top: 10px">
-            <el-table-column type="index" label="序号" width="60" />
-            <el-table-column prop="questionType" label="题目类型" width="100">
-              <template #default="{ row }">
-                <el-select v-model="row.questionType" placeholder="请选择" size="small">
-                  <el-option label="单选题" value="single" />
-                  <el-option label="多选题" value="multiple" />
-                  <el-option label="判断题" value="true_false" />
-                  <el-option label="填空题" value="fill" />
-                </el-select>
-              </template>
-            </el-table-column>
-            <el-table-column prop="answerType" label="答题类型" width="100">
-              <template #default="{ row }">
-                <el-select v-model="row.answerType" placeholder="请选择" size="small">
-                  <el-option label="单选题" value="single" />
-                  <el-option label="多选题" value="multiple" />
-                  <el-option label="判断题" value="true_false" />
-                  <el-option label="填空题" value="fill" />
-                </el-select>
-              </template>
-            </el-table-column>
-            <el-table-column prop="question" label="题干" min-width="200">
-              <template #default="{ row }">
-                <el-input v-model="row.question" placeholder="请输入题干" size="small" />
-              </template>
-            </el-table-column>
-            <el-table-column prop="score" label="分数" width="80">
-              <template #default="{ row }">
-                <el-input-number v-model="row.score" :min="1" :max="100" size="small" />
-              </template>
-            </el-table-column>
-            <el-table-column label="操作" width="80">
-              <template #default="{ $index }">
-                <el-button link type="danger" size="small" @click="handleRemoveQuestion($index)">删除</el-button>
-              </template>
-            </el-table-column>
-          </el-table>
-        </div>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
 
-    <!-- 详情弹窗 -->
-    <el-dialog v-model="detailVisible" title="考试详情" width="900px">
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="考卷名称">{{ currentRow?.examName }}</el-descriptions-item>
-        <el-descriptions-item label="总分数">{{ currentRow?.totalScore }}分</el-descriptions-item>
-        <el-descriptions-item label="总时长">{{ currentRow?.totalTime }}分钟</el-descriptions-item>
-        <el-descriptions-item label="总题数">{{ currentRow?.totalQuestions }}道</el-descriptions-item>
-        <el-descriptions-item label="报考开始时间">{{ currentRow?.startTime }}</el-descriptions-item>
-        <el-descriptions-item label="报考结束时间">{{ currentRow?.endTime }}</el-descriptions-item>
-        <el-descriptions-item label="发布状态">
-          <el-tag :type="currentRow?.publishStatus === 'published' ? 'success' : 'info'">
-            {{ currentRow?.publishStatus === 'published' ? '已发布' : '未发布' }}
-          </el-tag>
-        </el-descriptions-item>
-      </el-descriptions>
-      <el-divider content-position="left">试卷题目</el-divider>
-      <el-table :data="currentRow?.questions || []" border>
-        <el-table-column type="index" label="序号" width="60" />
-        <el-table-column prop="questionType" label="题目类型" width="100">
-          <template #default="{ row }">
-            {{ getQuestionTypeText(row.questionType) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="answerType" label="答题类型" width="100">
-          <template #default="{ row }">
-            {{ getAnswerTypeText(row.answerType) }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="question" label="题干" min-width="200" show-overflow-tooltip />
-        <el-table-column prop="score" label="分数" width="80" />
-      </el-table>
-      <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
@@ -259,7 +125,10 @@ import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
+import { useRouter } from 'vue-router'
 import { Plus, Delete, ArrowDown, Search, Refresh, View, Edit, Check, Close } from '@element-plus/icons-vue'
+
+const router = useRouter()
 
 // 类型定义
 interface ExamQuestion {
@@ -273,6 +142,7 @@ interface ExamRecord {
   id: string
   examName: string
   totalScore: number
+  passScore: number
   totalTime: number
   totalQuestions: number
   startTime: string
@@ -280,14 +150,17 @@ interface ExamRecord {
   questions: ExamQuestion[]
   publishStatus: 'published' | 'unpublished'
   createTime: string
+  passRate?: number // 通过率
 }
 
 // 表格列配置
 const columns = [
   { prop: 'examName', label: '考卷名称', minWidth: 200, sortable: true },
   { prop: 'totalScore', label: '总分数', minWidth: 100, sortable: true },
+  { prop: 'passScore', label: '考试通过分数', minWidth: 120, sortable: true },
   { prop: 'totalTime', label: '总时长', minWidth: 100, sortable: true },
   { prop: 'totalQuestions', label: '总题数', minWidth: 100, sortable: true },
+  { prop: 'passRate', label: '通过率', minWidth: 100, sortable: true },
   { prop: 'startTime', label: '报考开始时间', minWidth: 160 },
   { prop: 'endTime', label: '报考结束时间', minWidth: 160 },
   { prop: 'publishStatus', label: '发布状态', minWidth: 100 }
@@ -300,11 +173,6 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedRows = ref<ExamRecord[]>([])
-const dialogVisible = ref(false)
-const detailVisible = ref(false)
-const submitLoading = ref(false)
-const dialogTitle = ref('新增考试')
-const currentRow = ref<ExamRecord | null>(null)
 const filterExpanded = ref(false)
 const statsInfo = ref<Array<{ label: string; value: string }>>([])
 const tableRef = ref<InstanceType<typeof CommonTable> | null>(null)
@@ -314,37 +182,16 @@ const searchForm = reactive({
   publishStatus: ''
 })
 
-const formData = reactive<ExamRecord>({
-  id: '',
-  examName: '',
-  totalScore: 100,
-  totalTime: 60,
-  totalQuestions: 0,
-  startTime: '',
-  endTime: '',
-  questions: [],
-  publishStatus: 'unpublished',
-  createTime: ''
-})
-
-const formRef = ref<FormInstance>()
-
-const formRules: FormRules = {
-  examName: [{ required: true, message: '请输入考卷名称', trigger: 'blur' }],
-  totalScore: [{ required: true, message: '请输入总分数', trigger: 'blur' }],
-  totalTime: [{ required: true, message: '请输入总时长', trigger: 'blur' }],
-  startTime: [{ required: true, message: '请选择报考开始时间', trigger: 'change' }],
-  endTime: [{ required: true, message: '请选择报考结束时间', trigger: 'change' }]
-}
-
 // Mock数据
 const mockData: ExamRecord[] = [
   {
     id: '1',
     examName: '安全生产知识测试',
     totalScore: 100,
+    passScore: 60,
     totalTime: 60,
     totalQuestions: 20,
+    passRate: 85,
     startTime: '2024-02-01 00:00:00',
     endTime: '2024-02-28 23:59:59',
     questions: [
@@ -359,8 +206,10 @@ const mockData: ExamRecord[] = [
     id: '2',
     examName: '岗位技能考核',
     totalScore: 100,
+    passScore: 60,
     totalTime: 90,
     totalQuestions: 25,
+    passRate: 78,
     startTime: '2024-02-10 00:00:00',
     endTime: '2024-02-20 23:59:59',
     questions: [
@@ -374,8 +223,10 @@ const mockData: ExamRecord[] = [
     id: '3',
     examName: '职业健康培训测试',
     totalScore: 80,
+    passScore: 48,
     totalTime: 45,
     totalQuestions: 15,
+    passRate: 92,
     startTime: '2024-02-05 00:00:00',
     endTime: '2024-02-15 23:59:59',
     questions: [
@@ -489,33 +340,26 @@ const handleReset = () => {
 
 // 新增
 const handleAdd = () => {
-  dialogTitle.value = '新增考试'
-  Object.assign(formData, {
-    id: '',
-    examName: '',
-    totalScore: 100,
-    totalTime: 60,
-    totalQuestions: 0,
-    startTime: '',
-    endTime: '',
-    questions: [],
-    publishStatus: 'unpublished',
-    createTime: ''
+  router.push({
+    path: '/tenant/on-duty/exam/form',
+    meta: { title: '新增考试' }
   })
-  dialogVisible.value = true
 }
 
 // 编辑
 const handleEdit = (row: ExamRecord) => {
-  dialogTitle.value = '编辑考试'
-  Object.assign(formData, JSON.parse(JSON.stringify(row)))
-  dialogVisible.value = true
+  router.push({
+    path: `/tenant/on-duty/exam/form/${row.id}`,
+    meta: { title: '编辑考试' }
+  })
 }
 
 // 详情
 const handleDetail = (row: ExamRecord) => {
-  currentRow.value = row
-  detailVisible.value = true
+  router.push({
+    path: `/tenant/on-duty/exam/detail/${row.id}`,
+    meta: { title: '考试详情' }
+  })
 }
 
 // 删除
@@ -553,68 +397,7 @@ const handleBatchDelete = () => {
   }).catch(() => {})
 }
 
-// 添加题目
-const handleAddQuestion = () => {
-  formData.questions.push({
-    questionType: 'single',
-    answerType: 'single',
-    question: '',
-    score: 5
-  })
-  formData.totalQuestions = formData.questions.length
-}
 
-// 删除题目
-const handleRemoveQuestion = (index: number) => {
-  formData.questions.splice(index, 1)
-  formData.totalQuestions = formData.questions.length
-}
-
-// 平均分配分数
-const handleDistributeScore = () => {
-  if (formData.questions.length === 0) {
-    ElMessage.warning('请先添加题目')
-    return
-  }
-  const avgScore = Math.floor(formData.totalScore / formData.questions.length)
-  formData.questions.forEach(q => {
-    q.score = avgScore
-  })
-  ElMessage.success('分数已平均分配')
-}
-
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      // 更新总题数
-      formData.totalQuestions = formData.questions.length
-      submitLoading.value = true
-      setTimeout(() => {
-        if (formData.id) {
-          // 编辑
-          const index = mockData.findIndex(item => item.id === formData.id)
-          if (index > -1) {
-            mockData[index] = { ...formData }
-          }
-          ElMessage.success('编辑成功')
-        } else {
-          // 新增
-          mockData.unshift({
-            ...formData,
-            id: Date.now().toString(),
-            createTime: new Date().toLocaleString()
-          })
-          ElMessage.success('新增成功')
-        }
-        submitLoading.value = false
-        dialogVisible.value = false
-        loadData()
-      }, 500)
-    }
-  })
-}
 
 // 排序变化
 const handleSortChange = (sort: { prop: string; order: string | null }) => {

@@ -55,7 +55,7 @@ export interface AttachmentConfig {
   menuName: string
   menuPath: string
   attachmentName: string
-  attachmentType: AttachmentType
+  attachmentTypes: AttachmentType[]
   maxSize: number
   required: boolean
   templateFileId?: string
@@ -79,7 +79,7 @@ export interface AttachmentConfigQuery {
   pageSize?: number
   menuId?: string
   attachmentName?: string
-  attachmentType?: AttachmentType
+  attachmentTypes?: AttachmentType[]
   required?: boolean
   status?: string
 }
@@ -87,11 +87,15 @@ export interface AttachmentConfigQuery {
 export interface AttachmentConfigFormData {
   id?: string
   menuId: string
+  menuName?: string
+  menuPath?: string
   attachmentName: string
-  attachmentType: AttachmentType
+  attachmentTypes: AttachmentType[]
   maxSize: number
   required: boolean
   templateFileId?: string
+  templateFileName?: string
+  templateFileUrl?: string
   allowedTypes: string[]
   allowBatchUpload: boolean
   allowPreview: boolean

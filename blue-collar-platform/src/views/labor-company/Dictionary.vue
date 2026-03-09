@@ -136,161 +136,7 @@
       </div>
     </el-card>
 
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="700px"
-      :close-on-click-modal="false"
-      @close="handleDialogClose"
-    >
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        label-position="right"
-      >
-        <el-form-item label="字典名称" prop="name">
-          <el-input
-            v-model="formData.name"
-            placeholder="请输入字典名称"
-            maxlength="50"
-            show-word-limit
-          />
-        </el-form-item>
-        
-        <el-form-item label="字典类型" prop="type">
-          <el-select
-            v-model="formData.type"
-            placeholder="请选择字典类型"
-            style="width: 100%"
-          >
-            <el-option label="业务字典" value="business" />
-            <el-option label="自定义字典" value="custom" />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="字典编码" prop="code">
-          <el-input
-            v-model="formData.code"
-            placeholder="请输入字典编码（英文）"
-            maxlength="50"
-            show-word-limit
-          />
-        </el-form-item>
-        
-        <el-form-item label="字典说明" prop="description">
-          <el-input
-            v-model="formData.description"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入字典说明"
-            maxlength="200"
-            show-word-limit
-          />
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitting">
-          保存
-        </el-button>
-      </template>
-    </el-dialog>
 
-    <el-dialog
-      v-model="valuesDialogVisible"
-      title="管理字典值"
-      width="900px"
-      :close-on-click-modal="false"
-    >
-      <div class="dict-values-header">
-        <div class="dict-info">
-          <span class="dict-name">{{ currentDictionary?.name }}</span>
-          <span class="dict-code">{{ currentDictionary?.code }}</span>
-        </div>
-        <el-button type="primary" size="small" @click="handleAddValue">
-          新增值
-        </el-button>
-      </div>
-      
-      <el-table
-        :data="currentDictValues"
-        border
-        stripe
-        style="width: 100%; margin-top: 12px"
-      >
-        <el-table-column type="index" label="序号" width="60" />
-        <el-table-column prop="value" label="字典值" width="150">
-          <template #default="scope">
-            <el-input
-              v-if="scope.row.editing"
-              v-model="scope.row.value"
-              size="small"
-              placeholder="字典值"
-            />
-            <span v-else>{{ scope.row.value }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="label" label="显示标签" width="150">
-          <template #default="scope">
-            <el-input
-              v-if="scope.row.editing"
-              v-model="scope.row.label"
-              size="small"
-              placeholder="显示标签"
-            />
-            <span v-else>{{ scope.row.label }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="sort" label="排序" width="120">
-          <template #default="scope">
-            <el-input-number
-              v-if="scope.row.editing"
-              v-model="scope.row.sort"
-              size="small"
-              :min="0"
-              controls-position="right"
-              style="width: 100px"
-            />
-            <span v-else>{{ scope.row.sort }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="scope">
-            <el-tag :type="scope.row.status === 'enabled' ? 'success' : 'info'" size="small">
-              {{ scope.row.status === 'enabled' ? '启用' : '禁用' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="remark" label="备注" min-width="150" show-overflow-tooltip />
-        <el-table-column label="操作" width="180" fixed="right">
-          <template #default="scope">
-            <template v-if="scope.row.editing">
-              <el-button size="small" type="success" link @click="handleSaveValue(scope.row)">
-                保存
-              </el-button>
-              <el-button size="small" link @click="handleCancelValue(scope.row)">
-                取消
-              </el-button>
-            </template>
-            <template v-else>
-              <el-button size="small" type="primary" link @click="handleEditValue(scope.row)">
-                编辑
-              </el-button>
-              <el-button size="small" type="danger" link @click="handleDeleteValue(scope.row)">
-                删除
-              </el-button>
-            </template>
-          </template>
-        </el-table-column>
-      </el-table>
-      
-      <template #footer>
-        <el-button @click="valuesDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
 
     <el-dialog
       v-model="importDialogVisible"
@@ -327,6 +173,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox, type UploadInstance, type UploadUserFile } from 'element-plus'
 import { Plus, Upload, Download, Delete } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import DictionaryService from '@/services/dictionaryService'
 import type {
   Dictionary,
@@ -334,6 +181,8 @@ import type {
   DictionaryFormData,
   DictionaryValue
 } from '@/types/dictionary'
+
+const router = useRouter()
 
 const loading = ref(false)
 const tableData = ref<Dictionary[]>([])
@@ -348,40 +197,10 @@ const searchForm = reactive({
   type: ''
 })
 
-const dialogVisible = ref(false)
-const valuesDialogVisible = ref(false)
 const importDialogVisible = ref(false)
-const dialogTitle = ref('')
-const submitting = ref(false)
 const importing = ref(false)
-const formRef = ref()
 const uploadRef = ref<UploadInstance>()
 const importFile = ref<File | null>(null)
-
-const currentDictionary = ref<Dictionary | null>(null)
-const currentDictValues = ref<DictionaryValue[]>([])
-
-const formData = reactive<DictionaryFormData>({
-  id: '',
-  name: '',
-  type: 'business',
-  code: '',
-  description: '',
-  values: []
-})
-
-const formRules = {
-  name: [
-    { required: true, message: '请输入字典名称', trigger: 'blur' }
-  ],
-  type: [
-    { required: true, message: '请选择字典类型', trigger: 'change' }
-  ],
-  code: [
-    { required: true, message: '请输入字典编码', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9_]+$/, message: '字典编码只能包含字母、数字和下划线', trigger: 'blur' }
-  ]
-}
 
 const fetchData = async () => {
   loading.value = true
@@ -393,10 +212,13 @@ const fetchData = async () => {
       code: searchForm.code || undefined,
       type: searchForm.type as any || undefined
     }
+    console.log('Fetching dictionary list with params:', params)
     const response = await DictionaryService.getDictionaryList(params)
+    console.log('Dictionary list response:', response)
     tableData.value = response.list
     total.value = response.total
   } catch (error) {
+    console.error('Error fetching dictionary list:', error)
     ElMessage.error('获取字典列表失败')
   } finally {
     loading.value = false
@@ -421,42 +243,15 @@ const handleSelectionChange = (selection: Dictionary[]) => {
 }
 
 const handleAdd = () => {
-  dialogTitle.value = '新增字典'
-  Object.assign(formData, {
-    id: '',
-    name: '',
-    type: 'business',
-    code: '',
-    description: '',
-    values: []
-  })
-  dialogVisible.value = true
+  router.push('/tenant/dictionary/add')
 }
 
 const handleView = (row: Dictionary) => {
-  dialogTitle.value = '查看字典'
-  Object.assign(formData, {
-    id: row.id,
-    name: row.name,
-    type: row.type,
-    code: row.code,
-    description: row.description || '',
-    values: row.values || []
-  })
-  dialogVisible.value = true
+  router.push(`/tenant/dictionary/view/${row.id}`)
 }
 
 const handleEdit = (row: Dictionary) => {
-  dialogTitle.value = '编辑字典'
-  Object.assign(formData, {
-    id: row.id,
-    name: row.name,
-    type: row.type,
-    code: row.code,
-    description: row.description || '',
-    values: row.values || []
-  })
-  dialogVisible.value = true
+  router.push(`/tenant/dictionary/edit/${row.id}`)
 }
 
 const handleDelete = async (row: Dictionary) => {
@@ -541,23 +336,16 @@ const handleCancelValue = (row: DictionaryValue) => {
   }
 }
 
-const handleDeleteValue = async (row: DictionaryValue) => {
-  try {
-    await ElMessageBox.confirm('确定要删除该字典值吗？', '提示', {
-      type: 'warning',
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-    const index = currentDictValues.value.findIndex(v => v.id === row.id)
-    if (index !== -1) {
-      currentDictValues.value.splice(index, 1)
-    }
-    ElMessage.success('删除成功')
-  } catch (error) {
-    if (error !== 'cancel') {
-      ElMessage.error('删除失败')
-    }
-  }
+const addDictValue = () => {
+  const maxSort = Math.max(...formData.values.map(v => v.sort || 0), 0)
+  formData.values.push({
+    id: '',
+    value: '',
+    label: '',
+    sort: maxSort + 1,
+    status: 'enabled',
+    remark: ''
+  })
 }
 
 const handleImport = () => {
@@ -608,35 +396,6 @@ const handleExport = async () => {
   } catch (error) {
     ElMessage.error('导出失败')
   }
-}
-
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  
-  await formRef.value.validate(async (valid: boolean) => {
-    if (valid) {
-      submitting.value = true
-      try {
-        if (formData.id) {
-          await DictionaryService.updateDictionary(formData.id, formData)
-          ElMessage.success('更新成功')
-        } else {
-          await DictionaryService.createDictionary(formData)
-          ElMessage.success('创建成功')
-        }
-        dialogVisible.value = false
-        fetchData()
-      } catch (error) {
-        ElMessage.error(formData.id ? '更新失败' : '创建失败')
-      } finally {
-        submitting.value = false
-      }
-    }
-  })
-}
-
-const handleDialogClose = () => {
-  formRef.value?.resetFields()
 }
 
 const handleSizeChange = (size: number) => {
@@ -716,6 +475,16 @@ onMounted(() => {
   color: #909399;
 }
 
+.dict-values-section {
+  margin-top: 8px;
+}
+
+.add-value-button {
+  margin-top: 12px;
+  display: flex;
+  justify-content: flex-start;
+}
+
 @media screen and (max-width: 768px) {
   .dictionary-container {
     padding: 16px;
@@ -753,6 +522,16 @@ onMounted(() => {
   
   :deep(.el-table) {
     font-size: 12px;
+  }
+  
+  .dict-values-section :deep(.el-table) {
+    font-size: 11px;
+  }
+  
+  .dict-values-section :deep(.el-input),
+  .dict-values-section :deep(.el-select),
+  .dict-values-section :deep(.el-input-number) {
+    width: 100% !important;
   }
 }
 </style>

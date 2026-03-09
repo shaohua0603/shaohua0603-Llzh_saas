@@ -158,6 +158,7 @@ export interface RecruitmentQueryParams {
   factoryId?: string;
   laborCompanyId?: string;
   positionId?: string;
+  positionCategory?: string;
   startDate?: string;
   endDate?: string;
 }
@@ -174,6 +175,7 @@ export interface Recruitment {
   laborCompanyName: string;         // 劳务公司名称
   positionId: string;               // 岗位ID
   positionName: string;             // 岗位名称
+  positionCategory: string;         // 岗位类型
   recruitCount: number;             // 招聘人数
   salaryMin: number;                // 最低薪资
   salaryMax: number;                // 最高薪资
@@ -247,6 +249,7 @@ export interface ResumeQueryParams {
   keyword?: string;
   status?: ResumeStatus;
   positionId?: string;
+  positionCategory?: string;
   recruitmentId?: string;
   gender?: Gender;
   education?: Education;
@@ -275,6 +278,7 @@ export interface Resume {
   expectedSalary: string;           // 期望薪资
   positionId: string;               // 应聘岗位ID
   positionName: string;             // 应聘岗位名称
+  positionCategory: string;         // 岗位类型
   recruitmentId: string;            // 招聘需求ID
   recruitmentTitle: string;        // 招聘需求标题
   factoryId: string;               // 工厂ID

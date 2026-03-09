@@ -165,10 +165,11 @@ export interface InterviewCandidate {
   isReturnWorker: boolean
   name: string
   phone: string
+  idCard: string
   age: number
   gender: string
-  recommendationLevel: 'A' | 'B' | 'C' | 'D'
-  imageLevel: 'A' | 'B' | 'C' | 'D'
+  recommendationLevel: '优先推荐' | '一般' | '不建议'
+  imageLevel: '优秀' | '一般' | '其他'
   education: string
   positionCategory: string
   expectedLocation: string
@@ -607,10 +608,11 @@ export const getInterviewInvitationDetail = (id: string) => {
           isReturnWorker: false,
           name: '孙七',
           phone: '13800138003',
+          idCard: '440***********1234',
           age: 25,
           gender: '男',
-          recommendationLevel: 'A',
-          imageLevel: 'A',
+          recommendationLevel: '优先推荐',
+          imageLevel: '优秀',
           education: '大专',
           positionCategory: '普工',
           expectedLocation: '深圳',

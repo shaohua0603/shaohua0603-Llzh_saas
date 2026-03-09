@@ -62,6 +62,18 @@
                 />
               </el-select>
             </el-form-item>
+            <el-form-item label="岗位类型">
+              <el-select
+                v-model="queryParams.positionCategory"
+                placeholder="请选择岗位类型"
+                clearable
+                style="width: 150px"
+              >
+                <el-option label="普工" value="普工" />
+                <el-option label="技工" value="技工" />
+                <el-option label="干部" value="干部" />
+              </el-select>
+            </el-form-item>
             <el-form-item label="性别">
               <el-select
                 v-model="queryParams.gender"
@@ -380,6 +392,13 @@ const columns = [
     showTooltip: true
   },
   {
+    prop: 'positionCategory',
+    label: '岗位类型',
+    width: 100,
+    sortable: true,
+    align: 'center'
+  },
+  {
     prop: 'experience',
     label: '工作经验',
     width: 120,
@@ -488,6 +507,7 @@ const handleReset = () => {
   queryParams.keyword = ''
   queryParams.status = undefined
   queryParams.positionId = undefined
+  queryParams.positionCategory = undefined
   queryParams.gender = undefined
   queryParams.education = undefined
   queryParams.experience = undefined

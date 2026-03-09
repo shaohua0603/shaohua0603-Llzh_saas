@@ -77,6 +77,12 @@
         </el-tag>
       </template>
 
+      <template #column-employmentType="{ row }">
+        <el-tag :type="getPaymentType(row.employmentType)">
+          {{ row.employmentType }}
+        </el-tag>
+      </template>
+
       <template #column-entryDate="{ row }">
         {{ row.entryDate || '-' }}
       </template>
@@ -205,6 +211,10 @@ const getStatusText = (status: string): string => {
     'RESIGNED': '离职'
   }
   return textMap[status] || '未知'
+}
+
+const getPaymentType = (paymentType: string): string => {
+  return paymentType === '日结' ? 'warning' : 'success'
 }
 
 const handleSearch = () => {

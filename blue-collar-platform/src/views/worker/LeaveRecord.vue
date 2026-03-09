@@ -17,7 +17,7 @@
           <span>暂无请假记录</span>
         </div>
         <div v-else class="leave-items">
-          <div v-for="item in leaveRecords" :key="item.id" class="leave-item" @click="openLeaveDetail(item)">
+          <div v-for="item in leaveRecords" :key="item.id" class="leave-item">
             <div class="leave-header">
               <el-tag :type="getLeaveType(item.type)">
                 {{ getLeaveTypeText(item.type) }}
@@ -26,7 +26,7 @@
                 {{ getStatusText(item.status) }}
               </el-tag>
             </div>
-            <div class="leave-details">
+            <div class="leave-details" @click="openLeaveDetail(item)">
               <p>
                 <i class="el-icon-time"></i>
                 开始时间: {{ item.startDate }}
@@ -40,8 +40,16 @@
                 申请时间: {{ item.applyDate }}
               </p>
             </div>
-            <div class="leave-arrow">
-              <i class="el-icon-arrow-right"></i>
+            <div class="leave-actions">
+              <el-button 
+                v-if="item.status === 'approved' && !item.cancelled" 
+                type="success" 
+                size="small" 
+                @click.stop="handleCancelLeave(item)"
+              >
+                销假
+              </el-button>
+              <el-tag v-else-if="item.cancelled" type="info" size="small">已销假</el-tag>
             </div>
           </div>
         </div>
@@ -226,6 +234,25 @@ const openLeaveDetail = (leave: any) => {
   router.push(`/worker/leave-detail/${leave.id}`)
 }
 
+// 处理销假
+const handleCancelLeave = (leave: any) => {
+  // 模拟销假操作
+  ElMessage.confirm('确定要销假吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    // 找到对应的请假记录并标记为已销假
+    const index = leaveRecords.value.findIndex(item => item.id === leave.id)
+    if (index !== -1) {
+      leaveRecords.value[index].cancelled = true
+      ElMessage.success('销假成功')
+    }
+  }).catch(() => {
+    // 用户取消
+  })
+}
+
 // 初始化数据
 onMounted(() => {
   fetchLeaveRecords()
@@ -293,9 +320,11 @@ onMounted(() => {
   border-radius: 8px;
   padding: 15px;
   border-left: 4px solid #667eea;
-  cursor: pointer;
   position: relative;
   transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .leave-item:hover {
@@ -304,13 +333,17 @@ onMounted(() => {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
-.leave-arrow {
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #999;
-  font-size: 14px;
+.leave-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #f0f0f0;
+}
+
+.leave-details {
+  cursor: pointer;
 }
 
 .leave-header {

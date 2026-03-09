@@ -309,16 +309,16 @@ const handleViewBusinessDetail = () => {
 
   switch (businessType) {
     case 'worker':
-      router.push(`/labor-company/workers`)
+      router.push(`/tenant/workers`)
       break
     case 'contract':
-      router.push(`/labor-company/contract-detail/${businessId}`)
+      router.push(`/tenant/contract/${businessId}`)
       break
     case 'attendance':
-      router.push(`/labor-company/attendance`)
+      router.push(`/tenant/attendance`)
       break
     case 'production':
-      router.push(`/labor-company/production`)
+      router.push(`/tenant/production`)
       break
     default:
       ElMessage.info('暂无业务详情页')

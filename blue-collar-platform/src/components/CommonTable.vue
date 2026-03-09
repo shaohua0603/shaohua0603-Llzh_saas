@@ -712,7 +712,7 @@ onMounted(() => {
   background-color: #f5f7fa;
   border-bottom: 1px solid #ebeef5;
   font-size: 14px;
-  color: #606266;
+  color: #f56c6c;
   line-height: 1.5;
   border-left: 3px solid #409eff;
   margin: 16px;

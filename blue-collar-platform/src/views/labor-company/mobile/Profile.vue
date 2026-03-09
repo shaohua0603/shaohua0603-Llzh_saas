@@ -1,199 +1,367 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+import { 
+  User, Timer, SwitchButton, Grid, Flag, Promotion, 
+  Document, Present, ZoomIn
+} from '@element-plus/icons-vue'
+
+const router = useRouter()
+const userInfo = ref<any>(null)
+
+const menuItems = [
+  {
+    id: 1,
+    title: '招聘需求',
+    icon: Flag,
+    path: ''
+  },
+  {
+    id: 2,
+    title: '简历管理',
+    icon: Document,
+    path: ''
+  },
+  {
+    id: 3,
+    title: '接送管理',
+    icon: User,
+    path: ''
+  },
+  {
+    id: 4,
+    title: '签订合同',
+    icon: Present,
+    path: ''
+  },
+  {
+    id: 5,
+    title: '假勤管理',
+    icon: Timer,
+    path: ''
+  },
+  {
+    id: 6,
+    title: '离职管理',
+    icon: SwitchButton,
+    path: ''
+  },
+  {
+    id: 7,
+    title: '调岗管理',
+    icon: Grid,
+    path: ''
+  },
+  {
+    id: 8,
+    title: '报名管理',
+    icon: Promotion,
+    path: ''
+  },
+  {
+    id: 9,
+    title: '版本信息',
+    icon: ZoomIn,
+    path: ''
+  }
+]
+
+const getUserInfo = () => {
+  const defaultAvatar = 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20ID%20photo%20of%20a%20Chinese%20male%20worker%20with%20plain%20white%20background%2C%20passport%20style%2C%20front%20view%2C%20clear%20features%2C%20formal%20clothing&image_size=square'
+  
+  const storedUserInfo = localStorage.getItem('userInfo')
+  if (storedUserInfo) {
+    userInfo.value = JSON.parse(storedUserInfo)
+    userInfo.value.avatar = defaultAvatar
+  } else {
+    userInfo.value = {
+      name: '李四',
+      companyName: '南通富民劳务服务有限公司',
+      position: '招聘经理',
+      avatar: defaultAvatar
+    }
+  }
+}
+
+const goToFunction = (menuItem: any) => {
+  if (menuItem.path) {
+    router.push(menuItem.path)
+  } else {
+    ElMessage.info(`${menuItem.title} - 暂未开放`)
+  }
+}
+
+const goToScanner = () => {
+  ElMessage.info('扫一扫功能')
+}
+
+const handleLogout = () => {
+  localStorage.removeItem('userInfo')
+  localStorage.removeItem('token')
+  ElMessage.success('退出登录成功')
+  router.push('/login')
+}
+
+onMounted(() => {
+  getUserInfo()
+})
+</script>
+
 <template>
-  <div class="labor-company-mobile-profile">
-    <h2 class="page-title">个人中心</h2>
-    
-    <!-- 公司信息卡片 -->
-    <el-card class="company-card">
-      <div class="company-info">
-        <div class="company-name">{{ companyInfo.companyName }}</div>
-        <div class="company-details">
-          <div class="detail-item">
-            <span class="detail-label">联系人：</span>
-            <span class="detail-value">{{ companyInfo.contactName }}</span>
+  <div class="worker-profile">
+    <!-- 顶部个人信息 -->
+    <div class="home-header">
+      <div class="header-content">
+        <div class="user-info">
+          <div class="avatar">
+            <img v-if="userInfo?.avatar" :src="userInfo.avatar" alt="头像">
+            <div v-else class="default-avatar">
+              {{ userInfo?.name ? userInfo.name.charAt(0) : '用' }}
+            </div>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">联系电话：</span>
-            <span class="detail-value">{{ companyInfo.contactPhone }}</span>
+          <div class="user-details">
+            <div class="name-section">
+              <h3>{{ userInfo?.name || '未登录' }}</h3>
+            </div>
+            <p class="factory-info">
+              {{ userInfo?.companyName || '劳务公司' }}
+            </p>
+            <p class="position-info">{{ userInfo?.position || '招聘经理' }}</p>
           </div>
-          <div class="detail-item">
-            <span class="detail-label">地址：</span>
-            <span class="detail-value">{{ companyInfo.address }}</span>
-          </div>
-          <div class="detail-item">
-            <span class="detail-label">注册时间：</span>
-            <span class="detail-value">{{ companyInfo.registerDate }}</span>
+        </div>
+        <div class="header-actions">
+          <div class="scan-button" @click="goToScanner">
+            <el-icon class="scan-icon"><ZoomIn /></el-icon>
+            <span>扫一扫</span>
           </div>
         </div>
       </div>
-    </el-card>
+    </div>
+    
+    <!-- 个人信息入口 -->
+    <div class="function-menu">
+      <div class="menu-section">
+        <div class="menu-item" @click="goToFunction(menuItems[0])">
+          <div class="menu-icon">
+            <el-icon :size="18">
+              <component :is="menuItems[0].icon" />
+            </el-icon>
+          </div>
+          <span class="menu-title">{{ menuItems[0].title }}</span>
+          <i class="el-icon-arrow-right"></i>
+        </div>
+      </div>
+    </div>
     
     <!-- 功能菜单 -->
     <div class="function-menu">
-      <el-card class="menu-card">
-        <h3 class="menu-title">系统设置</h3>
-        <div class="menu-items">
-          <div class="menu-item" @click="handleEditProfile">
-            <span class="menu-icon"><i class="el-icon-edit"></i></span>
-            <span class="menu-text">编辑资料</span>
-            <span class="menu-arrow"><i class="el-icon-right"></i></span>
+      <div class="menu-section">
+        <div v-for="menuItem in menuItems.slice(1)" :key="menuItem.id" class="menu-item" @click="goToFunction(menuItem)">
+          <div class="menu-icon">
+            <el-icon :size="18">
+              <component :is="menuItem.icon" />
+            </el-icon>
           </div>
-          <div class="menu-item" @click="handleChangePassword">
-            <span class="menu-icon"><i class="el-icon-lock"></i></span>
-            <span class="menu-text">修改密码</span>
-            <span class="menu-arrow"><i class="el-icon-right"></i></span>
-          </div>
-          <div class="menu-item" @click="handleNotificationSettings">
-            <span class="menu-icon"><i class="el-icon-bell"></i></span>
-            <span class="menu-text">通知设置</span>
-            <span class="menu-arrow"><i class="el-icon-right"></i></span>
-          </div>
-          <div class="menu-item" @click="handleAbout">
-            <span class="menu-icon"><i class="el-icon-info"></i></span>
-            <span class="menu-text">关于我们</span>
-            <span class="menu-arrow"><i class="el-icon-right"></i></span>
-          </div>
+          <span class="menu-title">{{ menuItem.title }}</span>
+          <i class="el-icon-arrow-right"></i>
         </div>
-      </el-card>
+      </div>
     </div>
     
     <!-- 退出登录按钮 -->
     <div class="logout-section">
-      <el-button type="danger" @click="handleLogout" style="width: 100%">退出登录</el-button>
+      <el-button type="danger" @click="handleLogout">退出登录</el-button>
     </div>
     
     <!-- 版本信息 -->
     <div class="version-info">
-      <span class="version-text">版本号：v1.0.0</span>
+      <p>蓝领智汇 v1.0.0</p>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
-import axios from 'axios'
-
-// 路由实例
-const router = useRouter()
-
-// 公司信息
-const companyInfo = ref({
-  companyName: '劳务公司',
-  contactName: '联系人',
-  contactPhone: '13800138000',
-  address: '北京市朝阳区',
-  registerDate: '2024-01-01'
-})
-
-// 编辑资料
-const handleEditProfile = () => {
-  console.log('编辑资料')
-  // 这里可以跳转到编辑资料页面
-}
-
-// 修改密码
-const handleChangePassword = () => {
-  console.log('修改密码')
-  // 这里可以跳转到修改密码页面
-}
-
-// 通知设置
-const handleNotificationSettings = () => {
-  console.log('通知设置')
-  // 这里可以跳转到通知设置页面
-}
-
-// 关于我们
-const handleAbout = () => {
-  console.log('关于我们')
-  // 这里可以跳转到关于我们页面
-}
-
-// 退出登录
-const handleLogout = () => {
-  // 清除本地存储的用户信息
-  localStorage.removeItem('userInfo')
-  // 跳转到登录页面
-  router.push('/login')
-}
-
-// 初始化数据
-onMounted(async () => {
-  try {
-    // 获取公司信息
-    const response = await axios.get('/api/labor-company/info')
-    companyInfo.value = response.data
-  } catch (error) {
-    console.error('获取公司信息失败:', error)
-  }
-})
-</script>
-
 <style scoped>
-.labor-company-mobile-profile {
+.worker-profile {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.home-header {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  color: #fff;
   padding: 16px;
+  border-radius: 0 0 24px 24px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  position: relative;
+  overflow: hidden;
+  height: auto;
+  min-height: 140px;
 }
 
-.page-title {
-  font-size: 20px;
-  font-weight: bold;
-  margin-bottom: 20px;
-  color: #303133;
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  width: 100%;
 }
 
-/* 公司信息卡片 */
-.company-card {
-  margin-bottom: 20px;
+.home-header::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+  animation: float 6s ease-in-out infinite;
 }
 
-.company-info {
+@keyframes float {
+  0% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate(-20px, -20px) rotate(5deg);
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+  }
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.scan-button {
   display: flex;
   flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  min-width: 60px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-.company-name {
+.scan-button:hover {
+  background: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+.scan-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+  color: #fff;
+}
+
+.scan-button span {
+  font-size: 11px;
+  font-weight: 500;
+  color: #fff;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+  gap: 16px;
+  flex: 1;
+}
+
+.avatar {
+  width: 70px;
+  height: 90px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  transition: transform 0.3s ease;
+  flex-shrink: 0;
+}
+
+.avatar:hover {
+  transform: scale(1.03);
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.default-avatar {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  font-weight: bold;
+  color: #4f46e5;
+  background-color: white;
+}
+
+.user-details {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.name-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.name-section h3 {
+  margin: 0;
   font-size: 18px;
   font-weight: bold;
-  margin-bottom: 16px;
-  color: #303133;
+  letter-spacing: 0.5px;
 }
 
-.company-details {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.detail-item {
+.factory-info {
+  margin: 0;
   font-size: 14px;
-}
-
-.detail-label {
-  color: #606266;
-  margin-right: 8px;
-}
-
-.detail-value {
-  color: #303133;
-}
-
-/* 功能菜单 */
-.function-menu {
-  margin-bottom: 20px;
-}
-
-.menu-card {
-  margin-bottom: 16px;
-}
-
-.menu-title {
-  font-size: 16px;
   font-weight: bold;
-  margin-bottom: 16px;
-  color: #303133;
+  opacity: 1;
+  line-height: 1.3;
 }
 
-.menu-items {
+.position-info {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.9;
+  line-height: 1.3;
+}
+
+.function-menu {
+  background-color: #fff;
+  margin: 0 15px 15px;
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+.menu-section {
   display: flex;
   flex-direction: column;
 }
@@ -201,8 +369,8 @@ onMounted(async () => {
 .menu-item {
   display: flex;
   align-items: center;
-  padding: 16px 0;
-  border-bottom: 1px solid #ebeef5;
+  padding: 15px;
+  border-bottom: 1px solid #f0f0f0;
   cursor: pointer;
 }
 
@@ -211,47 +379,190 @@ onMounted(async () => {
 }
 
 .menu-icon {
-  margin-right: 16px;
-  color: #409eff;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  color: #667eea;
   font-size: 18px;
 }
 
-.menu-text {
+.menu-title {
   flex: 1;
-  color: #303133;
+  font-size: 14px;
+  color: #333;
+}
+
+.menu-item i.el-icon-arrow-right {
+  color: #999;
   font-size: 14px;
 }
 
-.menu-arrow {
-  color: #909399;
-  font-size: 14px;
-}
-
-/* 退出登录按钮 */
 .logout-section {
-  margin-bottom: 20px;
+  padding: 0 15px 15px;
 }
 
-/* 版本信息 */
+.logout-section .el-button {
+  width: 100%;
+  height: 48px;
+  font-size: 16px;
+}
+
 .version-info {
-  display: flex;
-  justify-content: center;
-  margin-top: 20px;
-}
-
-.version-text {
+  text-align: center;
+  padding: 20px 0;
   font-size: 12px;
-  color: #909399;
+  color: #999;
 }
 
-/* 响应式设计 */
-@media screen and (max-width: 768px) {
-  .labor-company-mobile-profile {
-    padding: 16px;
+@media (max-width: 1024px) {
+  .home-header {
+    padding: 20px;
   }
   
-  .page-title {
+  .user-info {
+    gap: 16px;
+  }
+  
+  .avatar {
+    width: 70px;
+    height: 90px;
+  }
+  
+  .default-avatar {
+    font-size: 28px;
+  }
+  
+  .name-section h3 {
     font-size: 18px;
+  }
+  
+  .factory-info {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 768px) {
+  .home-header {
+    padding: 15px;
+    min-height: 160px;
+  }
+  
+  .user-info {
+    gap: 12px;
+  }
+  
+  .avatar {
+    width: 60px;
+    height: 80px;
+  }
+  
+  .default-avatar {
+    font-size: 24px;
+  }
+  
+  .name-section {
+    margin-bottom: 6px;
+    gap: 8px;
+  }
+  
+  .name-section h3 {
+    font-size: 16px;
+  }
+  
+  .factory-info {
+    font-size: 13px;
+  }
+  
+  .position-info {
+    font-size: 12px;
+  }
+  
+  .header-actions {
+    margin-left: 12px;
+    gap: 8px;
+  }
+  
+  .scan-button {
+    min-width: 60px;
+    padding: 8px;
+  }
+  
+  .scan-icon {
+    font-size: 20px;
+  }
+  
+  .scan-button span {
+    font-size: 10px;
+  }
+  
+  .function-menu {
+    margin: 0 10px 10px;
+  }
+  
+  .menu-item {
+    padding: 12px 15px;
+  }
+  
+  .logout-section {
+    padding: 0 10px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .home-header {
+    padding: 20px;
+    min-height: 180px;
+  }
+  
+  .user-info {
+    gap: 16px;
+  }
+  
+  .avatar {
+    width: 70px;
+    height: 90px;
+  }
+  
+  .default-avatar {
+    font-size: 28px;
+  }
+  
+  .name-section h3 {
+    font-size: 18px;
+  }
+  
+  .factory-info {
+    font-size: 16px;
+  }
+  
+  .position-info {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 320px) {
+  .home-header {
+    padding: 10px;
+  }
+  
+  .user-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .avatar {
+    width: 80px;
+    height: 100px;
+  }
+  
+  .header-actions {
+    margin-left: 0;
+    margin-top: 12px;
+    align-self: flex-end;
   }
 }
 </style>

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { Contract, ContractQueryParams, ContractFormData, AvailableWorker } from '@/types/contract'
+import { exportExcelWithWatermark, getWatermarkText } from '@/utils/exportUtil'
 import {
   getContractList,
   getContractDetail,
@@ -109,15 +110,31 @@ export const useContractStore = defineStore('contract', () => {
 
   async function exportContract(filters?: any, fields?: string[]) {
     try {
-      const response = await exportContracts(filters, fields)
-      const blob = new Blob([response], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
-      const url = window.URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `合同列表_${new Date().toISOString().split('T')[0]}.xlsx`
-      a.click()
-      window.URL.revokeObjectURL(url)
-      ElMessage.success('导出成功')
+      // 从localStorage获取用户信息
+      const storedUserInfo = localStorage.getItem('userInfo')
+      const userInfo = storedUserInfo ? JSON.parse(storedUserInfo) : null
+      
+      // 定义表头
+      const headers = {
+        contractNo: '合同编号',
+        workerName: '工人姓名',
+        factoryName: '工厂名称',
+        startDate: '开始日期',
+        endDate: '结束日期',
+        status: '状态'
+      }
+      
+      // 获取水印文本
+      const watermark = getWatermarkText(userInfo)
+      
+      // 导出Excel文件
+      const success = exportExcelWithWatermark(contractList.value, headers, '合同列表', watermark)
+      
+      if (success) {
+        ElMessage.success('导出成功')
+      } else {
+        ElMessage.error('导出失败')
+      }
     } catch (error) {
       ElMessage.error('导出失败')
       throw error

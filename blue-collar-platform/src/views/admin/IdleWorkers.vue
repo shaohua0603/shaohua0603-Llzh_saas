@@ -16,7 +16,10 @@
                 <div class="worker-info">
                   <el-avatar :size="40" :src="scope.row.avatar" />
                   <div class="worker-details">
-                    <div class="worker-name">{{ scope.row.name }}</div>
+                    <div class="worker-name">
+                      {{ scope.row.name }}
+                      <el-tag v-if="scope.row.paymentType" :type="scope.row.paymentType === '日结' ? 'warning' : 'success'" size="small" style="margin-left: 8px;">{{ scope.row.paymentType }}</el-tag>
+                    </div>
                     <div class="worker-phone">{{ scope.row.phone }}</div>
                   </div>
                 </div>
@@ -45,7 +48,10 @@
                 <div class="worker-info">
                   <el-avatar :size="40" :src="scope.row.avatar" />
                   <div class="worker-details">
-                    <div class="worker-name">{{ scope.row.name }}</div>
+                    <div class="worker-name">
+                      {{ scope.row.name }}
+                      <el-tag v-if="scope.row.paymentType" :type="scope.row.paymentType === '日结' ? 'warning' : 'success'" size="small" style="margin-left: 8px;">{{ scope.row.paymentType }}</el-tag>
+                    </div>
                     <div class="worker-phone">{{ scope.row.phone }}</div>
                   </div>
                 </div>
@@ -116,7 +122,8 @@ const unassignedWorkers = ref([
     phone: '13800138001',
     avatar: 'https://via.placeholder.com/150',
     registerDate: '2026-01-10',
-    status: '活跃'
+    status: '活跃',
+    paymentType: '日结'
   },
   {
     id: 2,
@@ -124,7 +131,8 @@ const unassignedWorkers = ref([
     phone: '13800138002',
     avatar: 'https://via.placeholder.com/150',
     registerDate: '2026-01-11',
-    status: '活跃'
+    status: '活跃',
+    paymentType: '月结'
   },
   {
     id: 3,
@@ -132,7 +140,8 @@ const unassignedWorkers = ref([
     phone: '13800138003',
     avatar: 'https://via.placeholder.com/150',
     registerDate: '2026-01-12',
-    status: '未活跃'
+    status: '未活跃',
+    paymentType: '日结'
   }
 ])
 
@@ -145,7 +154,8 @@ const unemployedWorkers = ref([
     avatar: 'https://via.placeholder.com/150',
     laborCompany: '三鼎劳务有限公司',
     skillLevel: '初级',
-    registerDate: '2026-01-01'
+    registerDate: '2026-01-01',
+    paymentType: '月结'
   },
   {
     id: 5,
@@ -154,7 +164,8 @@ const unemployedWorkers = ref([
     avatar: 'https://via.placeholder.com/150',
     laborCompany: '三鼎劳务有限公司',
     skillLevel: '中级',
-    registerDate: '2026-01-02'
+    registerDate: '2026-01-02',
+    paymentType: '日结'
   },
   {
     id: 6,
@@ -163,7 +174,8 @@ const unemployedWorkers = ref([
     avatar: 'https://via.placeholder.com/150',
     laborCompany: '诚信劳务服务有限公司',
     skillLevel: '高级',
-    registerDate: '2026-01-03'
+    registerDate: '2026-01-03',
+    paymentType: '月结'
   },
   {
     id: 7,
@@ -172,7 +184,8 @@ const unemployedWorkers = ref([
     avatar: 'https://via.placeholder.com/150',
     laborCompany: '诚信劳务服务有限公司',
     skillLevel: '初级',
-    registerDate: '2026-01-04'
+    registerDate: '2026-01-04',
+    paymentType: '日结'
   }
 ])
 

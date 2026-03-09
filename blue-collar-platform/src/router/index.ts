@@ -57,12 +57,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../views/common/PrivacyPolicy.vue'),
     meta: { title: '隐私政策' }
   },
-  {
-    path: '/flow-designer-demo',
-    name: 'FlowDesignerDemo',
-    component: () => import('../views/common/FlowDesignerDemo.vue'),
-    meta: { title: '流程设计器演示' }
-  },
+
   
   // 工人移动端路由
   {
@@ -322,11 +317,25 @@ const routes: RouteRecordRaw[] = [
     component: () => import('../layouts/TenantLayout.vue'),
     meta: { title: '租户管理', requiresAuth: true, role: 'tenant' },
     children: [
-      {   
+      {        
         path: 'home',
         name: 'TenantHome',
         component: () => import('../views/labor-company/Home.vue'),
         meta: { title: '首页', hideInMenu: true }
+      },
+      // 大屏
+      {
+        path: 'dashboard',
+        name: 'TenantDashboard',
+        meta: { title: '大屏' },
+        children: [
+          {
+            path: 'annual-worker-overview',
+            name: 'TenantAnnualWorkerOverview',
+            component: () => import('../views/labor-company/dashboard/AnnualWorkerOverview.vue'),
+            meta: { title: '年度工人情况总览' }
+          }
+        ]
       },
       {
         path: 'todo',
@@ -520,12 +529,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/labor-company/WorkerTransfer.vue'),
         meta: { title: '岗位调动' }
       },
-      {
-        path: 'workers/create',
-        name: 'TenantWorkerCreate',
-        component: () => import('../views/labor-company/WorkerCreate.vue'),
-        meta: { title: '新增工人' }
-      },
+
       {
         path: 'workers/:id/edit',
         name: 'TenantWorkerEdit',
@@ -539,16 +543,52 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '考勤管理' }
       },
       {
+        path: 'attendance-add',
+        name: 'TenantAttendanceAdd',
+        component: () => import('../views/labor-company/attendance/AttendanceForm.vue'),
+        meta: { title: '新增考勤' }
+      },
+      {
+        path: 'attendance-edit/:id',
+        name: 'TenantAttendanceEdit',
+        component: () => import('../views/labor-company/attendance/AttendanceForm.vue'),
+        meta: { title: '编辑考勤' }
+      },
+      {
+        path: 'attendance-detail/:id',
+        name: 'TenantAttendanceDetail',
+        component: () => import('../views/labor-company/attendance/AttendanceDetail.vue'),
+        meta: { title: '考勤详情' }
+      },
+      {
         path: 'on-duty/living-expense',
         name: 'TenantLivingExpense',
         component: () => import('../views/labor-company/on-duty/LivingExpense.vue'),
         meta: { title: '生活费管理' }
       },
       {
+        path: 'on-duty/living-expense/detail/:id',
+        name: 'TenantLivingExpenseDetail',
+        component: () => import('../views/labor-company/on-duty/living-expense/LivingExpenseDetail.vue'),
+        meta: { title: '生活费申请详情' }
+      },
+      {        
         path: 'on-duty/salary',
         name: 'TenantOnDutySalary',
         component: () => import('../views/labor-company/on-duty/Salary.vue'),
         meta: { title: '工资管理' }
+      },
+      {        
+        path: 'on-duty/salary/detail/:id',
+        name: 'TenantSalaryDetail',
+        component: () => import('../views/labor-company/on-duty/salary/SalaryDetail.vue'),
+        meta: { title: '工资发放详情' }
+      },
+      {        
+        path: 'on-duty/salary/form',
+        name: 'TenantSalaryForm',
+        component: () => import('../views/labor-company/on-duty/salary/SalaryForm.vue'),
+        meta: { title: '工资发放管理' }
       },
       {
         path: 'on-duty/claim',
@@ -557,10 +597,46 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '理赔管理' }
       },
       {
+        path: 'on-duty/claim/detail/:id',
+        name: 'TenantClaimDetail',
+        component: () => import('../views/labor-company/on-duty/claim/ClaimDetail.vue'),
+        meta: { title: '理赔详情' }
+      },
+      {
+        path: 'on-duty/claim/form',
+        name: 'TenantClaimForm',
+        component: () => import('../views/labor-company/on-duty/claim/ClaimForm.vue'),
+        meta: { title: '新增理赔' }
+      },
+      {
+        path: 'on-duty/claim/form/:id',
+        name: 'TenantClaimEdit',
+        component: () => import('../views/labor-company/on-duty/claim/ClaimForm.vue'),
+        meta: { title: '编辑理赔' }
+      },
+      {
         path: 'on-duty/special-case',
         name: 'TenantSpecialCase',
         component: () => import('../views/labor-company/on-duty/SpecialCase.vue'),
         meta: { title: '特殊情况管理' }
+      },
+      {
+        path: 'on-duty/special-case/detail/:id',
+        name: 'TenantSpecialCaseDetail',
+        component: () => import('../views/labor-company/on-duty/special-case/SpecialCaseDetail.vue'),
+        meta: { title: '特殊情况详情' }
+      },
+      {
+        path: 'on-duty/special-case/form',
+        name: 'TenantSpecialCaseForm',
+        component: () => import('../views/labor-company/on-duty/special-case/SpecialCaseForm.vue'),
+        meta: { title: '新增特殊情况' }
+      },
+      {
+        path: 'on-duty/special-case/form/:id',
+        name: 'TenantSpecialCaseEdit',
+        component: () => import('../views/labor-company/on-duty/special-case/SpecialCaseForm.vue'),
+        meta: { title: '编辑特殊情况' }
       },
       {
         path: 'on-duty/insurance',
@@ -569,22 +645,76 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '保险管理' }
       },
       {
+        path: 'on-duty/insurance/detail/:id',
+        name: 'TenantInsuranceDetail',
+        component: () => import('../views/labor-company/on-duty/insurance/InsuranceDetail.vue'),
+        meta: { title: '保险详情' }
+      },
+      {
+        path: 'on-duty/insurance/form',
+        name: 'TenantInsuranceForm',
+        component: () => import('../views/labor-company/on-duty/insurance/InsuranceForm.vue'),
+        meta: { title: '新增保险' }
+      },
+      {
+        path: 'on-duty/insurance/form/:id',
+        name: 'TenantInsuranceEdit',
+        component: () => import('../views/labor-company/on-duty/insurance/InsuranceForm.vue'),
+        meta: { title: '编辑保险' }
+      },
+      {
         path: 'on-duty/insurance-record',
         name: 'TenantInsuranceRecord',
         component: () => import('../views/labor-company/on-duty/InsuranceRecord.vue'),
         meta: { title: '参保登记' }
       },
       {
+        path: 'on-duty/insurance-record/add',
+        name: 'TenantInsuranceRecordAdd',
+        component: () => import('../views/labor-company/on-duty/insurance-record/InsuranceRecordForm.vue'),
+        meta: { title: '新增参保登记' }
+      },
+      {
+        path: 'on-duty/insurance-record/edit/:id',
+        name: 'TenantInsuranceRecordEdit',
+        component: () => import('../views/labor-company/on-duty/insurance-record/InsuranceRecordForm.vue'),
+        meta: { title: '编辑参保登记' }
+      },
+      {
+        path: 'on-duty/insurance-record/detail/:id',
+        name: 'TenantInsuranceRecordDetail',
+        component: () => import('../views/labor-company/on-duty/insurance-record/InsuranceRecordDetail.vue'),
+        meta: { title: '参保登记详情' }
+      },
+      {        
         path: 'on-duty/leave',
         name: 'TenantLeave',
         component: () => import('../views/labor-company/on-duty/Leave.vue'),
         meta: { title: '请假管理' }
       },
-      {
-        path: 'on-duty/leave-detail',
+      {        
+        path: 'on-duty/leave-add',
+        name: 'TenantLeaveAdd',
+        component: () => import('../views/labor-company/on-duty/leave/LeaveForm.vue'),
+        meta: { title: '新增请假' }
+      },
+      {        
+        path: 'on-duty/leave-edit/:id',
+        name: 'TenantLeaveEdit',
+        component: () => import('../views/labor-company/on-duty/leave/LeaveForm.vue'),
+        meta: { title: '编辑请假' }
+      },
+      {        
+        path: 'on-duty/leave-detail/:id',
         name: 'TenantLeaveDetail',
-        component: () => import('../views/labor-company/on-duty/LeaveDetail.vue'),
+        component: () => import('../views/labor-company/on-duty/leave/LeaveDetail.vue'),
         meta: { title: '请假详情' }
+      },
+      {        
+        path: 'on-duty/leave-approve/:id',
+        name: 'TenantLeaveApprove',
+        component: () => import('../views/labor-company/on-duty/leave/LeaveApprove.vue'),
+        meta: { title: '请假审核' }
       },
       {
         path: 'on-duty/transfer',
@@ -593,16 +723,58 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '调岗管理' }
       },
       {
-        path: 'on-duty/transfer/detail/:id',
+        path: 'on-duty/transfer-add',
+        name: 'TenantTransferAdd',
+        component: () => import('../views/labor-company/on-duty/transfer/TransferForm.vue'),
+        meta: { title: '新增调岗' }
+      },
+      {
+        path: 'on-duty/transfer-edit/:id',
+        name: 'TenantTransferEdit',
+        component: () => import('../views/labor-company/on-duty/transfer/TransferForm.vue'),
+        meta: { title: '编辑调岗' }
+      },
+      {
+        path: 'on-duty/transfer-detail/:id',
         name: 'TenantTransferDetail',
-        component: () => import('../views/labor-company/on-duty/TransferDetail.vue'),
+        component: () => import('../views/labor-company/on-duty/transfer/TransferDetail.vue'),
         meta: { title: '调岗详情' }
+      },
+      {
+        path: 'on-duty/transfer-approve/:id',
+        name: 'TenantTransferApprove',
+        component: () => import('../views/labor-company/on-duty/transfer/TransferApprove.vue'),
+        meta: { title: '调岗审核' }
       },
       {
         path: 'on-duty/reward-punishment',
         name: 'TenantRewardPunishment',
         component: () => import('../views/labor-company/on-duty/RewardPunishment.vue'),
         meta: { title: '奖惩管理' }
+      },
+      {
+        path: 'on-duty/reward-punishment-add',
+        name: 'TenantRewardPunishmentAdd',
+        component: () => import('../views/labor-company/on-duty/reward-punishment/RewardPunishmentForm.vue'),
+        meta: { title: '新增奖惩' }
+      },
+      {
+        path: 'on-duty/reward-punishment-edit/:id',
+        name: 'TenantRewardPunishmentEdit',
+        component: () => import('../views/labor-company/on-duty/reward-punishment/RewardPunishmentForm.vue'),
+        meta: { title: '编辑奖惩' }
+      },
+      {
+        path: 'on-duty/reward-punishment-detail/:id',
+        name: 'TenantRewardPunishmentDetail',
+        component: () => import('../views/labor-company/on-duty/reward-punishment/RewardPunishmentDetail.vue'),
+        meta: { title: '奖惩详情' }
+      },
+      {
+        path: 'on-duty/reward-punishment-approve/:id',
+        name: 'TenantRewardPunishmentApprove',
+        component: () => import('../views/labor-company/on-duty/reward-punishment/RewardPunishmentApprove.vue'),
+        meta: { title: '奖惩审核' }
       },
       {
         path: 'on-duty/learning-material',
@@ -616,11 +788,75 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/labor-company/on-duty/QuestionBank.vue'),
         meta: { title: '题库管理' }
       },
-      {
+      {        
         path: 'on-duty/learning-time',
         name: 'TenantLearningTime',
         component: () => import('../views/labor-company/on-duty/LearningTime.vue'),
         meta: { title: '学习时长管理' }
+      },
+      // 学习材料相关路由
+      {        
+        path: 'on-duty/learning-material/form',
+        name: 'TenantLearningMaterialForm',
+        component: () => import('../views/labor-company/on-duty/learning-material/LearningMaterialForm.vue'),
+        meta: { title: '新增学习材料' }
+      },
+      {        
+        path: 'on-duty/learning-material/form/:id',
+        name: 'TenantLearningMaterialEdit',
+        component: () => import('../views/labor-company/on-duty/learning-material/LearningMaterialForm.vue'),
+        meta: { title: '编辑学习材料' }
+      },
+      {        
+        path: 'on-duty/learning-material/detail/:id',
+        name: 'TenantLearningMaterialDetail',
+        component: () => import('../views/labor-company/on-duty/learning-material/LearningMaterialDetail.vue'),
+        meta: { title: '学习材料详情' }
+      },
+      // 题库管理相关路由
+      {        
+        path: 'on-duty/question-bank/form',
+        name: 'TenantQuestionBankForm',
+        component: () => import('../views/labor-company/on-duty/question-bank/QuestionBankForm.vue'),
+        meta: { title: '新增题库' }
+      },
+      {        
+        path: 'on-duty/question-bank/form/:id',
+        name: 'TenantQuestionBankEdit',
+        component: () => import('../views/labor-company/on-duty/question-bank/QuestionBankForm.vue'),
+        meta: { title: '编辑题库' }
+      },
+      {        
+        path: 'on-duty/question-bank/detail/:id',
+        name: 'TenantQuestionBankDetail',
+        component: () => import('../views/labor-company/on-duty/question-bank/QuestionBankDetail.vue'),
+        meta: { title: '题库详情' }
+      },
+      // 考试管理相关路由
+      {        
+        path: 'on-duty/exam/form',
+        name: 'TenantExamForm',
+        component: () => import('../views/labor-company/on-duty/exam/ExamForm.vue'),
+        meta: { title: '新增考试' }
+      },
+      {        
+        path: 'on-duty/exam/form/:id',
+        name: 'TenantExamEdit',
+        component: () => import('../views/labor-company/on-duty/exam/ExamForm.vue'),
+        meta: { title: '编辑考试' }
+      },
+      {        
+        path: 'on-duty/exam/detail/:id',
+        name: 'TenantExamDetail',
+        component: () => import('../views/labor-company/on-duty/exam/ExamDetail.vue'),
+        meta: { title: '考试详情' }
+      },
+      // 考试成绩相关路由
+      {        
+        path: 'on-duty/exam-result/detail/:id',
+        name: 'TenantExamResultDetail',
+        component: () => import('../views/labor-company/on-duty/exam-result/ExamResultDetail.vue'),
+        meta: { title: '考试成绩详情' }
       },
       {
         path: 'on-duty/exam',
@@ -646,11 +882,29 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/labor-company/on-duty/Complaint.vue'),
         meta: { title: '投诉/建议' }
       },
-      {
+      { 
         path: 'on-duty/communication',
         name: 'TenantCommunication',
         component: () => import('../views/labor-company/on-duty/Communication.vue'),
         meta: { title: '沟通管理' }
+      },
+      { 
+        path: 'on-duty/communication/detail/:id',
+        name: 'TenantCommunicationDetail',
+        component: () => import('../views/labor-company/on-duty/communication/CommunicationDetail.vue'),
+        meta: { title: '沟通记录详情' }
+      },
+      { 
+        path: 'on-duty/communication/form',
+        name: 'TenantCommunicationForm',
+        component: () => import('../views/labor-company/on-duty/communication/CommunicationForm.vue'),
+        meta: { title: '新增沟通记录' }
+      },
+      { 
+        path: 'on-duty/communication/form/:id',
+        name: 'TenantCommunicationEdit',
+        component: () => import('../views/labor-company/on-duty/communication/CommunicationForm.vue'),
+        meta: { title: '编辑沟通记录' }
       },
       {
         path: 'on-duty/entertainment',
@@ -659,10 +913,34 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '文娱活动' }
       },
       {
+        path: 'on-duty/entertainment/add',
+        name: 'TenantEntertainmentAdd',
+        component: () => import('../views/labor-company/on-duty/entertainment/EntertainmentForm.vue'),
+        meta: { title: '新增文娱活动' }
+      },
+      {
+        path: 'on-duty/entertainment/edit/:id',
+        name: 'TenantEntertainmentEdit',
+        component: () => import('../views/labor-company/on-duty/entertainment/EntertainmentForm.vue'),
+        meta: { title: '编辑文娱活动' }
+      },
+      {
+        path: 'on-duty/entertainment/detail/:id',
+        name: 'TenantEntertainmentDetail',
+        component: () => import('../views/labor-company/on-duty/entertainment/EntertainmentDetail.vue'),
+        meta: { title: '文娱活动详情' }
+      },
+      {        
         path: 'on-duty/registration',
         name: 'TenantRegistration',
         component: () => import('../views/labor-company/on-duty/Registration.vue'),
         meta: { title: '报名管理' }
+      },
+      {        
+        path: 'on-duty/registration/detail/:id',
+        name: 'TenantRegistrationDetail',
+        component: () => import('../views/labor-company/on-duty/registration/RegistrationDetail.vue'),
+        meta: { title: '报名详情' }
       },
       {
         path: 'on-duty/news',
@@ -671,10 +949,46 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '发布资讯' }
       },
       {
+        path: 'on-duty/news/detail/:id',
+        name: 'TenantNewsDetail',
+        component: () => import('../views/labor-company/on-duty/news/NewsDetail.vue'),
+        meta: { title: '资讯详情' }
+      },
+      {
+        path: 'on-duty/news/edit/:id',
+        name: 'TenantNewsEdit',
+        component: () => import('../views/labor-company/on-duty/news/NewsEdit.vue'),
+        meta: { title: '编辑资讯' }
+      },
+      {
+        path: 'on-duty/news/add',
+        name: 'TenantNewsAdd',
+        component: () => import('../views/labor-company/on-duty/news/NewsEdit.vue'),
+        meta: { title: '新增资讯' }
+      },
+      {
         path: 'on-duty/community',
         name: 'TenantCommunity',
         component: () => import('../views/labor-company/on-duty/Community.vue'),
         meta: { title: '社团管理' }
+      },
+      {
+        path: 'on-duty/community/detail/:id',
+        name: 'TenantCommunityDetail',
+        component: () => import('../views/labor-company/on-duty/community/CommunityDetail.vue'),
+        meta: { title: '社团详情' }
+      },
+      {
+        path: 'on-duty/community/edit/:id',
+        name: 'TenantCommunityEdit',
+        component: () => import('../views/labor-company/on-duty/community/CommunityEdit.vue'),
+        meta: { title: '编辑社团' }
+      },
+      {
+        path: 'on-duty/community/add',
+        name: 'TenantCommunityAdd',
+        component: () => import('../views/labor-company/on-duty/community/CommunityEdit.vue'),
+        meta: { title: '新增社团' }
       },
       {
         path: 'resignation',
@@ -809,10 +1123,28 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '企业文化介绍' }
       },
       {
+        path: 'test-page',
+        name: 'TenantTestPage',
+        component: () => import('../views/labor-company/TestPage.vue'),
+        meta: { title: '测试页面' }
+      },
+      {
         path: 'position-culture',
         name: 'TenantPositionCulture',
         component: () => import('../views/labor-company/PositionCulture.vue'),
         meta: { title: '岗位文化介绍' }
+      },
+      {
+        path: 'position-culture/add',
+        name: 'TenantPositionCultureAdd',
+        component: () => import('../views/labor-company/position-culture/PositionCultureForm.vue'),
+        meta: { title: '新增岗位文化' }
+      },
+      {
+        path: 'position-culture/edit/:id',
+        name: 'TenantPositionCultureEdit',
+        component: () => import('../views/labor-company/position-culture/PositionCultureForm.vue'),
+        meta: { title: '编辑岗位文化' }
       },
       {
         path: 'employees',
@@ -851,6 +1183,24 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '规则配置' }
       },
       {
+        path: 'rules/form',
+        name: 'TenantRulesForm',
+        component: () => import('../views/labor-company/rules/RuleForm.vue'),
+        meta: { title: '新增规则' }
+      },
+      {
+        path: 'rules/form/:id',
+        name: 'TenantRulesEdit',
+        component: () => import('../views/labor-company/rules/RuleForm.vue'),
+        meta: { title: '编辑规则' }
+      },
+      {
+        path: 'rules/:id',
+        name: 'TenantRulesDetail',
+        component: () => import('../views/labor-company/rules/RuleDetail.vue'),
+        meta: { title: '规则详情' }
+      },
+      {
         path: 'menu-config',
         name: 'TenantMenuConfig',
         component: () => import('../views/labor-company/MenuConfig.vue'),
@@ -863,22 +1213,66 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '字典管理' }
       },
       {
+        path: 'dictionary/add',
+        name: 'TenantDictionaryAdd',
+        component: () => import('../views/labor-company/dictionary/DictionaryForm.vue'),
+        meta: { title: '新增字典' }
+      },
+      {
+        path: 'dictionary/edit/:id',
+        name: 'TenantDictionaryEdit',
+        component: () => import('../views/labor-company/dictionary/DictionaryForm.vue'),
+        meta: { title: '编辑字典' }
+      },
+      {
+        path: 'dictionary/view/:id',
+        name: 'TenantDictionaryView',
+        component: () => import('../views/labor-company/dictionary/DictionaryForm.vue'),
+        meta: { title: '查看字典' }
+      },
+      {
         path: 'system-parameter',
         name: 'TenantSystemParameter',
         component: () => import('../views/labor-company/SystemParameter.vue'),
         meta: { title: '系统参数' }
       },
+
       {
-        path: 'process',
-        name: 'TenantProcess',
-        component: () => import('../views/labor-company/Process.vue'),
-        meta: { title: '流程管理' }
+        path: 'workflow-config',
+        name: 'TenantWorkflowConfig',
+        component: () => import('../views/admin/system/WorkflowConfig.vue'),
+        meta: { title: '工作流配置' }
       },
+      {
+        path: 'workflow-config/add',
+        name: 'TenantWorkflowConfigAdd',
+        component: () => import('../views/admin/system/WorkflowForm.vue'),
+        meta: { title: '新增工作流' }
+      },
+      {
+        path: 'workflow-config/edit/:id',
+        name: 'TenantWorkflowConfigEdit',
+        component: () => import('../views/admin/system/WorkflowForm.vue'),
+        meta: { title: '编辑工作流' }
+      },
+
       {
         path: 'process-config',
         name: 'TenantProcessConfig',
         component: () => import('../views/labor-company/ProcessConfig.vue'),
         meta: { title: '流程配置' }
+      },
+      {
+        path: 'process-config/add',
+        name: 'TenantProcessConfigAdd',
+        component: () => import('../views/labor-company/process/ProcessConfigForm.vue'),
+        meta: { title: '新增流程配置' }
+      },
+      {
+        path: 'process-config/edit/:id',
+        name: 'TenantProcessConfigEdit',
+        component: () => import('../views/labor-company/process/ProcessConfigForm.vue'),
+        meta: { title: '编辑流程配置' }
       },
       {
         path: 'attachment',
@@ -887,10 +1281,40 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '附件管理' }
       },
       {
+        path: 'attachment-config-create',
+        name: 'TenantAttachmentConfigCreate',
+        component: () => import('../views/admin/system/AttachmentConfigCreate.vue'),
+        meta: { title: '新增附件配置' }
+      },
+      {
+        path: 'attachment-config-edit',
+        name: 'TenantAttachmentConfigEdit',
+        component: () => import('../views/admin/system/AttachmentConfigEdit.vue'),
+        meta: { title: '编辑附件配置' }
+      },
+      {
+        path: 'attachment-config-view',
+        name: 'TenantAttachmentConfigView',
+        component: () => import('../views/admin/system/AttachmentConfigView.vue'),
+        meta: { title: '附件配置详情' }
+      },
+      {
         path: 'template-config',
         name: 'TenantTemplateConfig',
         component: () => import('../views/labor-company/TemplateConfig.vue'),
         meta: { title: '模版配置' }
+      },
+      {
+        path: 'template-config/add',
+        name: 'TenantTemplateConfigAdd',
+        component: () => import('../views/labor-company/template/TemplateForm.vue'),
+        meta: { title: '新增模板' }
+      },
+      {
+        path: 'template-config/edit/:id',
+        name: 'TenantTemplateConfigEdit',
+        component: () => import('../views/labor-company/template/TemplateForm.vue'),
+        meta: { title: '编辑模板' }
       },
       {
         path: 'print-config',
@@ -898,6 +1322,13 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/labor-company/PrintConfig.vue'),
         meta: { title: '打印配置' }
       },
+      {
+        path: 'variable-pool',
+        name: 'TenantVariablePool',
+        component: () => import('../views/labor-company/variable-pool/VariablePool.vue'),
+        meta: { title: '变量池管理' }
+      },
+
       {
         path: 'quick-access-settings',
         name: 'TenantQuickAccessSettings',
@@ -922,6 +1353,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/labor-company/WarningDetail.vue'),
         meta: { title: '预警详情' }
       },
+
       {
         path: 'table-example',
         name: 'TenantTableExample',
@@ -957,22 +1389,124 @@ const routes: RouteRecordRaw[] = [
         meta: { title: '工人管理' }
       },
       {
-        path: 'attendance',
-        name: 'TenantMobileAttendance',
-        component: () => import('../views/labor-company/mobile/Attendance.vue'),
-        meta: { title: '考勤管理' }
+        path: 'workbench',
+        name: 'TenantMobileWorkbench',
+        component: () => import('../views/labor-company/mobile/Workbench.vue'),
+        meta: { title: '工作台' }
+      },
+      {
+        path: 'news',
+        name: 'TenantMobileNews',
+        component: () => import('../views/labor-company/mobile/News.vue'),
+        meta: { title: '资讯' }
+      },
+      {
+        path: 'messages',
+        name: 'TenantMobileMessages',
+        component: () => import('../views/labor-company/mobile/Messages.vue'),
+        meta: { title: '消息' }
       },
       {
         path: 'profile',
         name: 'TenantMobileProfile',
         component: () => import('../views/labor-company/mobile/Profile.vue'),
         meta: { title: '我的' }
+      },
+      // 工作中心
+      {
+        path: 'todo',
+        name: 'TenantMobileTodo',
+        component: () => import('../views/labor-company/mobile/Todo.vue'),
+        meta: { title: '待办任务' }
+      },
+      {
+        path: 'warnings',
+        name: 'TenantMobileWarnings',
+        component: () => import('../views/labor-company/mobile/Warnings.vue'),
+        meta: { title: '预警信息' }
+      },
+      // 招聘管理
+      {
+        path: 'recruitment',
+        name: 'TenantMobileRecruitment',
+        component: () => import('../views/labor-company/mobile/Recruitment.vue'),
+        meta: { title: '招聘需求' }
+      },
+      {
+        path: 'resume',
+        name: 'TenantMobileResume',
+        component: () => import('../views/labor-company/mobile/Resume.vue'),
+        meta: { title: '简历管理' }
+      },
+      // 面试管理
+      {
+        path: 'interview/pickup',
+        name: 'TenantMobilePickup',
+        component: () => import('../views/labor-company/mobile/interview/Pickup.vue'),
+        meta: { title: '接送管理' }
+      },
+      {
+        path: 'interview/initial-interview',
+        name: 'TenantMobileInitialInterview',
+        component: () => import('../views/labor-company/mobile/interview/InitialInterview.vue'),
+        meta: { title: '初步面试' }
+      },
+      {
+        path: 'interview/invitation',
+        name: 'TenantMobileInterviewInvitation',
+        component: () => import('../views/labor-company/mobile/interview/InterviewInvitation.vue'),
+        meta: { title: '面试邀约' }
+      },
+      {
+        path: 'interview/factory-interview',
+        name: 'TenantMobileFactoryInterview',
+        component: () => import('../views/labor-company/mobile/interview/FactoryInterview.vue'),
+        meta: { title: '工厂面试' }
+      },
+      // 工人管理
+      {
+        path: 'workers-list',
+        name: 'TenantMobileWorkersList',
+        component: () => import('../views/labor-company/mobile/WorkersList.vue'),
+        meta: { title: '工人信息' }
+      },
+      // 合同管理
+      {
+        path: 'contract',
+        name: 'TenantMobileContract',
+        component: () => import('../views/labor-company/mobile/Contract.vue'),
+        meta: { title: '签订合同' }
+      },
+      // 在职管理
+      {
+        path: 'attendance',
+        name: 'TenantMobileAttendance',
+        component: () => import('../views/labor-company/mobile/Attendance.vue'),
+        meta: { title: '考勤管理' }
+      },
+      {
+        path: 'on-duty/leave',
+        name: 'TenantMobileLeave',
+        component: () => import('../views/labor-company/mobile/on-duty/Leave.vue'),
+        meta: { title: '请假管理' }
+      },
+      // 离职管理
+      {
+        path: 'resignation',
+        name: 'TenantMobileResignation',
+        component: () => import('../views/labor-company/mobile/Resignation.vue'),
+        meta: { title: '离职管理' }
+      },
+      // 结算管理
+      {
+        path: 'settlement',
+        name: 'TenantMobileSettlement',
+        component: () => import('../views/labor-company/mobile/Settlement.vue'),
+        meta: { title: '结算管理' }
       }
     ]
   },
-  
 
-  
   // 平台管理员路由
   {
     path: '/admin',
@@ -1297,72 +1831,32 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/admin/system/SystemParam.vue'),
         meta: { title: '系统参数' }
       },
-      {
-        path: 'system/process',
-        name: 'AdminProcess',
-        component: () => import('../views/admin/system/Process.vue'),
-        meta: { title: '流程管理' }
-      },
-      {
-        path: 'system/flow-management',
-        name: 'AdminFlowManagement',
-        component: () => import('../views/admin/system/FlowManagement.vue'),
-        meta: { title: '流程管理' }
-      },
-      {
-        path: 'system/flow-management/add',
-        name: 'AdminFlowManagementAdd',
-        component: () => import('../views/admin/system/FlowManagementForm.vue'),
-        meta: { title: '新增流程' }
-      },
-      {
-        path: 'system/flow-management/edit/:id',
-        name: 'AdminFlowManagementEdit',
-        component: () => import('../views/admin/system/FlowManagementForm.vue'),
-        meta: { title: '编辑流程' }
-      },
-      {
-        path: 'system/flow-management/view/:id',
-        name: 'AdminFlowManagementView',
-        component: () => import('../views/admin/system/FlowManagementDetail.vue'),
-        meta: { title: '流程详情' }
-      },
-      {
-        path: 'system/process-config',
-        name: 'AdminProcessConfig',
-        component: () => import('../views/admin/system/ProcessConfig.vue'),
-        meta: { title: '流程配置' }
-      },
-      {
-        path: 'system/flow-config',
-        name: 'AdminFlowConfig',
-        component: () => import('../views/admin/system/FlowConfigList.vue'),
-        meta: { title: '流程配置管理' }
-      },
+
+
 
 
       {
         path: 'system/attachment',
         name: 'AdminAttachment',
-        component: () => import('../views/admin/system/AttachmentConfigList.vue'),
+        component: () => import('../views/admin/system/Attachment.vue'),
         meta: { title: '附件配置管理' }
       },
       {
-        path: 'system/attachment/add',
-        name: 'AdminAttachmentAdd',
-        component: () => import('../views/admin/system/AttachmentConfigForm.vue'),
+        path: 'attachment-config-create',
+        name: 'AdminAttachmentConfigCreate',
+        component: () => import('../views/admin/system/AttachmentConfigCreate.vue'),
         meta: { title: '新增附件配置' }
       },
       {
-        path: 'system/attachment/edit/:id',
-        name: 'AdminAttachmentEdit',
-        component: () => import('../views/admin/system/AttachmentConfigForm.vue'),
+        path: 'attachment-config-edit',
+        name: 'AdminAttachmentConfigEdit',
+        component: () => import('../views/admin/system/AttachmentConfigEdit.vue'),
         meta: { title: '编辑附件配置' }
       },
       {
-        path: 'system/attachment/:id',
-        name: 'AdminAttachmentDetail',
-        component: () => import('../views/admin/system/AttachmentConfigDetail.vue'),
+        path: 'attachment-config-view',
+        name: 'AdminAttachmentConfigView',
+        component: () => import('../views/admin/system/AttachmentConfigView.vue'),
         meta: { title: '附件配置详情' }
       },
       {
@@ -1394,7 +1888,26 @@ const routes: RouteRecordRaw[] = [
         name: 'AdminPrintConfig',
         component: () => import('../views/admin/system/PrintConfig.vue'),
         meta: { title: '打印配置' }
+      },
+      {
+        path: 'system/workflow-config',
+        name: 'AdminWorkflowConfig',
+        component: () => import('../views/admin/system/WorkflowConfig.vue'),
+        meta: { title: '工作流配置' }
+      },
+      {
+        path: 'system/workflow-config/add',
+        name: 'AdminWorkflowConfigAdd',
+        component: () => import('../views/admin/system/WorkflowForm.vue'),
+        meta: { title: '新增工作流' }
+      },
+      {
+        path: 'system/workflow-config/edit/:id',
+        name: 'AdminWorkflowConfigEdit',
+        component: () => import('../views/admin/system/WorkflowForm.vue'),
+        meta: { title: '编辑工作流' }
       }
+
     ]
   },
   
@@ -1417,30 +1930,6 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
   // 设置页面标题
   document.title = to.meta.title as string || '蓝领智汇'
-  
-  // 检查是否是从登录页跳转
-  if (from.name === 'Login' && to.name === 'Login') {
-    // 从登录页来，检查用户信息
-    const userInfo = localStorage.getItem('userInfo')
-    if (userInfo) {
-      const user = JSON.parse(userInfo)
-      // 根据角色跳转到对应工作中心，默认选中工作中心菜单
-      switch (user.role) {
-        case 'tenant':
-          next({ name: 'TenantTodo' })
-          return
-        case 'platform_admin':
-          next({ name: 'AdminHome' })
-          return
-        case 'worker':
-          next({ name: 'WorkerHome' })
-          return
-        default:
-          next()
-          return
-      }
-    }
-  }
   
   // 检查是否需要认证
   if (to.meta.requiresAuth) {

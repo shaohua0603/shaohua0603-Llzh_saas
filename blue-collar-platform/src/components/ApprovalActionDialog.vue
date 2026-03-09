@@ -1,10 +1,11 @@
 <template>
   <el-dialog
-    v-model="visible"
+    :model-value="visible"
     :title="dialogTitle"
     width="600px"
     :close-on-click-modal="false"
     @close="handleClose"
+    @update:model-value="(value) => visible = value"
   >
     <el-form
       ref="formRef"
@@ -66,7 +67,7 @@ import {
   rejectApproval,
   transferApproval,
   delegateApproval
-} from '@/api/system/flowConfigApi'
+} from '@/api/approvalExecutionApi'
 import type { ApprovalActionRequest } from '@/types/flow-config'
 
 /**

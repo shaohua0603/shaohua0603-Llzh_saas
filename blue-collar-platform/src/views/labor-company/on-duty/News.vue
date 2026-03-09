@@ -140,6 +140,10 @@
           <el-icon><Delete /></el-icon>
           删除
         </el-button>
+        <el-button type="info" link @click="handleShare(row)">
+          <el-icon><Share /></el-icon>
+          分享
+        </el-button>
         <el-button
           v-if="row.status === 'unpublished'"
           type="warning"
@@ -161,91 +165,24 @@
       </template>
     </CommonTable>
 
-    <!-- 新增/编辑对话框 -->
-    <el-dialog
-      v-model="formDialogVisible"
-      :title="isEdit ? '编辑资讯' : '新增资讯'"
-      width="800px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
-        <el-form-item label="资讯标题" prop="title">
-          <el-input v-model="formData.title" placeholder="请输入资讯标题" />
-        </el-form-item>
-        <el-form-item label="资讯类型" prop="newsType">
-          <el-select v-model="formData.newsType" placeholder="请选择资讯类型">
-            <el-option label="技能提升" value="skill" />
-            <el-option label="学历提升" value="education" />
-            <el-option label="岗位介绍" value="job" />
-            <el-option label="其他资讯" value="other" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="资讯摘要" prop="summary">
-          <el-input
-            v-model="formData.summary"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入资讯摘要"
-          />
-        </el-form-item>
-        <el-form-item label="资讯内容" prop="content">
-          <RichTextEditor v-model="formData.content" :height="'350px'" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="formDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitForm" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 详情对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      title="资讯详情"
-      width="800px"
-    >
-      <div v-if="currentRow" class="detail-content">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="资讯标题" :span="2">
-            {{ currentRow.title }}
-          </el-descriptions-item>
-          <el-descriptions-item label="资讯类型">
-            <el-tag>{{ getTypeText(currentRow.newsType) }}</el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="发布状态">
-            <el-tag :type="currentRow.status === 'published' ? 'success' : 'info'">
-              {{ currentRow.status === 'published' ? '已发布' : '未发布' }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="资讯摘要" :span="2">
-            {{ currentRow.summary }}
-          </el-descriptions-item>
-          <el-descriptions-item label="发布时间">
-            {{ currentRow.publishTime ? formatDateTime(currentRow.publishTime) : '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="创建时间">
-            {{ formatDateTime(currentRow.createTime) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="资讯内容" :span="2">
-            <div v-html="currentRow.content" class="news-content"></div>
-          </el-descriptions-item>
-        </el-descriptions>
-      </div>
-      <template #footer>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
+    <!-- 分享组件 -->
+    <ShareComponent 
+      ref="shareComponentRef"
+      :title="shareTitle"
+      :id="shareId"
+      :type="'news'"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, View, Edit, Delete, Upload, Download, ArrowDown } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, View, Edit, Delete, Upload, Download, ArrowDown, Share } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import CommonTable from '@/components/CommonTable.vue'
-import RichTextEditor from '../../../components/RichTextEditor.vue'
+import ShareComponent from '@/components/ShareComponent.vue'
 import type { ColumnConfig } from '../../types/common-table'
-import type { FormInstance, FormRules } from 'element-plus'
 
 // 类型定义
 interface NewsRecord {
@@ -260,6 +197,7 @@ interface NewsRecord {
 }
 
 // 响应式数据
+const router = useRouter()
 const filterExpanded = ref(false)
 const filterForm = reactive({
   keyword: '',
@@ -272,31 +210,12 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const loading = ref(false)
-const currentRow = ref<NewsRecord | null>(null)
 const selectedRows = ref<NewsRecord[]>([])
+const shareComponentRef = ref<any>(null)
+const shareTitle = ref('')
+const shareId = ref('')
 
-// 对话框控制
-const formDialogVisible = ref(false)
-const detailDialogVisible = ref(false)
-const isEdit = ref(false)
-const submitLoading = ref(false)
-const formRef = ref<FormInstance>()
 
-// 表单数据
-const formData = reactive({
-  title: '',
-  newsType: '' as NewsRecord['newsType'] | '',
-  summary: '',
-  content: ''
-})
-
-// 表单验证规则
-const formRules: FormRules = {
-  title: [{ required: true, message: '请输入资讯标题', trigger: 'blur' }],
-  newsType: [{ required: true, message: '请选择资讯类型', trigger: 'change' }],
-  summary: [{ required: true, message: '请输入资讯摘要', trigger: 'blur' }],
-  content: [{ required: true, message: '请输入资讯内容', trigger: 'blur' }]
-}
 
 // 表格列配置
 const columns: ColumnConfig[] = [
@@ -486,67 +405,17 @@ const fetchData = () => {
 
 // 新增
 const handleAdd = () => {
-  isEdit.value = false
-  formData.title = ''
-  formData.newsType = ''
-  formData.summary = ''
-  formData.content = ''
-  formDialogVisible.value = true
+  router.push('/tenant/on-duty/news/add')
 }
 
 // 编辑
 const handleEdit = (row: NewsRecord) => {
-  isEdit.value = true
-  currentRow.value = row
-  formData.title = row.title
-  formData.newsType = row.newsType
-  formData.summary = row.summary
-  formData.content = row.content
-  formDialogVisible.value = true
-}
-
-// 提交表单
-const handleSubmitForm = async () => {
-  if (!formRef.value) return
-
-  await formRef.value.validate()
-
-  submitLoading.value = true
-
-  try {
-    if (isEdit.value && currentRow.value) {
-      // 编辑
-      const index = allData.value.findIndex(item => item.id === currentRow.value!.id)
-      if (index > -1) {
-        allData.value[index] = { ...allData.value[index], ...formData }
-      }
-      ElMessage.success('修改成功')
-    } else {
-      // 新增
-      const newRecord: NewsRecord = {
-        id: `NEWS${Date.now()}`,
-        title: formData.title,
-        newsType: formData.newsType as NewsRecord['newsType'],
-        summary: formData.summary,
-        content: formData.content,
-        status: 'unpublished',
-        createTime: new Date().toISOString()
-      }
-      allData.value.unshift(newRecord)
-      ElMessage.success('新增成功')
-    }
-
-    formDialogVisible.value = false
-    fetchData()
-  } finally {
-    submitLoading.value = false
-  }
+  router.push(`/tenant/on-duty/news/edit/${row.id}`)
 }
 
 // 查看
 const handleView = (row: NewsRecord) => {
-  currentRow.value = row
-  detailDialogVisible.value = true
+  router.push(`/tenant/on-duty/news/detail/${row.id}`)
 }
 
 // 删除
@@ -697,6 +566,15 @@ const handleBatchDelete = async () => {
   } catch (error) {
     console.error('批量删除失败:', error)
     ElMessage.error('批量删除失败')
+  }
+}
+
+// 分享
+const handleShare = (row: NewsRecord) => {
+  shareTitle.value = row.title
+  shareId.value = row.id
+  if (shareComponentRef.value) {
+    shareComponentRef.value.openShareDialog()
   }
 }
 

@@ -1,6 +1,7 @@
 <template>
   <el-dialog
-    v-model="visible"
+    :model-value="visible"
+    @update:model-value="emit('update:visible', $event)"
     :title="`${fileName} - 预览`"
     width="80%"
     :close-on-click-modal="false"

@@ -276,12 +276,12 @@ const handleRowClick = (row: any) => {
 
 // 查看
 const handleViewDetail = (row: any) => {
-  router.push(`/labor-company/todo-detail/${row.id}`)
+  router.push(`/tenant/todo-detail/${row.id}`)
 }
 
 // 审批
 const handleApprove = (row: any) => {
-  router.push(`/labor-company/todo-detail/${row.id}`)
+  router.push(`/tenant/todo-detail/${row.id}`)
 }
 
 // 获取状态类型

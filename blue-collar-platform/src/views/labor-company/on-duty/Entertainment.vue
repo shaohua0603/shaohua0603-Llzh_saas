@@ -136,6 +136,10 @@
           <el-icon><Delete /></el-icon>
           删除
         </el-button>
+        <el-button type="info" link @click="handleShare(row)">
+          <el-icon><Share /></el-icon>
+          分享
+        </el-button>
         <el-button
           v-if="row.status === 'unpublished'"
           type="warning"
@@ -175,156 +179,24 @@
       </template>
     </CommonTable>
 
-    <!-- 新增/编辑对话框 -->
-    <el-dialog
-      v-model="formDialogVisible"
-      :title="isEdit ? '编辑文娱活动' : '新增文娱活动'"
-      width="800px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="140px">
-        <el-form-item label="活动标题" prop="title">
-          <el-input v-model="formData.title" placeholder="请输入活动标题" />
-        </el-form-item>
-        <el-form-item label="活动类型" prop="activityType">
-          <el-select v-model="formData.activityType" placeholder="请选择活动类型">
-            <el-option label="文体活动" value="sports" />
-            <el-option label="相亲活动" value="dating" />
-            <el-option label="技能提升" value="skill" />
-            <el-option label="社团活动" value="community" />
-            <el-option label="其他活动" value="other" />
-          </el-select>
-        </el-form-item>
-        <el-form-item
-          v-if="formData.activityType === 'community'"
-          label="选择社团"
-          prop="communityId"
-        >
-          <el-select v-model="formData.communityId" placeholder="请选择社团">
-            <el-option
-              v-for="community in communityOptions"
-              :key="community.id"
-              :label="community.name"
-              :value="community.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="是否报名审核" prop="isApprovalRequired">
-          <el-switch
-            v-model="formData.isApprovalRequired"
-            active-text="需要审核"
-            inactive-text="无需审核"
-          />
-        </el-form-item>
-        <el-form-item label="报名开始日期" prop="registrationStartDate">
-          <el-date-picker
-            v-model="formData.registrationStartDate"
-            type="date"
-            placeholder="选择报名开始日期"
-            value-format="YYYY-MM-DD"
-          />
-        </el-form-item>
-        <el-form-item label="报名截止日期" prop="registrationEndDate">
-          <el-date-picker
-            v-model="formData.registrationEndDate"
-            type="date"
-            placeholder="选择报名截止日期"
-            value-format="YYYY-MM-DD"
-          />
-        </el-form-item>
-        <el-form-item label="活动地址" prop="address">
-          <el-input v-model="formData.address" placeholder="请输入活动地址" />
-        </el-form-item>
-        <el-form-item label="活动简介" prop="summary">
-          <el-input
-            v-model="formData.summary"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入活动简介"
-          />
-        </el-form-item>
-        <el-form-item label="活动详情" prop="content">
-          <RichTextEditor v-model="formData.content" :height="'300px'" />
-        </el-form-item>
-        <el-form-item label="活动开始时间" prop="activityStartTime">
-          <el-date-picker
-            v-model="formData.activityStartTime"
-            type="datetime"
-            placeholder="选择活动开始时间"
-            value-format="YYYY-MM-DD HH:mm:ss"
-          />
-        </el-form-item>
-        <el-form-item label="活动结束时间" prop="activityEndTime">
-          <el-date-picker
-            v-model="formData.activityEndTime"
-            type="datetime"
-            placeholder="选择活动结束时间"
-            value-format="YYYY-MM-DD HH:mm:ss"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="formDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitForm" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 详情对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      title="文娱活动详情"
-      width="800px"
-    >
-      <div v-if="currentRow" class="detail-content">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="活动标题">
-            {{ currentRow.title }}
-          </el-descriptions-item>
-          <el-descriptions-item label="活动类型">
-            <el-tag>{{ getTypeText(currentRow.activityType) }}</el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="是否报名审核">
-            <el-tag :type="currentRow.isApprovalRequired ? 'warning' : 'success'">
-              {{ currentRow.isApprovalRequired ? '需要审核' : '无需审核' }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="发布状态">
-            <el-tag :type="getStatusType(currentRow.status)">
-              {{ getStatusText(currentRow.status) }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="报名时间" :span="2">
-            {{ currentRow.registrationStartDate }} ~ {{ currentRow.registrationEndDate }}
-          </el-descriptions-item>
-          <el-descriptions-item label="活动地址" :span="2">
-            {{ currentRow.address }}
-          </el-descriptions-item>
-          <el-descriptions-item label="活动简介" :span="2">
-            {{ currentRow.summary }}
-          </el-descriptions-item>
-          <el-descriptions-item label="活动时间" :span="2">
-            {{ currentRow.activityStartTime }} ~ {{ currentRow.activityEndTime }}
-          </el-descriptions-item>
-          <el-descriptions-item label="活动详情" :span="2">
-            <div v-html="currentRow.content"></div>
-          </el-descriptions-item>
-        </el-descriptions>
-      </div>
-      <template #footer>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
+    <!-- 分享组件 -->
+    <ShareComponent 
+      ref="shareComponentRef"
+      :title="shareTitle"
+      :id="shareId"
+      :type="'entertainment'"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, View, Edit, Delete, Upload, Download, VideoPlay, VideoPause, ArrowDown } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, View, Edit, Delete, Upload, Download, VideoPlay, VideoPause, ArrowDown, Share } from '@element-plus/icons-vue'
+import { useRouter } from 'vue-router'
 import CommonTable from '@/components/CommonTable.vue'
-import RichTextEditor from '../../../components/RichTextEditor.vue'
+import ShareComponent from '@/components/ShareComponent.vue'
 import type { ColumnConfig } from '../../types/common-table'
-import type { FormInstance, FormRules } from 'element-plus'
 
 // 类型定义
 interface EntertainmentRecord {
@@ -345,10 +217,8 @@ interface EntertainmentRecord {
   createdAt: string
 }
 
-interface Community {
-  id: string
-  name: string
-}
+// 路由相关
+const router = useRouter()
 
 // 响应式数据
 const filterExpanded = ref(false)
@@ -363,55 +233,9 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const loading = ref(false)
-const currentRow = ref<EntertainmentRecord | null>(null)
-const communityOptions = ref<Community[]>([])
-
-// 对话框控制
-const formDialogVisible = ref(false)
-const detailDialogVisible = ref(false)
-const isEdit = ref(false)
-const submitLoading = ref(false)
-const formRef = ref<FormInstance>()
-
-// 表单数据
-const formData = reactive({
-  title: '',
-  activityType: '' as EntertainmentRecord['activityType'] | '',
-  communityId: '',
-  isApprovalRequired: true,
-  registrationStartDate: '',
-  registrationEndDate: '',
-  address: '',
-  summary: '',
-  content: '',
-  activityStartTime: '',
-  activityEndTime: ''
-})
-
-// 表单验证规则
-const formRules: FormRules = {
-  title: [{ required: true, message: '请输入活动标题', trigger: 'blur' }],
-  activityType: [{ required: true, message: '请选择活动类型', trigger: 'change' }],
-  communityId: [
-    {
-      required: true,
-      message: '请选择社团',
-      trigger: 'change',
-      validator: (_rule: any, value: any, callback: any) => {
-        if (formData.activityType === 'community' && !value) {
-          callback(new Error('请选择社团'))
-        } else {
-          callback()
-        }
-      }
-    }
-  ],
-  registrationStartDate: [{ required: true, message: '请选择报名开始日期', trigger: 'change' }],
-  registrationEndDate: [{ required: true, message: '请选择报名截止日期', trigger: 'change' }],
-  address: [{ required: true, message: '请输入活动地址', trigger: 'blur' }],
-  activityStartTime: [{ required: true, message: '请选择活动开始时间', trigger: 'change' }],
-  activityEndTime: [{ required: true, message: '请选择活动结束时间', trigger: 'change' }]
-}
+const shareComponentRef = ref<any>(null)
+const shareTitle = ref('')
+const shareId = ref('')
 
 // 表格列配置
 const columns: ColumnConfig[] = [
@@ -441,9 +265,6 @@ const statsInfo = computed(() => {
 const toggleFilter = () => {
   filterExpanded.value = !filterExpanded.value
 }
-
-// 模拟数据存储
-const allData = ref<EntertainmentRecord[]>([])
 
 // 获取活动类型文本
 const getTypeText = (type: string): string => {
@@ -477,18 +298,6 @@ const getStatusText = (status: string): string => {
     ended: '已结束'
   }
   return textMap[status] || status
-}
-
-// 社团选项
-const getCommunityOptions = (): Community[] => {
-  return [
-    { id: 'C001', name: '篮球社' },
-    { id: 'C002', name: '足球社' },
-    { id: 'C003', name: '羽毛球社' },
-    { id: 'C004', name: '读书会' },
-    { id: 'C005', name: '摄影社' },
-    { id: 'C006', name: '舞蹈社' }
-  ]
 }
 
 // 生成模拟数据
@@ -543,6 +352,23 @@ const generateMockData = (): EntertainmentRecord[] => {
   return data
 }
 
+// 从localStorage获取数据
+const getAllData = (): EntertainmentRecord[] => {
+  const data = localStorage.getItem('entertainmentData')
+  if (data) {
+    return JSON.parse(data)
+  } else {
+    const mockData = generateMockData()
+    localStorage.setItem('entertainmentData', JSON.stringify(mockData))
+    return mockData
+  }
+}
+
+// 保存数据到localStorage
+const saveData = (data: EntertainmentRecord[]) => {
+  localStorage.setItem('entertainmentData', JSON.stringify(data))
+}
+
 // 搜索处理
 const handleSearch = () => {
   currentPage.value = 1
@@ -580,7 +406,8 @@ const handleGlobalSearch = (keyword: string) => {
 const fetchData = () => {
   loading.value = true
 
-  let filteredData = [...allData.value]
+  let allData = getAllData()
+  let filteredData = [...allData]
 
   if (filterForm.keyword) {
     filteredData = filteredData.filter(item =>
@@ -621,79 +448,17 @@ const fetchData = () => {
 
 // 新增
 const handleAdd = () => {
-  isEdit.value = false
-  formData.title = ''
-  formData.activityType = ''
-  formData.communityId = ''
-  formData.isApprovalRequired = true
-  formData.registrationStartDate = ''
-  formData.registrationEndDate = ''
-  formData.address = ''
-  formData.summary = ''
-  formData.content = ''
-  formData.activityStartTime = ''
-  formData.activityEndTime = ''
-  formDialogVisible.value = true
+  router.push('/tenant/on-duty/entertainment/add')
 }
 
 // 编辑
 const handleEdit = (row: EntertainmentRecord) => {
-  isEdit.value = true
-  currentRow.value = row
-  formData.title = row.title
-  formData.activityType = row.activityType
-  formData.communityId = row.communityId || ''
-  formData.isApprovalRequired = row.isApprovalRequired
-  formData.registrationStartDate = row.registrationStartDate
-  formData.registrationEndDate = row.registrationEndDate
-  formData.address = row.address
-  formData.summary = row.summary
-  formData.content = row.content
-  formData.activityStartTime = row.activityStartTime
-  formData.activityEndTime = row.activityEndTime
-  formDialogVisible.value = true
-}
-
-// 提交表单
-const handleSubmitForm = async () => {
-  if (!formRef.value) return
-
-  await formRef.value.validate()
-
-  submitLoading.value = true
-
-  try {
-    if (isEdit.value && currentRow.value) {
-      // 编辑
-      const index = allData.value.findIndex(item => item.id === currentRow.value!.id)
-      if (index > -1) {
-        allData.value[index] = { ...allData.value[index], ...formData }
-      }
-      ElMessage.success('修改成功')
-    } else {
-      // 新增
-      const newRecord: EntertainmentRecord = {
-        id: `ENT${Date.now()}`,
-        ...formData,
-        status: 'unpublished',
-        isStarted: false,
-        createdAt: new Date().toISOString()
-      }
-      allData.value.unshift(newRecord)
-      ElMessage.success('新增成功')
-    }
-
-    formDialogVisible.value = false
-    fetchData()
-  } finally {
-    submitLoading.value = false
-  }
+  router.push(`/tenant/on-duty/entertainment/edit/${row.id}`)
 }
 
 // 查看
 const handleView = (row: EntertainmentRecord) => {
-  currentRow.value = row
-  detailDialogVisible.value = true
+  router.push(`/tenant/on-duty/entertainment/detail/${row.id}`)
 }
 
 // 删除
@@ -703,9 +468,11 @@ const handleDelete = (row: EntertainmentRecord) => {
     cancelButtonText: '取消',
     type: 'warning'
   }).then(() => {
-    const index = allData.value.findIndex(item => item.id === row.id)
+    let allData = getAllData()
+    const index = allData.findIndex(item => item.id === row.id)
     if (index > -1) {
-      allData.value.splice(index, 1)
+      allData.splice(index, 1)
+      saveData(allData)
     }
     ElMessage.success('删除成功')
     fetchData()
@@ -719,9 +486,11 @@ const handlePublish = (row: EntertainmentRecord) => {
     cancelButtonText: '取消',
     type: 'info'
   }).then(() => {
-    const index = allData.value.findIndex(item => item.id === row.id)
+    let allData = getAllData()
+    const index = allData.findIndex(item => item.id === row.id)
     if (index > -1) {
-      allData.value[index].status = 'published'
+      allData[index].status = 'published'
+      saveData(allData)
     }
     ElMessage.success('发布成功')
     fetchData()
@@ -735,9 +504,11 @@ const handleUnpublish = (row: EntertainmentRecord) => {
     cancelButtonText: '取消',
     type: 'info'
   }).then(() => {
-    const index = allData.value.findIndex(item => item.id === row.id)
+    let allData = getAllData()
+    const index = allData.findIndex(item => item.id === row.id)
     if (index > -1) {
-      allData.value[index].status = 'unpublished'
+      allData[index].status = 'unpublished'
+      saveData(allData)
     }
     ElMessage.success('取消发布成功')
     fetchData()
@@ -751,10 +522,12 @@ const handleStartEarly = (row: EntertainmentRecord) => {
     cancelButtonText: '取消',
     type: 'info'
   }).then(() => {
-    const index = allData.value.findIndex(item => item.id === row.id)
+    let allData = getAllData()
+    const index = allData.findIndex(item => item.id === row.id)
     if (index > -1) {
-      allData.value[index].status = 'ongoing'
-      allData.value[index].isStarted = true
+      allData[index].status = 'ongoing'
+      allData[index].isStarted = true
+      saveData(allData)
     }
     ElMessage.success('活动已开始')
     fetchData()
@@ -768,19 +541,28 @@ const handleEndEarly = (row: EntertainmentRecord) => {
     cancelButtonText: '取消',
     type: 'info'
   }).then(() => {
-    const index = allData.value.findIndex(item => item.id === row.id)
+    let allData = getAllData()
+    const index = allData.findIndex(item => item.id === row.id)
     if (index > -1) {
-      allData.value[index].status = 'ended'
+      allData[index].status = 'ended'
+      saveData(allData)
     }
     ElMessage.success('活动已结束')
     fetchData()
   }).catch(() => {})
 }
 
+// 分享
+const handleShare = (row: EntertainmentRecord) => {
+  shareTitle.value = row.title
+  shareId.value = row.id
+  if (shareComponentRef.value) {
+    shareComponentRef.value.openShareDialog()
+  }
+}
+
 // 生命周期
 onMounted(() => {
-  allData.value = generateMockData()
-  communityOptions.value = getCommunityOptions()
   fetchData()
 })
 </script>

@@ -17,7 +17,13 @@
         <el-icon v-if="tab.fixed" class="tab-icon">
           <Lock />
         </el-icon>
-        <span class="tab-title">{{ tab.title }}</span>
+        <span class="tab-title">
+          {{ tab.path === '/tenant/on-duty/entertainment/add' ? '新增文娱活动' : 
+             tab.path.includes('/tenant/on-duty/entertainment/edit/') ? '编辑文娱活动' : 
+             tab.path.includes('/tenant/on-duty/entertainment/detail/') ? '文娱活动详情' : 
+             tab.path === '/tenant/on-duty/entertainment' ? '文娱活动' : 
+             tab.title }}
+        </span>
         <span
           v-if="!tab.fixed"
           class="tab-close"
@@ -259,6 +265,22 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', closeContextMenu)
 })
+
+// 获取标签标题
+const getTabTitle = (tab: PageTab): string => {
+  // 强制设置文娱活动相关页面的标题
+  if (tab.path === '/tenant/on-duty/entertainment/add') {
+    return '新增文娱活动'
+  } else if (tab.path.includes('/tenant/on-duty/entertainment/edit/')) {
+    return '编辑文娱活动'
+  } else if (tab.path.includes('/tenant/on-duty/entertainment/detail/')) {
+    return '文娱活动详情'
+  } else if (tab.path === '/tenant/on-duty/entertainment') {
+    return '文娱活动'
+  }
+  
+  return tab.title
+}
 
 // 暴露方法
 defineExpose({

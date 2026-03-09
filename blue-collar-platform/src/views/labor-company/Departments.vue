@@ -241,22 +241,22 @@ const handleExpandAll = () => {
 
 // 新增部门
 const handleAdd = () => {
-  router.push({ name: 'LaborCompanyDepartmentAdd' })
+  router.push({ name: 'TenantDepartmentAdd' })
 }
 
 // 添加子部门
 const handleAddChild = (row: any) => {
-  router.push({ name: 'LaborCompanyDepartmentAdd', query: { parentId: row.id } })
+  router.push({ name: 'TenantDepartmentAdd', query: { parentId: row.id } })
 }
 
 // 查看
 const handleDetail = (row: any) => {
-  router.push({ name: 'LaborCompanyDepartmentDetail', params: { id: row.id } })
+  router.push({ name: 'TenantDepartmentDetail', params: { id: row.id } })
 }
 
 // 编辑
 const handleEdit = (row: any) => {
-  router.push({ name: 'LaborCompanyDepartmentEdit', params: { id: row.id } })
+  router.push({ name: 'TenantDepartmentEdit', params: { id: row.id } })
 }
 
 // 删除

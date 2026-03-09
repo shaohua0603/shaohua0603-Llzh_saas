@@ -18,6 +18,30 @@
         </div>
         
         <el-form :model="leaveForm" label-position="top" class="leave-form">
+          <el-form-item label="工厂" class="form-item">
+            <el-select v-model="leaveForm.factory" placeholder="请选择工厂" size="large" class="form-select">
+              <el-option label="工厂A" value="factoryA" />
+              <el-option label="工厂B" value="factoryB" />
+              <el-option label="工厂C" value="factoryC" />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="区域" class="form-item">
+            <el-select v-model="leaveForm.area" placeholder="请选择区域" size="large" class="form-select">
+              <el-option label="区域1" value="area1" />
+              <el-option label="区域2" value="area2" />
+              <el-option label="区域3" value="area3" />
+            </el-select>
+          </el-form-item>
+          
+          <el-form-item label="产线" class="form-item">
+            <el-select v-model="leaveForm.productionLine" placeholder="请选择产线" size="large" class="form-select">
+              <el-option label="产线1" value="line1" />
+              <el-option label="产线2" value="line2" />
+              <el-option label="产线3" value="line3" />
+            </el-select>
+          </el-form-item>
+          
           <el-form-item label="请假类型" class="form-item">
             <el-select v-model="leaveForm.type" placeholder="请选择请假类型" size="large" class="form-select">
               <el-option label="事假" value="personal" />
@@ -107,6 +131,9 @@ const router = useRouter()
 
 // 请假表单
 const leaveForm = ref({
+  factory: '',
+  area: '',
+  productionLine: '',
   type: '',
   startDate: '',
   endDate: '',
@@ -139,6 +166,9 @@ const handleSubmit = async () => {
 // 重置表单
 const resetForm = () => {
   leaveForm.value = {
+    factory: '',
+    area: '',
+    productionLine: '',
     type: '',
     startDate: '',
     endDate: '',

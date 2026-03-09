@@ -370,22 +370,22 @@ const generateQuickFunctions = () => {
       {
         title: '人员管理',
         icon: 's-custom',
-        handler: () => router.push('/labor-company/workers')
+        handler: () => router.push('/tenant/workers')
       },
       {
         title: '考勤管理',
         icon: 'time',
-        handler: () => router.push('/labor-company/attendance')
+        handler: () => router.push('/tenant/attendance')
       },
       {
         title: '薪资管理',
         icon: 's-finance',
-        handler: () => router.push('/labor-company/salary')
+        handler: () => router.push('/tenant/salary')
       },
       {
         title: '招聘管理',
         icon: 's-grid',
-        handler: () => router.push('/labor-company/recruitment')
+        handler: () => router.push('/tenant/recruitment')
       }
     ]
   } else if (role === 'factory') {
@@ -638,7 +638,7 @@ onMounted(() => {
         <!-- 智惠管家入口 -->
         <div class="service-item zhihui-butler" @click="goToZhihuiButler">
           <div class="service-icon">
-            <img src="/images/智惠管家.png" alt="智惠管家" class="butler-logo">
+            <img src="../../assets/zhihui-butler-logo.jpg" alt="智惠管家" class="butler-logo">
           </div>
           <div class="service-content">
             <h4>智惠管家</h4>
@@ -1066,8 +1066,8 @@ onMounted(() => {
 }
 
 .butler-logo {
-  width: 55px;
-  height: 55px;
+  width: 65px;
+  height: 65px;
   object-fit: contain;
 }
 

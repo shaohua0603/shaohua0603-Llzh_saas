@@ -13,8 +13,6 @@ const permission: Directive = {
       if (!hasPermission) {
         el.parentNode?.removeChild(el)
       }
-    } else {
-      throw new Error('需要权限！如 v-permission="[system:position:view]"')
     }
   }
 }

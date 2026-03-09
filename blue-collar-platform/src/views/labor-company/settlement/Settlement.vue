@@ -288,12 +288,11 @@ const handleReset = () => {
 
 // 新建结算
 const handleAdd = () => {
-  router.push({ name: 'LaborCompanySettlementAdd' })
+  router.push({ name: 'TenantSettlementAdd' })
 }
 
-// 详情
-const handleView = (row: any) => {
-  router.push({ name: 'LaborCompanySettlementDetail', params: { id: row.id } })
+const handleView = (row: Settlement) => {
+  router.push({ name: 'TenantSettlementDetail', params: { id: row.id } })
 }
 
 

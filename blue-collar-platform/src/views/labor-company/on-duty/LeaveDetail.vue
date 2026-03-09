@@ -696,7 +696,7 @@ const handleBack = () => {
 // 编辑
 const handleEdit = () => {
   router.push({
-    path: '/labor-company/on-duty/leave',
+    path: '/tenant/on-duty/leave',
     query: { action: 'edit', id: businessId }
   })
 }
@@ -733,9 +733,9 @@ onMounted(() => {
 <style scoped>
 .leave-detail-page {
   width: 100%;
-  min-height: 100%;
-  padding: 20px;
-  padding-bottom: 80px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
   background-color: #f5f7fa;
 }
 
@@ -746,6 +746,10 @@ onMounted(() => {
 }
 
 .detail-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 80px;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -776,21 +780,21 @@ onMounted(() => {
 .detail-footer {
   position: fixed;
   bottom: 0;
-  left: var(--sidebar-width, 200px);
+  left: var(--sidebar-width);
   right: 0;
   display: flex;
   justify-content: center;
   gap: 12px;
   padding: 16px;
-  background-color: #fff;
+  background-color: #f5f7fa;
   border-top: 1px solid #e4e7ed;
   z-index: 100;
-  transition: left 0.3s ease;
+  transition: left var(--transition-base);
 }
 
 /* 响应式设计 */
 @media screen and (max-width: 768px) {
-  .leave-detail-page {
+  .detail-content {
     padding: 12px;
     padding-bottom: 120px;
   }

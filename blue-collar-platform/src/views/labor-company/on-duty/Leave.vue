@@ -75,10 +75,7 @@
         <el-icon><Download /></el-icon>
         导出
       </el-button>
-      <el-button type="info" @click="handlePrint">
-        <el-icon><Printer /></el-icon>
-        打印
-      </el-button>
+
     </div>
 
     <!-- 通用表格 -->
@@ -94,13 +91,19 @@
       :show-index="true"
       :show-actions="true"
       :stats-info="statsInfo"
-      action-column-width="280"
+      :action-column-width="320"
       table-id="leave-table"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
+
+      <template #column-paymentType="{ row }">
+        <el-tag :type="row.paymentType === 'daily' ? 'warning' : 'success'">
+          {{ row.paymentType === 'daily' ? '日结' : '月结' }}
+        </el-tag>
+      </template>
 
       <template #column-leaveType="{ row }">
         <el-tag :type="getLeaveTypeTag(row.leaveType)">
@@ -112,6 +115,11 @@
           {{ getApprovalStatusText(row.approvalStatus) }}
         </el-tag>
       </template>
+      <template #column-cancelled="{ row }">
+        <el-tag :type="row.cancelled ? 'info' : 'default'">
+          {{ row.cancelled ? '已销假' : '未销假' }}
+        </el-tag>
+      </template>
       <template #column-approvalRecords="{ row }">
         <el-button link type="primary" size="small" @click="viewApprovalRecords(row)">
           查看记录 ({{ row.approvalRecords?.length || 0 }})
@@ -119,164 +127,46 @@
       </template>
       <template #actions="{ row }">
         <el-button link type="primary" size="small" @click="handleDetail(row)">详情</el-button>
-        <el-button link type="primary" size="small" @click="handleEdit(row)">编辑</el-button>
-        <el-button
-          link
-          type="success"
-          size="small"
-          @click="handleSubmitApproval(row)"
-          :disabled="row.approvalStatus !== 'pending'"
-        >
-          提交审批
-        </el-button>
+        <el-button 
+          link 
+          type="primary" 
+          size="small" 
+          @click="handleEdit(row)"
+          :disabled="row.approvalStatus === 'approved' || row.approvalStatus === 'rejected'"
+        >编辑</el-button>
         <el-button
           link
           type="warning"
           size="small"
           @click="handleApprove(row)"
-          :disabled="row.approvalStatus !== 'pending' && row.approvalStatus !== 'processing'"
+          v-if="row.approvalStatus === 'pending' || row.approvalStatus === 'processing'"
         >
           审核
         </el-button>
-        <el-button link type="danger" size="small" @click="handleDelete(row)">删除</el-button>
+        <el-button 
+          link 
+          type="info" 
+          size="small" 
+          @click="handleCancelLeave(row)"
+          v-if="row.approvalStatus === 'approved' && !row.cancelled"
+        >销假</el-button>
+        <el-tag v-else-if="row.cancelled" type="info" size="small">已销假</el-tag>
+        <el-button 
+          link 
+          type="danger" 
+          size="small" 
+          @click="handleDelete(row)"
+          :disabled="row.approvalStatus === 'approved'"
+        >删除</el-button>
       </template>
     </CommonTable>
 
-    <!-- 新增/编辑弹窗 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="700px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
-        <el-form-item label="工人姓名" prop="workerName">
-          <el-input v-model="formData.workerName" placeholder="请输入工人姓名" />
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="formData.phone" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item label="请假类型" prop="leaveType">
-          <el-select v-model="formData.leaveType" placeholder="请选择请假类型" style="width: 100%">
-            <el-option label="事假" value="personal" />
-            <el-option label="病假" value="sick" />
-            <el-option label="年假" value="annual" />
-            <el-option label="婚假" value="marriage" />
-            <el-option label="丧假" value="bereavement" />
-            <el-option label="其他" value="other" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="请假开始日期" prop="startDate">
-          <el-date-picker
-            v-model="formData.startDate"
-            type="datetime"
-            placeholder="选择开始日期"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="请假结束日期" prop="endDate">
-          <el-date-picker
-            v-model="formData.endDate"
-            type="datetime"
-            placeholder="选择结束日期"
-            value-format="YYYY-MM-DD HH:mm:ss"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="请假原因" prop="reason">
-          <el-input v-model="formData.reason" type="textarea" :rows="4" placeholder="请输入请假原因" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 详情弹窗 -->
-    <el-dialog v-model="detailDialogVisible" title="请假详情" width="800px">
-      <el-tabs v-model="detailTab">
-        <el-tab-pane label="基本信息" name="basic">
-          <el-descriptions :column="2" border>
-            <el-descriptions-item label="请假人">{{ currentRow.workerName }}</el-descriptions-item>
-            <el-descriptions-item label="手机号">{{ currentRow.phone }}</el-descriptions-item>
-            <el-descriptions-item label="请假类型">
-              <el-tag :type="getLeaveTypeTag(currentRow.leaveType)">
-                {{ getLeaveTypeText(currentRow.leaveType) }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="审核状态">
-              <el-tag :type="getApprovalStatusTag(currentRow.approvalStatus)">
-                {{ getApprovalStatusText(currentRow.approvalStatus) }}
-              </el-tag>
-            </el-descriptions-item>
-            <el-descriptions-item label="请假开始日期">{{ currentRow.startDate }}</el-descriptions-item>
-            <el-descriptions-item label="请假结束日期">{{ currentRow.endDate }}</el-descriptions-item>
-            <el-descriptions-item label="请假天数">{{ currentRow.days || 0 }} 天</el-descriptions-item>
-            <el-descriptions-item label="请假原因">{{ currentRow.reason }}</el-descriptions-item>
-            <el-descriptions-item label="创建时间">{{ currentRow.createTime }}</el-descriptions-item>
-          </el-descriptions>
-        </el-tab-pane>
-        <el-tab-pane label="审核记录" name="approval">
-          <el-timeline v-if="currentRow.approvalRecords && currentRow.approvalRecords.length > 0">
-            <el-timeline-item
-              v-for="(record, index) in currentRow.approvalRecords"
-              :key="index"
-              :timestamp="record.approvalTime"
-              placement="top"
-              :type="record.approvalResult === 'approved' ? 'success' : 'danger'"
-            >
-              <el-card>
-                <div class="approval-record">
-                  <div class="record-header">
-                    <span class="record-node">{{ record.nodeName }}</span>
-                    <el-tag :type="record.approvalResult === 'approved' ? 'success' : 'danger'" size="small">
-                      {{ record.approvalResult === 'approved' ? '通过' : '驳回' }}
-                    </el-tag>
-                  </div>
-                  <div class="record-info">
-                    <span>审批人：{{ record.approver }}</span>
-                  </div>
-                  <div v-if="record.approvalComment" class="record-comment">
-                    <span>审批意见：{{ record.approvalComment }}</span>
-                  </div>
-                </div>
-              </el-card>
-            </el-timeline-item>
-          </el-timeline>
-          <el-empty v-else description="暂无审核记录" />
-        </el-tab-pane>
-      </el-tabs>
-      <template #footer>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 审核弹窗 -->
-    <el-dialog v-model="approvalDialogVisible" title="请假审核" width="600px" :close-on-click-modal="false">
-      <el-form ref="approvalFormRef" :model="approvalForm" :rules="approvalFormRules" label-width="100px">
-        <el-form-item label="审核结果" prop="result">
-          <el-radio-group v-model="approvalForm.result">
-            <el-radio label="approved">
-              <el-icon color="#67c23a"><CircleCheck /></el-icon>
-              通过
-            </el-radio>
-            <el-radio label="rejected">
-              <el-icon color="#f56c6c"><CircleClose /></el-icon>
-              驳回
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="审批意见">
-          <el-input v-model="approvalForm.comment" type="textarea" :rows="4" placeholder="请输入审批意见" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="approvalDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleApprovalSubmit" :loading="approvalLoading">提交</el-button>
-      </template>
-    </el-dialog>
+    <!-- 销假对话框 -->
+    <LeaveCancelDialog
+      v-model:visible="cancelDialogVisible"
+      :leave-info="currentLeave"
+      @submit="handleCancelLeaveSubmit"
+    />
 
     <!-- 导入弹窗 -->
     <el-dialog v-model="importDialogVisible" title="导入考勤数据" width="500px">
@@ -319,9 +209,9 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Upload, Download, Printer, CircleCheck, CircleClose, ArrowDown } from '@element-plus/icons-vue'
+import { Plus, Upload, Download, CircleCheck, CircleClose, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
-import { submitApproval } from '@/api/approvalExecutionApi'
+import LeaveCancelDialog from '@/components/LeaveCancelDialog.vue'
 
 const router = useRouter()
 
@@ -348,11 +238,13 @@ const statsInfo = ref<Array<{ label: string; value: string }>>([])
 const columns = [
   { prop: 'workerName', label: '姓名', minWidth: 100, sortable: true },
   { prop: 'phone', label: '手机号', minWidth: 120, sortable: true },
+  { prop: 'paymentType', label: '结算方式', minWidth: 100 },
   { prop: 'leaveType', label: '请假类型', minWidth: 100 },
   { prop: 'startDate', label: '开始日期', minWidth: 160, sortable: true },
   { prop: 'endDate', label: '结束日期', minWidth: 160, sortable: true },
   { prop: 'days', label: '天数', minWidth: 80 },
   { prop: 'approvalStatus', label: '审核状态', minWidth: 100 },
+  { prop: 'cancelled', label: '销假状态', minWidth: 100 },
   { prop: 'createTime', label: '创建时间', minWidth: 160, sortable: true },
   { prop: 'approvalRecords', label: '审核记录', minWidth: 120 }
 ]
@@ -361,49 +253,14 @@ const columns = [
 const tableRef = ref()
 
 // 弹窗控制
-const dialogVisible = ref(false)
-const detailDialogVisible = ref(false)
-const approvalDialogVisible = ref(false)
 const importDialogVisible = ref(false)
-const dialogTitle = ref('新增请假')
-const submitLoading = ref(false)
-const approvalLoading = ref(false)
 const importLoading = ref(false)
-const formRef = ref()
-const approvalFormRef = ref()
 const uploadRef = ref()
-const currentRow = ref<any>({})
-const detailTab = ref('basic')
 const importFile = ref()
 
-const formData = reactive({
-  id: '',
-  workerName: '',
-  phone: '',
-  leaveType: '',
-  startDate: '',
-  endDate: '',
-  reason: ''
-})
-
-const formRules = {
-  workerName: [{ required: true, message: '请输入工人姓名', trigger: 'blur' }],
-  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
-  leaveType: [{ required: true, message: '请选择请假类型', trigger: 'change' }],
-  startDate: [{ required: true, message: '请选择请假开始日期', trigger: 'change' }],
-  endDate: [{ required: true, message: '请选择请假结束日期', trigger: 'change' }],
-  reason: [{ required: true, message: '请输入请假原因', trigger: 'blur' }]
-}
-
-const approvalForm = reactive({
-  id: '',
-  result: 'approved',
-  comment: ''
-})
-
-const approvalFormRules = {
-  result: [{ required: true, message: '请选择审核结果', trigger: 'change' }]
-}
+// 销假对话框
+const cancelDialogVisible = ref(false)
+const currentLeave = ref({})
 
 // 获取请假类型标签
 const getLeaveTypeTag = (type: string) => {
@@ -484,6 +341,7 @@ const fetchData = async () => {
         id: '1',
         workerName: '张三',
         phone: '13800138000',
+        paymentType: 'daily',
         leaveType: 'personal',
         startDate: '2024-01-20 09:00:00',
         endDate: '2024-01-21 18:00:00',
@@ -491,12 +349,14 @@ const fetchData = async () => {
         approvalStatus: 'pending',
         reason: '家中有事需要处理',
         createTime: '2024-01-15 10:00:00',
-        approvalRecords: []
+        approvalRecords: [],
+        cancelled: false
       },
       {
         id: '2',
         workerName: '李四',
         phone: '13800138001',
+        paymentType: 'monthly',
         leaveType: 'sick',
         startDate: '2024-01-18 14:00:00',
         endDate: '2024-01-19 18:00:00',
@@ -512,12 +372,14 @@ const fetchData = async () => {
             approvalResult: 'approved',
             approvalComment: '情况属实，同意请假'
           }
-        ]
+        ],
+        cancelled: false
       },
       {
         id: '3',
         workerName: '王五',
         phone: '13800138002',
+        paymentType: 'daily',
         leaveType: 'annual',
         startDate: '2024-02-01 09:00:00',
         endDate: '2024-02-05 18:00:00',
@@ -533,12 +395,14 @@ const fetchData = async () => {
             approvalResult: 'approved',
             approvalComment: '同意'
           }
-        ]
+        ],
+        cancelled: false
       },
       {
         id: '4',
         workerName: '赵六',
         phone: '13800138003',
+        paymentType: 'monthly',
         leaveType: 'marriage',
         startDate: '2024-03-01 09:00:00',
         endDate: '2024-03-03 18:00:00',
@@ -554,7 +418,8 @@ const fetchData = async () => {
             approvalResult: 'rejected',
             approvalComment: '日期与其他工作冲突，请调整时间'
           }
-        ]
+        ],
+        cancelled: false
       }
     ]
     total.value = 4
@@ -598,68 +463,30 @@ const handleSelectionChange = (selection: any[]) => {
 
 // 新增
 const handleAdd = () => {
-  dialogTitle.value = '新增请假'
-  formData.id = ''
-  formData.workerName = ''
-  formData.phone = ''
-  formData.leaveType = ''
-  formData.startDate = ''
-  formData.endDate = ''
-  formData.reason = ''
-  dialogVisible.value = true
+  router.push('/tenant/on-duty/leave-add')
 }
 
 // 编辑
 const handleEdit = (row: any) => {
-  dialogTitle.value = '编辑请假'
-  Object.assign(formData, row)
-  dialogVisible.value = true
+  router.push({
+    path: `/tenant/on-duty/leave-edit/${row.id}`
+  })
 }
 
 // 详情
 const handleDetail = (row: any) => {
   router.push({
-    path: '/labor-company/on-duty/leave-detail',
-    query: { id: row.id }
+    path: `/tenant/on-duty/leave-detail/${row.id}`
   })
 }
 
-// 提交审批
-const handleSubmitApproval = async (row: any) => {
-  try {
-    await ElMessageBox.confirm('确定要提交审批吗？', '提示', {
-      type: 'warning'
-    })
 
-    const submitData = {
-      businessCode: 'LEAVE',
-      businessId: row.id,
-      businessData: {
-        workerName: row.workerName,
-        phone: row.phone,
-        leaveType: row.leaveType,
-        startDate: row.startDate,
-        endDate: row.endDate,
-        reason: row.reason
-      }
-    }
-
-    await submitApproval(submitData)
-    ElMessage.success('提交审批成功')
-    fetchData()
-  } catch (error: any) {
-    if (error !== 'cancel') {
-      ElMessage.error('提交审批失败')
-    }
-  }
-}
 
 // 审核
 const handleApprove = (row: any) => {
-  approvalForm.id = row.id
-  approvalForm.result = 'approved'
-  approvalForm.comment = ''
-  approvalDialogVisible.value = true
+  router.push({
+    path: `/tenant/on-duty/leave-approve/${row.id}`
+  })
 }
 
 // 删除
@@ -675,44 +502,7 @@ const handleDelete = async (row: any) => {
   }
 }
 
-// 提交审核
-const handleApprovalSubmit = async () => {
-  if (!approvalFormRef.value) return
-  await approvalFormRef.value.validate((valid) => {
-    if (valid) {
-      approvalLoading.value = true
-      setTimeout(() => {
-        ElMessage.success('审核提交成功')
-        approvalDialogVisible.value = false
-        approvalLoading.value = false
-        fetchData()
-      }, 500)
-    }
-  })
-}
 
-// 查看审核记录
-const viewApprovalRecords = (row: any) => {
-  currentRow.value = row
-  detailTab.value = 'approval'
-  detailDialogVisible.value = true
-}
-
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      submitLoading.value = true
-      setTimeout(() => {
-        ElMessage.success(dialogTitle.value === '新增请假' ? '新增成功' : '修改成功')
-        dialogVisible.value = false
-        submitLoading.value = false
-        fetchData()
-      }, 500)
-    }
-  })
-}
 
 // 导入
 const handleImport = () => {
@@ -750,10 +540,24 @@ const handleExport = () => {
   ElMessage.info('导出功能开发中')
 }
 
-// 打印
-const handlePrint = () => {
-  ElMessage.info('打印功能开发中')
+// 处理销假
+const handleCancelLeave = (row: any) => {
+  currentLeave.value = row
+  cancelDialogVisible.value = true
 }
+
+// 处理销假提交
+const handleCancelLeaveSubmit = (formData: any) => {
+  // 找到对应的请假记录并标记为已销假
+  const index = tableData.value.findIndex(item => item.id === formData.leaveId)
+  if (index !== -1) {
+    tableData.value[index].cancelled = true
+    // 这里可以添加销假记录的保存逻辑
+    ElMessage.success('销假成功')
+  }
+}
+
+
 
 onMounted(() => {
   fetchData()
@@ -804,7 +608,7 @@ onMounted(() => {
   display: flex;
   justify-content: flex-start;
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   padding: 16px 20px;
   background-color: #fff;
   border-radius: 4px;

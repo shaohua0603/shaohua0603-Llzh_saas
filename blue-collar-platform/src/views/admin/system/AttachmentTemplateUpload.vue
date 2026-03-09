@@ -1,10 +1,11 @@
 <template>
   <el-dialog
-    v-model="visible"
+    :model-value="visible"
     title="上传附件模板"
     width="600px"
     :close-on-click-modal="false"
     @close="handleClose"
+    @update:model-value="(value) => emit('update:visible', value)"
   >
     <el-form
       ref="formRef"

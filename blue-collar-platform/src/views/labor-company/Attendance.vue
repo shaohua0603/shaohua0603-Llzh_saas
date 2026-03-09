@@ -62,10 +62,7 @@
         <el-icon><Download /></el-icon>
         导出
       </el-button>
-      <el-button type="info" @click="handlePrint">
-        <el-icon><Printer /></el-icon>
-        打印
-      </el-button>
+
     </div>
 
     <!-- 表格区域 -->
@@ -80,13 +77,19 @@
       :showSelection="true"
       :showIndex="true"
       :showActions="true"
-      action-column-width="200"
+      :action-column-width="200"
       :stats-info="statsInfo"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
+      <template #column-paymentType="{ row }">
+        <el-tag :type="row.paymentType === 'daily' ? 'warning' : 'success'">
+          {{ row.paymentType === 'daily' ? '日结' : '月结' }}
+        </el-tag>
+      </template>
+
       <template #column-status="{ row }">
         <el-tag :type="getStatusType(row.status)">
           {{ getStatusText(row.status) }}
@@ -108,85 +111,7 @@
       </template>
     </CommonTable>
 
-    <!-- 新增/编辑弹窗 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="600px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="100px">
-        <el-form-item label="工人姓名" prop="workerName">
-          <el-input v-model="formData.workerName" placeholder="请输入工人姓名" />
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="formData.phone" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item label="考勤日期" prop="attendanceDate">
-          <el-date-picker
-            v-model="formData.attendanceDate"
-            type="date"
-            placeholder="选择考勤日期"
-            value-format="YYYY-MM-DD"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="考勤状态" prop="status">
-          <el-select v-model="formData.status" placeholder="请选择考勤状态" style="width: 100%">
-            <el-option label="正常" value="normal" />
-            <el-option label="迟到" value="late" />
-            <el-option label="早退" value="early" />
-            <el-option label="缺勤" value="absent" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="上班时间">
-          <el-time-picker
-            v-model="formData.checkInTime"
-            placeholder="选择上班时间"
-            format="HH:mm"
-            value-format="HH:mm:ss"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="下班时间">
-          <el-time-picker
-            v-model="formData.checkOutTime"
-            placeholder="选择下班时间"
-            format="HH:mm"
-            value-format="HH:mm:ss"
-            style="width: 100%"
-          />
-        </el-form-item>
-        <el-form-item label="工作时长">
-          <el-input-number v-model="formData.workHours" :min="0" :max="24" :precision="1" style="width: 100%" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
 
-    <!-- 详情弹窗 -->
-    <el-dialog v-model="detailDialogVisible" title="考勤详情" width="600px">
-      <el-descriptions :column="2" border>
-        <el-descriptions-item label="工人姓名">{{ currentRow.workerName }}</el-descriptions-item>
-        <el-descriptions-item label="手机号">{{ currentRow.phone }}</el-descriptions-item>
-        <el-descriptions-item label="考勤日期">{{ currentRow.attendanceDate }}</el-descriptions-item>
-        <el-descriptions-item label="考勤状态">
-          <el-tag :type="getStatusType(currentRow.status)">
-            {{ getStatusText(currentRow.status) }}
-          </el-tag>
-        </el-descriptions-item>
-        <el-descriptions-item label="上班时间">{{ currentRow.checkInTime || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="下班时间">{{ currentRow.checkOutTime || '-' }}</el-descriptions-item>
-        <el-descriptions-item label="工作时长">{{ currentRow.workHours ? currentRow.workHours + '小时' : '-' }}</el-descriptions-item>
-        <el-descriptions-item label="创建时间">{{ currentRow.createTime }}</el-descriptions-item>
-      </el-descriptions>
-      <template #footer>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
 
     <!-- 导入弹窗 -->
     <el-dialog v-model="importDialogVisible" title="导入考勤数据" width="500px">
@@ -227,11 +152,13 @@
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Upload, Download, Printer, ArrowDown } from '@element-plus/icons-vue'
+import { Plus, Upload, Download, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 
 // 搜索表单
+const router = useRouter()
 const filterExpanded = ref(false)
 const searchForm = reactive({
   workerName: '',
@@ -277,6 +204,7 @@ const selectedRows = ref<any[]>([])
 const columns = [
   { prop: 'workerName', label: '姓名', minWidth: 100, sortable: true },
   { prop: 'phone', label: '手机号', minWidth: 120, sortable: true },
+  { prop: 'paymentType', label: '结算方式', minWidth: 100 },
   { prop: 'attendanceDate', label: '考勤日期', minWidth: 120, sortable: true },
   { prop: 'status', label: '考勤状态', minWidth: 100 },
   { prop: 'checkInTime', label: '上班时间', minWidth: 120 },
@@ -289,34 +217,10 @@ const columns = [
 const tableRef = ref()
 
 // 弹窗控制
-const dialogVisible = ref(false)
-const detailDialogVisible = ref(false)
 const importDialogVisible = ref(false)
-const dialogTitle = ref('新增考勤')
-const submitLoading = ref(false)
 const importLoading = ref(false)
-const formRef = ref()
 const uploadRef = ref()
-const currentRow = ref<any>({})
 const importFile = ref()
-
-const formData = reactive({
-  id: '',
-  workerName: '',
-  phone: '',
-  attendanceDate: '',
-  status: 'normal',
-  checkInTime: '',
-  checkOutTime: '',
-  workHours: 8
-})
-
-const formRules = {
-  workerName: [{ required: true, message: '请输入工人姓名', trigger: 'blur' }],
-  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
-  attendanceDate: [{ required: true, message: '请选择考勤日期', trigger: 'change' }],
-  status: [{ required: true, message: '请选择考勤状态', trigger: 'change' }]
-}
 
 // 获取状态类型
 const getStatusType = (status: string) => {
@@ -365,6 +269,7 @@ const fetchData = async () => {
         id: '1',
         workerName: '张三',
         phone: '13800138000',
+        paymentType: 'daily',
         attendanceDate: '2024-01-15',
         status: 'normal',
         checkInTime: '08:30:00',
@@ -376,6 +281,7 @@ const fetchData = async () => {
         id: '2',
         workerName: '李四',
         phone: '13800138001',
+        paymentType: 'monthly',
         attendanceDate: '2024-01-15',
         status: 'late',
         checkInTime: '09:15:00',
@@ -387,6 +293,7 @@ const fetchData = async () => {
         id: '3',
         workerName: '王五',
         phone: '13800138002',
+        paymentType: 'daily',
         attendanceDate: '2024-01-15',
         status: 'early',
         checkInTime: '08:30:00',
@@ -398,6 +305,7 @@ const fetchData = async () => {
         id: '4',
         workerName: '赵六',
         phone: '13800138003',
+        paymentType: 'monthly',
         attendanceDate: '2024-01-15',
         status: 'absent',
         checkInTime: '',
@@ -409,6 +317,7 @@ const fetchData = async () => {
         id: '5',
         workerName: '钱七',
         phone: '13800138004',
+        paymentType: 'daily',
         attendanceDate: '2024-01-16',
         status: 'normal',
         checkInTime: '08:00:00',
@@ -466,29 +375,21 @@ const handleSelectionChange = (selection: any[]) => {
 
 // 新增
 const handleAdd = () => {
-  dialogTitle.value = '新增考勤'
-  formData.id = ''
-  formData.workerName = ''
-  formData.phone = ''
-  formData.attendanceDate = ''
-  formData.status = 'normal'
-  formData.checkInTime = ''
-  formData.checkOutTime = ''
-  formData.workHours = 8
-  dialogVisible.value = true
+  router.push('/tenant/attendance-add')
 }
 
 // 编辑
 const handleEdit = (row: any) => {
-  dialogTitle.value = '编辑考勤'
-  Object.assign(formData, row)
-  dialogVisible.value = true
+  router.push({
+    path: `/tenant/attendance-edit/${row.id}`
+  })
 }
 
 // 详情
 const handleDetail = (row: any) => {
-  currentRow.value = row
-  detailDialogVisible.value = true
+  router.push({
+    path: `/tenant/attendance-detail/${row.id}`
+  })
 }
 
 // 删除
@@ -504,21 +405,7 @@ const handleDelete = async (row: any) => {
   }
 }
 
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      submitLoading.value = true
-      setTimeout(() => {
-        ElMessage.success(dialogTitle.value === '新增考勤' ? '新增成功' : '修改成功')
-        dialogVisible.value = false
-        submitLoading.value = false
-        fetchData()
-      }, 500)
-    }
-  })
-}
+
 
 // 导入
 const handleImport = () => {
@@ -556,10 +443,7 @@ const handleExport = () => {
   ElMessage.info('导出功能开发中')
 }
 
-// 打印
-const handlePrint = () => {
-  ElMessage.info('打印功能开发中')
-}
+
 
 // 初始化
 onMounted(() => {

@@ -59,6 +59,10 @@
               <el-icon><Tools /></el-icon>
               <span>系统管理</span>
             </el-menu-item>
+            <el-menu-item index="dashboard">
+              <el-icon><Monitor /></el-icon>
+              <span>大屏</span>
+            </el-menu-item>
           </el-menu>
         </div>
       </div>
@@ -406,10 +410,6 @@
               <el-icon><Parameter /></el-icon>
               <span>系统参数</span>
             </el-menu-item>
-            <el-menu-item index="/tenant/process">
-              <el-icon><Operation /></el-icon>
-              <span>流程管理</span>
-            </el-menu-item>
             <el-menu-item index="/tenant/process-config">
               <el-icon><SettingIcon /></el-icon>
               <span>流程配置</span>
@@ -431,10 +431,26 @@
                 <el-icon><Printer /></el-icon>
                 <span>打印配置</span>
               </el-menu-item>
+              <el-menu-item index="/tenant/variable-pool">
+                <el-icon><DataAnalysis /></el-icon>
+                <span>变量池管理</span>
+              </el-menu-item>
             </el-sub-menu>
+            <el-menu-item index="/tenant/workflow-config">
+              <el-icon><Operation /></el-icon>
+              <span>工作流配置</span>
+            </el-menu-item>
             <el-menu-item index="/tenant/roles">
               <el-icon><Key /></el-icon>
               <span>角色管理</span>
+            </el-menu-item>
+          </template>
+          
+          <!-- 大屏二级菜单 -->
+          <template v-if="activeFirstMenu === 'dashboard'">
+            <el-menu-item index="/tenant/dashboard/annual-worker-overview">
+              <el-icon><Monitor /></el-icon>
+              <span>年度工人情况总览</span>
             </el-menu-item>
           </template>
         </el-menu>
@@ -462,6 +478,14 @@
         
         <!-- 内容区域 -->
         <main class="layout-content">
+          <!-- 水印 -->
+          <div class="watermark" v-if="userInfo">
+            <div class="watermark-text">
+              <div>{{ userInfo.phone || '手机号' }}</div>
+              <div>{{ userInfo.name || '用户姓名' }}</div>
+              <div>{{ userInfo.companyName || '所属企业' }}</div>
+            </div>
+          </div>
           <router-view v-slot="{ Component }">
             <transition name="fade" mode="out-in">
               <component :is="Component" />
@@ -494,6 +518,20 @@
             <span>关闭全部</span>
           </div>
         </div>
+
+        <!-- 底部页脚 -->
+        <footer class="layout-footer">
+          <div class="footer-content">
+            <div class="footer-left">
+              <p class="footer-text">© 2024 蓝领智汇平台 | 备案号：京ICP备12345678号</p>
+              <p class="footer-text">版本号：v1.0.0</p>
+            </div>
+            <div class="footer-right">
+              <p class="footer-text">联系电话：400-123-4567</p>
+              <p class="footer-text">邮箱：contact@lanlingzhihui.com</p>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   </div>
@@ -566,7 +604,8 @@ import {
   Cpu as Parameter,
   Operation,
   Document as File,
-  Printer
+  Printer,
+  Monitor
 } from '@element-plus/icons-vue'
 
 // 路由实例
@@ -594,7 +633,8 @@ const firstMenus = [
   { key: 'employment', label: '在职管理', icon: Management },
   { key: 'resignation', label: '离职管理', icon: RemoveFilled },
   { key: 'settlement', label: '结算管理', icon: Wallet },
-  { key: 'system', label: '系统管理', icon: Tools }
+  { key: 'system', label: '系统管理', icon: Tools },
+  { key: 'dashboard', label: '大屏', icon: Monitor }
 ]
 
 // 二级菜单配置
@@ -666,12 +706,17 @@ const secondMenus = {
     { path: '/tenant/menu-config', label: '菜单配置', icon: MenuIcon },
     { path: '/tenant/dictionary', label: '字典管理', icon: ListIcon },
     { path: '/tenant/system-parameter', label: '系统参数', icon: Parameter },
-    { path: '/tenant/process', label: '流程管理', icon: Operation },
+    { path: '/tenant/process', label: '流程自定义', icon: Operation },
     { path: '/tenant/process-config', label: '流程配置', icon: SettingIcon },
     { path: '/tenant/attachment', label: '附件管理', icon: File },
     { path: '/tenant/template-config', label: '模版配置', icon: DocumentIcon },
     { path: '/tenant/print-config', label: '打印配置', icon: Printer },
+    { path: '/tenant/variable-pool', label: '变量池管理', icon: DataAnalysis },
+    { path: '/tenant/workflow-config', label: '工作流配置', icon: Operation },
     { path: '/tenant/roles', label: '角色管理', icon: Key }
+  ],
+  dashboard: [
+    { path: '/tenant/dashboard/annual-worker-overview', label: '年度工人情况总览', icon: Monitor }
   ]
 }
 
@@ -736,6 +781,7 @@ const activeFirstMenu = computed(() => {
   if (path.includes('/resignation')) return 'resignation'
   if (path.includes('/referral') || path.includes('/commission') || path.includes('/settlement')) return 'settlement'
   if (path.includes('/departments') || path.includes('/roles') || path.includes('/company-culture') || path.includes('/position-culture') || path.includes('/employees') || path.includes('/positions') || path.includes('/rules') || path.includes('/menu-config') || path.includes('/dictionary') || path.includes('/system-parameter') || path.includes('/process') || path.includes('/process-config') || path.includes('/attachment') || path.includes('/template-config') || path.includes('/print-config')) return 'system'
+  if (path.includes('/dashboard')) return 'dashboard'
   console.log('Defaulting to work-center')
   return 'work-center'
 })
@@ -855,30 +901,82 @@ const getTabTitle = (path) => {
     '/tenant/contract/add': '新增合同',
     '/tenant/contract/edit/:id': '编辑合同',
     '/tenant/attendance': '考勤管理',
+    '/tenant/attendance-add': '新增考勤',
+    '/tenant/attendance-edit/:id': '编辑考勤',
+    '/tenant/attendance-detail/:id': '考勤详情',
     '/tenant/attendance/statistics': '考勤统计',
     '/tenant/on-duty/living-expense': '生活费管理',
+    '/tenant/on-duty/living-expense/detail/:id': '生活费申请详情',
     '/tenant/on-duty/salary': '工资管理',
+    '/tenant/on-duty/salary/detail/:id': '工资发放详情',
+    '/tenant/on-duty/salary/form': '工资发放管理',
     '/tenant/on-duty/claim': '理赔管理',
+    '/tenant/on-duty/claim/form': '新增理赔',
+    '/tenant/on-duty/claim/form/:id': '编辑理赔',
+    '/tenant/on-duty/claim/detail/:id': '理赔详情',
+    '/tenant/on-duty/communication/form': '新增沟通记录',
+    '/tenant/on-duty/communication/form/:id': '编辑沟通记录',
+    '/tenant/on-duty/communication/detail/:id': '沟通记录详情',
     '/tenant/on-duty/special-case': '特殊情况管理',
+    '/tenant/on-duty/special-case/form': '新增特殊情况',
+    '/tenant/on-duty/special-case/form/:id': '编辑特殊情况',
+    '/tenant/on-duty/special-case/detail/:id': '特殊情况详情',
     '/tenant/on-duty/insurance': '保险管理',
     '/tenant/on-duty/insurance-record': '参保登记',
+    '/tenant/on-duty/insurance/form': '新增保险',
+    '/tenant/on-duty/insurance/form/:id': '编辑保险',
+    '/tenant/on-duty/insurance/detail/:id': '保险详情',
+    '/tenant/on-duty/insurance-record/add': '新增参保登记',
+    '/tenant/on-duty/insurance-record/edit/:id': '编辑参保登记',
+    '/tenant/on-duty/insurance-record/detail/:id': '参保登记详情',
     '/tenant/on-duty/leave': '请假管理',
-    '/tenant/on-duty/leave-detail': '请假详情',
+    '/tenant/on-duty/leave-add': '新增请假',
+    '/tenant/on-duty/leave-edit/:id': '编辑请假',
+    '/tenant/on-duty/leave-detail/:id': '请假详情',
+    '/tenant/on-duty/leave-approve/:id': '请假审核',
     '/tenant/on-duty/transfer': '调岗管理',
-    '/tenant/on-duty/transfer/detail/:id': '调岗详情',
+    '/tenant/on-duty/transfer-add': '新增调岗',
+    '/tenant/on-duty/transfer-edit/:id': '编辑调岗',
+    '/tenant/on-duty/transfer-detail/:id': '调岗详情',
+    '/tenant/on-duty/transfer-approve/:id': '调岗审核',
     '/tenant/on-duty/reward-punishment': '奖惩管理',
+    '/tenant/on-duty/reward-punishment-add': '新增奖惩',
+    '/tenant/on-duty/reward-punishment-edit/:id': '编辑奖惩',
+    '/tenant/on-duty/reward-punishment-detail/:id': '奖惩详情',
+    '/tenant/on-duty/reward-punishment-approve/:id': '奖惩审核',
     '/tenant/on-duty/learning-material': '学习材料',
+    '/tenant/on-duty/learning-material/form': '新增学习材料',
+    '/tenant/on-duty/learning-material/form/:id': '编辑学习材料',
+    '/tenant/on-duty/learning-material/detail/:id': '学习材料详情',
     '/tenant/on-duty/question-bank': '题库管理',
+    '/tenant/on-duty/question-bank/form': '新增题库',
+    '/tenant/on-duty/question-bank/form/:id': '编辑题库',
+    '/tenant/on-duty/question-bank/detail/:id': '题库详情',
     '/tenant/on-duty/learning-time': '学习时长管理',
     '/tenant/on-duty/exam': '考试管理',
+    '/tenant/on-duty/exam/form': '新增考试',
+    '/tenant/on-duty/exam/form/:id': '编辑考试',
+    '/tenant/on-duty/exam/detail/:id': '考试详情',
     '/tenant/on-duty/exam-result': '考试成绩',
+    '/tenant/on-duty/exam-result/detail/:id': '考试成绩详情',
     '/tenant/on-duty/abnormal': '异常管理',
     '/tenant/on-duty/complaint': '投诉/建议',
     '/tenant/on-duty/communication': '沟通管理',
     '/tenant/on-duty/entertainment': '文娱活动',
+    '/tenant/on-duty/entertainment/add': '新增文娱活动',
+    '/tenant/on-duty/entertainment/edit/:id': '编辑文娱活动',
+    '/tenant/on-duty/entertainment/detail/:id': '文娱活动详情',
     '/tenant/on-duty/registration': '报名管理',
+    '/tenant/on-duty/registration/detail/:id': '报名详情',
     '/tenant/on-duty/news': '发布资讯',
+    '/tenant/on-duty/news/detail/:id': '资讯详情',
+    '/tenant/on-duty/news/add': '新增资讯',
+    '/tenant/on-duty/news/edit/:id': '编辑资讯',
     '/tenant/on-duty/community': '社团管理',
+    '/tenant/on-duty/community/detail/:id': '社团详情',
+    '/tenant/on-duty/community/add': '新增社团',
+    '/tenant/on-duty/community/edit/:id': '编辑社团',
+    '/tenant/news-detail/:id': '资讯详情',
     '/tenant/resignation': '离职管理',
     '/tenant/resignation/:id': '离职详情',
     '/tenant/resignation/add': '新增离职',
@@ -903,24 +1001,46 @@ const getTabTitle = (path) => {
     '/tenant/roles/permissions': '权限管理',
     '/tenant/company-culture': '企业文化介绍',
     '/tenant/position-culture': '岗位文化介绍',
+    '/tenant/position-culture/add': '新增岗位文化',
+    '/tenant/position-culture/edit/:id': '编辑岗位文化',
     '/tenant/employees': '正式员工',
     '/tenant/employees/add': '新增员工',
     '/tenant/employees/edit/:id': '编辑员工',
     '/tenant/employees/:id': '员工详情',
     '/tenant/positions': '岗位管理',
     '/tenant/rules': '规则配置',
+    '/tenant/rules/form': '新增规则',
+    '/tenant/rules/form/:id': '编辑规则',
+    '/tenant/rules/:id': '规则详情',
     '/tenant/menu-config': '菜单配置',
     '/tenant/dictionary': '字典管理',
+    '/tenant/dictionary/add': '新增字典',
+    '/tenant/dictionary/edit/:id': '编辑字典',
+    '/tenant/dictionary/view/:id': '查看字典',
     '/tenant/system-parameter': '系统参数',
-    '/tenant/process': '流程管理',
+    '/tenant/process': '流程自定义',
+    '/tenant/process/add': '新增流程',
+    '/tenant/process/edit/:id': '编辑流程',
     '/tenant/process-config': '流程配置',
+    '/tenant/process-config/add': '新增流程配置',
+    '/tenant/process-config/edit/:id': '编辑流程配置',
     '/tenant/attachment': '附件管理',
+    '/tenant/attachment-config-create': '新增附件配置',
+    '/tenant/attachment-config-edit': '编辑附件配置',
+    '/tenant/attachment-config-view': '附件配置详情',
     '/tenant/template-config': '模版配置',
+    '/tenant/template-config/add': '新增模板',
+    '/tenant/template-config/edit/:id': '编辑模板',
     '/tenant/print-config': '打印配置',
+    '/tenant/variable-pool': '变量池管理',
+    '/tenant/workflow-config': '工作流配置',
+    '/tenant/workflow-config/add': '新增工作流配置',
+    '/tenant/workflow-config/edit/:id': '编辑工作流配置',
     '/tenant/quick-access-settings': '首页快捷入口设置',
     '/tenant/todo-detail/:id': '待办详情',
     '/tenant/message-detail/:id': '消息详情',
-    '/tenant/warning-detail/:id': '预警详情'
+    '/tenant/warning-detail/:id': '预警详情',
+    '/tenant/dashboard/annual-worker-overview': '年度工人情况总览'
   }
   
   // 首先尝试精确匹配
@@ -939,14 +1059,48 @@ const getTabTitle = (path) => {
     return '新增合同'
   }
   
+  // 特殊处理规则配置页面路径
+  if (path.includes('/rules/form/')) {
+    return '编辑规则'
+  }
+  if (path === '/tenant/rules/form') {
+    return '新增规则'
+  }
+  if (path.includes('/rules/') && !path.includes('/form/')) {
+    const pathParts = path.split('/')
+    const lastPart = pathParts[pathParts.length - 1]
+    if (!isNaN(lastPart)) {
+      return '规则详情'
+    }
+  }
+  
   // 处理带动态参数的路径
   for (const key in titleMap) {
     if (key.includes(':')) {
+      // 替换动态参数为正则表达式
       const pathPattern = key.replace(/:\w+/g, '[^/]+')
       const regex = new RegExp(`^${pathPattern}$`)
       if (regex.test(path)) {
         return titleMap[key]
       }
+    }
+  }
+  
+  // 特殊处理编辑页面路径
+  if (path.includes('/edit/')) {
+    const parentPath = path.substring(0, path.lastIndexOf('/edit/'))
+    const editKey = `${parentPath}/edit/:id`
+    if (titleMap[editKey]) {
+      return titleMap[editKey]
+    }
+  }
+  
+  // 特殊处理新增页面路径
+  if (path.includes('/add')) {
+    const parentPath = path.substring(0, path.lastIndexOf('/add'))
+    const addKey = `${parentPath}/add`
+    if (titleMap[addKey]) {
+      return titleMap[addKey]
     }
   }
   
@@ -1062,17 +1216,35 @@ const closeAllTabs = () => {
 }
 
 // 监听路由变化，确保通过快捷导航跳转时能正确更新4级导航栏和菜单
-watch(() => route.path, (newPath) => {
-  // 路由变化时，添加页面标签
-  const title = getTabTitle(newPath)
+watch(() => route.fullPath, (newPath) => {
+  // 从路径中提取基本路径（去除查询参数）
+  const basePath = newPath.split('?')[0]
+  
+  // 路由变化时，获取页面标签标题
+  let title = getTabTitle(basePath)
+  
+  // 检查是否为报名详情页面的审核模式
+  if (basePath.includes('/tenant/on-duty/registration/detail/') && newPath.includes('mode=approve')) {
+    title = '报名审核'
+  }
   
   // 检查标签是否已存在
-  const existingTab = openTabs.value.find(tab => tab.path === newPath)
+  const existingTab = openTabs.value.find(tab => tab.path === basePath)
   if (!existingTab) {
     openTabs.value.push({
-      path: newPath,
+      path: basePath,
       title
     })
+  } else {
+    // 标签已存在，更新标题
+    // 使用splice替换整个标签对象，确保Vue能检测到变化
+    const index = openTabs.value.findIndex(tab => tab.path === basePath)
+    if (index > -1) {
+      openTabs.value.splice(index, 1, {
+        ...existingTab,
+        title
+      })
+    }
   }
 })
 
@@ -1576,6 +1748,49 @@ onUnmounted(() => {
   flex: 1;
   padding: var(--spacing-sm);
   background-color: var(--color-bg-page);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 水印样式 */
+.watermark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transform: rotate(-45deg);
+}
+
+.watermark-text {
+  font-size: 24px;
+  font-weight: bold;
+  color: var(--color-text-primary);
+  text-align: center;
+  line-height: 1.4;
+  letter-spacing: 2px;
+  white-space: nowrap;
+  padding: 20px;
+}
+
+/* 响应式调整 */
+@media screen and (max-width: 768px) {
+  .watermark-text {
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+}
+
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .watermark-text {
+    font-size: 20px;
+  }
 }
 
 .layout-content::-webkit-scrollbar {
@@ -1832,6 +2047,71 @@ onUnmounted(() => {
 
   .layout-content {
     padding: var(--spacing-xxl);
+  }
+}
+
+/* 底部页脚 */
+.layout-footer {
+  background: #ffffff;
+  border-top: 1px solid var(--color-border-light);
+  transition: all var(--transition-base);
+  margin-top: auto;
+}
+
+.footer-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-xl);
+  max-width: 1440px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.footer-left,
+.footer-right {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.footer-text {
+  font-size: var(--font-size-small);
+  color: var(--color-text-secondary);
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    text-align: center;
+  }
+
+  .footer-left,
+  .footer-right {
+    align-items: center;
+  }
+}
+
+/* 平板设备适配 (768px - 1024px) */
+@media screen and (min-width: 769px) and (max-width: 1024px) {
+  .footer-content {
+    padding: var(--spacing-md);
+  }
+
+  .footer-text {
+    font-size: var(--font-size-extra-small);
+  }
+}
+
+/* 大屏幕优化 (>1440px) */
+@media screen and (min-width: 1440px) {
+  .footer-content {
+    padding: var(--spacing-lg) var(--spacing-xxl);
   }
 }
 

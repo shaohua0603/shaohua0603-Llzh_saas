@@ -134,165 +134,34 @@
           <el-icon><Delete /></el-icon>
           删除
         </el-button>
-        <el-button type="warning" link @click="handleUpdateIntro(row)">
-          <el-icon><Document /></el-icon>
-          更新介绍
+        <el-button type="info" link @click="handleShare(row)">
+          <el-icon><Share /></el-icon>
+          分享
         </el-button>
       </template>
     </CommonTable>
 
-    <!-- 新增/编辑对话框 -->
-    <el-dialog
-      v-model="formDialogVisible"
-      :title="isEdit ? '编辑社团' : '新增社团'"
-      width="800px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="140px">
-        <el-form-item label="社团标题" prop="title">
-          <el-input v-model="formData.title" placeholder="请输入社团标题" />
-        </el-form-item>
-        <el-form-item label="社团类型" prop="communityType">
-          <el-select v-model="formData.communityType" placeholder="请选择社团类型">
-            <el-option label="体育类" value="sports" />
-            <el-option label="文化类" value="culture" />
-            <el-option label="兴趣类" value="interest" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="是否团员限制" prop="isMemberLimit">
-          <el-switch
-            v-model="formData.isMemberLimit"
-            active-text="开启"
-            inactive-text="关闭"
-            @change="handleMemberLimitChange"
-          />
-        </el-form-item>
-        <el-form-item v-if="formData.isMemberLimit" label="团员人数限制" prop="memberLimit">
-          <el-input-number v-model="formData.memberLimit" :min="1" :max="1000" />
-          <span class="form-tip">人</span>
-        </el-form-item>
-        <el-form-item label="是否报名审核" prop="isApprovalRequired">
-          <el-switch
-            v-model="formData.isApprovalRequired"
-            active-text="需要审核"
-            inactive-text="无需审核"
-          />
-        </el-form-item>
-        <el-form-item label="社团简介" prop="summary">
-          <el-input
-            v-model="formData.summary"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入社团简介"
-          />
-        </el-form-item>
-        <el-form-item label="社团活动地址" prop="activityAddress">
-          <el-input v-model="formData.activityAddress" placeholder="请输入社团活动地址" />
-        </el-form-item>
-        <el-form-item label="社团活动时间" prop="activityTime">
-          <el-input v-model="formData.activityTime" placeholder="如：每周六下午3点" />
-        </el-form-item>
-        <el-form-item label="加入社团要求" prop="requirements">
-          <el-input
-            v-model="formData.requirements"
-            type="textarea"
-            :rows="2"
-            placeholder="请输入加入社团要求"
-          />
-        </el-form-item>
-        <el-form-item label="社团介绍" prop="introduction">
-          <RichTextEditor v-model="formData.introduction" :height="'300px'" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="formDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitForm" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 更新介绍对话框 -->
-    <el-dialog
-      v-model="introDialogVisible"
-      title="更新社团介绍"
-      width="800px"
-      :close-on-click-modal="false"
-    >
-      <el-form v-if="currentRow" label-width="140px">
-        <el-form-item label="社团标题">
-          <el-input :value="currentRow.title" disabled />
-        </el-form-item>
-        <el-form-item label="社团介绍">
-          <RichTextEditor v-model="introContent" :height="'350px'" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="introDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitIntro" :loading="submitLoading">保存</el-button>
-      </template>
-    </el-dialog>
-
-    <!-- 详情对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      title="社团详情"
-      width="800px"
-    >
-      <div v-if="currentRow" class="detail-content">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="社团标题">
-            {{ currentRow.title }}
-          </el-descriptions-item>
-          <el-descriptions-item label="社团类型">
-            <el-tag>{{ getTypeText(currentRow.communityType) }}</el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="是否团员限制">
-            <el-tag :type="currentRow.isMemberLimit ? 'warning' : 'success'">
-              {{ currentRow.isMemberLimit ? `限${currentRow.memberLimit}人` : '不限人数' }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="是否报名审核">
-            <el-tag :type="currentRow.isApprovalRequired ? 'warning' : 'success'">
-              {{ currentRow.isApprovalRequired ? '需要审核' : '无需审核' }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="社团简介" :span="2">
-            {{ currentRow.summary || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="社团活动地址" :span="2">
-            {{ currentRow.activityAddress || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="社团活动时间" :span="2">
-            {{ currentRow.activityTime || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="加入社团要求" :span="2">
-            {{ currentRow.requirements || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="社团介绍" :span="2">
-            <div v-html="currentRow.introduction" class="community-intro"></div>
-          </el-descriptions-item>
-          <el-descriptions-item label="创建时间">
-            {{ formatDateTime(currentRow.createTime) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="更新时间">
-            {{ formatDateTime(currentRow.updateTime) }}
-          </el-descriptions-item>
-        </el-descriptions>
-      </div>
-      <template #footer>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
+    <!-- 分享组件 -->
+    <ShareComponent 
+      ref="shareComponentRef"
+      :title="shareTitle"
+      :id="shareId"
+      :type="'community'"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Search, Refresh, Plus, View, Edit, Delete, Document, ArrowDown } from '@element-plus/icons-vue'
+import { Search, Refresh, Plus, View, Edit, Delete, ArrowDown, Share } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
-import RichTextEditor from '../../../components/RichTextEditor.vue'
+import ShareComponent from '@/components/ShareComponent.vue'
 import type { ColumnConfig } from '../../types/common-table'
-import type { FormInstance, FormRules } from 'element-plus'
+
+// 路由实例
+const router = useRouter()
 
 // 类型定义
 interface CommunityRecord {
@@ -324,52 +193,10 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const loading = ref(false)
-const currentRow = ref<CommunityRecord | null>(null)
-const introContent = ref('')
 const selectedRows = ref<CommunityRecord[]>([])
-
-// 对话框控制
-const formDialogVisible = ref(false)
-const detailDialogVisible = ref(false)
-const introDialogVisible = ref(false)
-const isEdit = ref(false)
-const submitLoading = ref(false)
-const formRef = ref<FormInstance>()
-
-// 表单数据
-const formData = reactive({
-  title: '',
-  communityType: '' as CommunityRecord['communityType'] | '',
-  isMemberLimit: false,
-  memberLimit: 50,
-  isApprovalRequired: true,
-  summary: '',
-  activityAddress: '',
-  activityTime: '',
-  requirements: '',
-  introduction: ''
-})
-
-// 表单验证规则
-const formRules: FormRules = {
-  title: [{ required: true, message: '请输入社团标题', trigger: 'blur' }],
-  communityType: [{ required: true, message: '请选择社团类型', trigger: 'change' }],
-  memberLimit: [
-    {
-      required: true,
-      message: '请输入团员人数限制',
-      trigger: 'blur',
-      validator: (_rule: any, value: any, callback: any) => {
-        if (formData.isMemberLimit && !value) {
-          callback(new Error('请输入团员人数限制'))
-        } else {
-          callback()
-        }
-      }
-    }
-  ],
-  activityAddress: [{ required: true, message: '请输入社团活动地址', trigger: 'blur' }]
-}
+const shareComponentRef = ref<any>(null)
+const shareTitle = ref('')
+const shareId = ref('')
 
 // 表格列配置
 const columns: ColumnConfig[] = [
@@ -411,19 +238,6 @@ const getTypeText = (type: string): string => {
     interest: '兴趣类'
   }
   return typeMap[type] || type
-}
-
-// 格式化日期时间
-const formatDateTime = (dateStr: string): string => {
-  if (!dateStr) return '-'
-  const date = new Date(dateStr)
-  const year = date.getFullYear()
-  const month = String(date.getMonth() + 1).padStart(2, '0')
-  const day = String(date.getDate()).padStart(2, '0')
-  const hours = String(date.getHours()).padStart(2, '0')
-  const minutes = String(date.getMinutes()).padStart(2, '0')
-  const seconds = String(date.getSeconds()).padStart(2, '0')
-  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
 }
 
 // 生成模拟数据
@@ -564,99 +378,19 @@ const fetchData = () => {
   loading.value = false
 }
 
-// 团员限制开关变化
-const handleMemberLimitChange = (value: boolean) => {
-  if (!value) {
-    formData.memberLimit = 50
-  }
-}
-
 // 新增
 const handleAdd = () => {
-  isEdit.value = false
-  formData.title = ''
-  formData.communityType = ''
-  formData.isMemberLimit = false
-  formData.memberLimit = 50
-  formData.isApprovalRequired = true
-  formData.summary = ''
-  formData.activityAddress = ''
-  formData.activityTime = ''
-  formData.requirements = ''
-  formData.introduction = ''
-  formDialogVisible.value = true
+  router.push('/tenant/on-duty/community/add')
 }
 
 // 编辑
 const handleEdit = (row: CommunityRecord) => {
-  isEdit.value = true
-  currentRow.value = row
-  formData.title = row.title
-  formData.communityType = row.communityType
-  formData.isMemberLimit = row.isMemberLimit
-  formData.memberLimit = row.memberLimit || 50
-  formData.isApprovalRequired = row.isApprovalRequired
-  formData.summary = row.summary
-  formData.activityAddress = row.activityAddress
-  formData.activityTime = row.activityTime
-  formData.requirements = row.requirements
-  formData.introduction = row.introduction
-  formDialogVisible.value = true
-}
-
-// 提交表单
-const handleSubmitForm = async () => {
-  if (!formRef.value) return
-
-  await formRef.value.validate()
-
-  submitLoading.value = true
-
-  try {
-    if (isEdit.value && currentRow.value) {
-      // 编辑
-      const index = allData.value.findIndex(item => item.id === currentRow.value!.id)
-      if (index > -1) {
-        allData.value[index] = {
-          ...allData.value[index],
-          ...formData,
-          updateTime: new Date().toISOString()
-        }
-      }
-      ElMessage.success('修改成功')
-    } else {
-      // 新增
-      const now = new Date().toISOString()
-      const newRecord: CommunityRecord = {
-        id: `COMM${Date.now()}`,
-        title: formData.title,
-        communityType: formData.communityType as CommunityRecord['communityType'],
-        isMemberLimit: formData.isMemberLimit,
-        memberLimit: formData.isMemberLimit ? formData.memberLimit : undefined,
-        isApprovalRequired: formData.isApprovalRequired,
-        summary: formData.summary,
-        activityAddress: formData.activityAddress,
-        activityTime: formData.activityTime,
-        requirements: formData.requirements,
-        introduction: formData.introduction,
-        createTime: now,
-        updateTime: now
-      }
-      allData.value.unshift(newRecord)
-      ElMessage.success('新增成功')
-    }
-
-    formDialogVisible.value = false
-    fetchData()
-  } finally {
-    submitLoading.value = false
-  }
+  router.push(`/tenant/on-duty/community/edit/${row.id}`)
 }
 
 // 查看
 const handleView = (row: CommunityRecord) => {
-  currentRow.value = row
-  detailDialogVisible.value = true
+  router.push(`/tenant/on-duty/community/detail/${row.id}`)
 }
 
 // 删除
@@ -673,39 +407,6 @@ const handleDelete = (row: CommunityRecord) => {
     ElMessage.success('删除成功')
     fetchData()
   }).catch(() => {})
-}
-
-// 更新介绍
-const handleUpdateIntro = (row: CommunityRecord) => {
-  currentRow.value = row
-  introContent.value = row.introduction
-  introDialogVisible.value = true
-}
-
-// 提交更新介绍
-const handleSubmitIntro = () => {
-  if (!currentRow.value) return
-
-  if (!introContent.value) {
-    ElMessage.warning('请输入社团介绍')
-    return
-  }
-
-  submitLoading.value = true
-
-  try {
-    const index = allData.value.findIndex(item => item.id === currentRow.value!.id)
-    if (index > -1) {
-      allData.value[index].introduction = introContent.value
-      allData.value[index].updateTime = new Date().toISOString()
-    }
-
-    ElMessage.success('社团介绍更新成功')
-    introDialogVisible.value = false
-    fetchData()
-  } finally {
-    submitLoading.value = false
-  }
 }
 
 // 批量删除
@@ -734,6 +435,15 @@ const handleBatchDelete = async () => {
   } catch (error) {
     console.error('批量删除失败:', error)
     ElMessage.error('批量删除失败')
+  }
+}
+
+// 分享
+const handleShare = (row: CommunityRecord) => {
+  shareTitle.value = row.title
+  shareId.value = row.id
+  if (shareComponentRef.value) {
+    shareComponentRef.value.openShareDialog()
   }
 }
 

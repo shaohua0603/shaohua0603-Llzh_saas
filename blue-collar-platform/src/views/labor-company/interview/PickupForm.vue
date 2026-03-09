@@ -1,6 +1,7 @@
 <template>
   <div class="pickup-form-container">
     <div class="form-content">
+      <!-- 基本信息表单 -->
       <el-card class="form-card" shadow="never">
         <CommonForm
           ref="formRef"
@@ -9,31 +10,78 @@
           :loading="loading"
           @submit="handleSubmit"
           @reset="handleReset"
-        >
-          <template #field-workerIds>
-            <el-form-item label="接送人员" prop="workerIds" required>
-              <el-button type="primary" @click="showPersonSelectDialog = true">
-                <el-icon><User /></el-icon>
-                选择接送人员
-              </el-button>
-              <div class="selected-workers" v-if="selectedWorkers.length > 0">
-                <el-tag
-                  v-for="worker in selectedWorkers"
-                  :key="worker.id"
-                  closable
-                  @close="removeWorker(worker.id)"
-                  class="worker-tag"
-                >
-                  {{ worker.name }} - {{ worker.phone }}
-                </el-tag>
-              </div>
-              <div v-else class="empty-tip">
-                暂未选择接送人员
-              </div>
-            </el-form-item>
-          </template>
-        </CommonForm>
+          :show-buttons="false"
+        />
+        
       </el-card>
+
+      <!-- 接送人员清单卡片 -->
+      <el-card class="info-card" shadow="never" style="margin-top: 20px;">
+        <template #header>
+          <div class="card-header">
+            <el-icon><User /></el-icon>
+            <span>接送人员清单</span>
+            <el-button type="primary" @click="showPersonSelectDialog = true" style="margin-left: auto;">
+              <el-icon><User /></el-icon>
+              选择接送人员
+            </el-button>
+          </div>
+        </template>
+        <div v-if="selectedWorkers.length > 0">
+          <el-table :data="selectedWorkers" border>
+            <el-table-column type="index" label="序号" width="60" />
+            <el-table-column prop="name" label="姓名" width="120" />
+            <el-table-column prop="phone" label="手机号" width="130" />
+            <el-table-column prop="idCard" label="身份证号" width="180" />
+            <el-table-column prop="jobCategory" label="岗位类别" width="100" />
+            <el-table-column prop="jobIntention" label="岗位意向" width="120" />
+            <el-table-column prop="expectedSalary" label="期望薪资" width="100" />
+            <el-table-column prop="expectedWorkLocation" label="期望工作地址" width="120" />
+            <el-table-column prop="materialComplete" label="材料齐全" width="100">
+              <template #default="{ row }">
+                <el-tag :type="row.materialComplete ? 'success' : 'danger'">
+                  {{ row.materialComplete ? '是' : '否' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="操作" width="80" fixed="right">
+              <template #default="{ row }">
+                <el-button
+                  type="danger"
+                  size="small"
+                  @click="removeWorker(row.id)"
+                >
+                  <el-icon><Delete /></el-icon>
+                  移除
+                </el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+        <div v-else class="empty-tip">
+          暂未选择接送人员
+        </div>
+      </el-card>
+    </div>
+    
+    <!-- 底部按钮栏 -->
+    <div class="form-footer">
+      <el-button @click="handleBack">
+        <el-icon><ArrowLeft /></el-icon>
+        返回
+      </el-button>
+      <el-button @click="handleResetForm">
+        <el-icon><Refresh /></el-icon>
+        重置
+      </el-button>
+      <el-button @click="handleSaveDraft">
+        <el-icon><Upload /></el-icon>
+        保存草稿
+      </el-button>
+      <el-button type="primary" @click="handleSubmit()" :loading="loading">
+        <el-icon><Check /></el-icon>
+        提交
+      </el-button>
     </div>
     
     <PersonSelectDialog
@@ -49,8 +97,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { User } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { User, Delete, ArrowLeft, Refresh, Upload, Check } from '@element-plus/icons-vue'
 import CommonForm from '../../../components/CommonForm.vue'
 import PersonSelectDialog from '../../../components/PersonSelectDialog.vue'
 import type { FormConfig, FormFieldConfig } from '../../types/common-form'
@@ -63,6 +111,9 @@ interface Worker {
   phone: string
   idCard: string
   jobCategory: string
+  jobIntention: string
+  expectedSalary: string
+  expectedWorkLocation: string
   materialComplete: boolean
 }
 
@@ -192,25 +243,6 @@ const formConfig: FormConfig = {
       ]
     },
     {
-      field: 'workerIds',
-      label: '接送人员',
-      type: 'CUSTOM',
-      required: true,
-      span: 24,
-      rules: [
-        { required: true, message: '请选择接送人员', trigger: 'change' },
-        { validator: (rule: any, value: any, callback: any) => {
-          if (!value || value.length === 0) {
-            callback(new Error('至少选择一名接送人员'))
-          } else if (value.length > 50) {
-            callback(new Error('接送人员数量不能超过50人'))
-          } else {
-            callback()
-          }
-        }, trigger: 'change' }
-      ]
-    },
-    {
       field: 'remark',
       label: '备注',
       type: 'TEXTAREA',
@@ -225,10 +257,6 @@ const formConfig: FormConfig = {
   ],
   labelWidth: '120px',
   columns: 2,
-  buttonPosition: 'bottom',
-  buttonAlign: 'center',
-  submitText: '提交',
-  resetText: '重置',
   permissions: {
     submit: isEdit.value ? 'interview:pickup:update' : 'interview:pickup:create'
   }
@@ -248,15 +276,26 @@ const removeWorker = (workerId: string) => {
   formData.value.workerIds = selectedWorkers.value.map(w => w.id)
 }
 
-const handleSubmit = async (data: PickupFormData) => {
-  console.log('提交表单数据:', data)
+const handleSubmit = async () => {
+  // 验证接送人员
+  if (!formData.value.workerIds || formData.value.workerIds.length === 0) {
+    ElMessage.error('请选择接送人员')
+    return
+  }
+  
+  if (formData.value.workerIds.length > 50) {
+    ElMessage.error('接送人员数量不能超过50人')
+    return
+  }
+  
+  console.log('提交表单数据:', formData.value)
   loading.value = true
   try {
     if (isEdit.value) {
-      await updatePickup(route.params.id as string, data)
+      await updatePickup(route.params.id as string, formData.value)
       ElMessage.success('编辑成功')
     } else {
-      await createPickup(data)
+      await createPickup(formData.value)
       ElMessage.success('新增成功')
     }
     router.back()
@@ -266,6 +305,31 @@ const handleSubmit = async (data: PickupFormData) => {
   } finally {
     loading.value = false
   }
+}
+
+const handleResetForm = () => {
+  console.log('重置表单')
+  if (formRef.value) {
+    formRef.value.resetFields()
+  }
+  selectedWorkers.value = []
+  formData.value.workerIds = []
+}
+
+const handleSaveDraft = () => {
+  // 验证接送人员
+  if (!formData.value.workerIds || formData.value.workerIds.length === 0) {
+    ElMessage.error('请选择接送人员')
+    return
+  }
+  
+  if (formData.value.workerIds.length > 50) {
+    ElMessage.error('接送人员数量不能超过50人')
+    return
+  }
+  
+  // 保存草稿逻辑
+  ElMessage.success('草稿保存成功')
 }
 
 const handleReset = (data: any) => {
@@ -300,8 +364,11 @@ const loadPickupDetail = async () => {
         name: worker.name,
         phone: worker.phone,
         idCard: worker.idCard,
-        jobCategory: '',
-        materialComplete: false
+        jobCategory: worker.jobCategory || '',
+        jobIntention: worker.jobIntention || '',
+        expectedSalary: worker.expectedSalary || '',
+        expectedWorkLocation: worker.expectedWorkLocation || '',
+        materialComplete: worker.materialComplete || false
       }))
     }
   } catch (error) {
@@ -338,17 +405,19 @@ onMounted(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.selected-workers {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+.info-card {
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.worker-tag {
-  font-size: 14px;
-  padding: 8px 12px;
-  border-radius: 4px;
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: #303133;
 }
 
 .empty-tip {
@@ -359,6 +428,22 @@ onMounted(() => {
   background-color: #f5f7fa;
   border-radius: 4px;
   text-align: center;
+}
+
+/* 底部按钮栏 - 固定悬浮 */
+.form-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-top: 1px solid #e4e7ed;
+  z-index: 100;
+  transition: left var(--transition-base);
 }
 
 @media screen and (max-width: 768px) {
@@ -375,13 +460,17 @@ onMounted(() => {
     margin-bottom: 16px;
   }
 
-  .selected-workers {
-    gap: 6px;
+  .form-footer {
+    left: 0;
+    flex-direction: column;
+  }
+  
+  .form-footer .el-button {
+    width: 100%;
   }
 
-  .worker-tag {
-    font-size: 12px;
-    padding: 6px 10px;
+  .form-content {
+    padding-bottom: 120px;
   }
 }
 </style>

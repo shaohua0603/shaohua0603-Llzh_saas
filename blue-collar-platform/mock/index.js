@@ -779,8 +779,8 @@ Mock.mock('/api/tenant/resignations', 'get', () => {
 });
 
 // 获取离职详情
-Mock.mock(/\/api\/labor-company\/resignations\/\d+/, 'get', (options) => {
-  const id = options.url.match(/\/api\/labor-company\/resignations\/(\d+)/)?.[1];
+Mock.mock(/\/api\/tenant\/resignations\/\d+/, 'get', (options) => {
+  const id = options.url.match(/\/api\/tenant\/resignations\/(\d+)/)?.[1];
   const resignation = resignations.find(r => r.id == id) || resignations[0];
   const records = resignationApprovalRecords.find(r => r.resignationId == id)?.records || [];
   return {
@@ -1977,6 +1977,15 @@ const activities = [
   }
 ];
 
+// 引入打印管理模拟数据
+import printConfigMock from './printConfig.js';
+
+// 注册打印管理模拟数据
+Object.keys(printConfigMock).forEach(key => {
+  const [method, url] = key.split(' ');
+  Mock.mock(new RegExp(url), method, printConfigMock[key]);
+});
+
 // 报名记录数据
 const registrations = [
   {
@@ -2535,7 +2544,7 @@ Mock.mock(/\/system\/packages\/\w+/, 'put', (options) => {
 
 // 删除套餐 - 新接口
 Mock.mock(/\/system\/packages\/\w+/, 'delete', (options) => {
-  const id = options.url.match(/\/system\/packages\/\w+)/)?.[1];
+  const id = options.url.match(/\/system\/packages\/(\w+)/)?.[1];
   const index = packageInfoList.findIndex(p => p.id === id);
   if (index !== -1) {
     packageInfoList.splice(index, 1);
@@ -4056,6 +4065,9 @@ Mock.mock('/factories', 'get', () => {
 
 // 引入系统管理模块Mock API
 import('./systemManagementApi.js');
+
+// 引入工作流配置Mock数据
+import('./flowConfig.js');
 
 // 导出Mock对象
 if (typeof module !== 'undefined' && module.exports) {
@@ -5748,11 +5760,9 @@ Mock.mock(/\/api\/v1\/work-center\/messages\/\d+/, 'delete', (options) => {
 // 模拟业务审批状态数据
 const businessApprovalStatuses = [];
 
-// 模拟审批记录数据
-const approvalRecords = [];
+// 模拟审批记录数据 - 使用已定义的approvalRecords
 
-// 模拟待办任务数据
-const todoTasks = [];
+// 模拟待办任务数据 - 使用已定义的todoTasks
 
 // 初始化一些模拟数据
 const initApprovalExecutionMockData = () => {

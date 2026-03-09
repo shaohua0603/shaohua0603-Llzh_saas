@@ -424,15 +424,15 @@ const loadContractList = async () => {
 }
 
 const handleAdd = () => {
-  router.push({ name: 'LaborCompanyContractAdd' })
+  router.push({ name: 'TenantContractAdd' })
 }
 
 const handleView = (row: Contract) => {
-  router.push({ name: 'LaborCompanyContractDetail', params: { id: row.id } })
+  router.push({ name: 'TenantContractDetail', params: { id: row.id } })
 }
 
 const handleEdit = (row: Contract) => {
-  router.push({ name: 'LaborCompanyContractEdit', params: { id: row.id } })
+  router.push({ name: 'TenantContractEdit', params: { id: row.id } })
 }
 
 const handleDelete = (row: Contract) => {
@@ -642,7 +642,7 @@ onMounted(() => {
   background-color: #f5f7fa;
   border-radius: 4px;
   font-size: 14px;
-  color: #606266;
+  color: #f56c6c;
   line-height: 1.5;
 }
 

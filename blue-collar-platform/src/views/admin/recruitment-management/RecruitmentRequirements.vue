@@ -77,6 +77,18 @@
                 />
               </el-select>
             </el-form-item>
+            <el-form-item label="岗位类型">
+              <el-select
+                v-model="queryParams.positionCategory"
+                placeholder="请选择岗位类型"
+                clearable
+                style="width: 150px"
+              >
+                <el-option label="普工" value="普工" />
+                <el-option label="技工" value="技工" />
+                <el-option label="干部" value="干部" />
+              </el-select>
+            </el-form-item>
             <el-form-item label="发布时间">
               <el-date-picker
                 v-model="dateRange"
@@ -108,6 +120,13 @@
         @click="handleBatchDelete"
       >
         批量删除
+      </el-button>
+      <el-button
+        :icon="Share"
+        :disabled="selectedIds.length === 0"
+        @click="handleBatchShare"
+      >
+        批量分享
       </el-button>
       <el-button
         :icon="Download"
@@ -149,7 +168,7 @@
           type="primary"
           link
           :icon="View"
-          @click="handleView(row)"
+          @click.stop="handleView(row)"
         >
           查看
         </el-button>
@@ -157,20 +176,28 @@
           type="primary"
           link
           :icon="Edit"
-          @click="handleEdit(row)"
+          @click.stop="handleEdit(row)"
         >
           编辑
+        </el-button>
+        <el-button
+          type="primary"
+          link
+          :icon="Share"
+          @click.stop="handleShare(row)"
+        >
+          分享
         </el-button>
         <el-button
           type="danger"
           link
           :icon="Delete"
-          @click="handleDelete(row)"
+          @click.stop="handleDelete(row)"
         >
           删除
         </el-button>
         <el-dropdown v-if="row.status === 'published'" @command="(cmd) => handleStatusCommand(cmd, row)">
-          <el-button type="primary" link>
+          <el-button type="primary" link @click.stop>
             更多
             <el-icon class="el-icon--right"><ArrowDown /></el-icon>
           </el-button>
@@ -191,7 +218,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Delete, Download, View, Edit, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
+import { Plus, Delete, Download, View, Edit, ArrowDown, ArrowUp, Share, ChatDotRound, ChatLineRound, Link } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 import {
   getRecruitmentList,
@@ -287,6 +314,13 @@ const columns = [
     width: 120,
     sortable: true,
     showTooltip: true
+  },
+  {
+    prop: 'positionCategory',
+    label: '岗位类型',
+    width: 100,
+    sortable: true,
+    align: 'center'
   },
   {
     prop: 'recruitCount',
@@ -386,6 +420,7 @@ const handleReset = () => {
   queryParams.status = undefined
   queryParams.factoryId = undefined
   queryParams.laborCompanyId = undefined
+  queryParams.positionCategory = undefined
   dateRange.value = null
   queryParams.startDate = undefined
   queryParams.endDate = undefined
@@ -517,6 +552,80 @@ const handleSizeChange = (size: number) => {
   queryParams.pageSize = size
   queryParams.page = 1
   loadData()
+}
+
+// 单个岗位分享
+const handleShare = (row: Recruitment) => {
+  // 实现单个岗位分享功能
+  const shareUrl = `http://localhost:5175/admin/recruitment-management/recruitment-requirements/${row.id}`
+  
+  ElMessageBox.alert(
+    `<div style="padding: 20px;">
+      <h3 style="margin-bottom: 16px;">分享到</h3>
+      <div style="margin-bottom: 16px;">
+        <p><strong>分享链接：</strong></p>
+        <input type="text" value="${shareUrl}" readonly style="width: 100%; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px;" />
+      </div>
+      <div style="margin-bottom: 16px;">
+        <p>选择分享平台</p>
+        <div style="display: flex; gap: 16px; margin-top: 12px;">
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;">
+            📱 微信
+          </button>
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;">
+            💬 QQ
+          </button>
+          <button type="button" style="width: 100px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;">
+            🔗 复制链接
+          </button>
+        </div>
+      </div>
+    </div>`,
+    '分享招聘需求',
+    {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '关闭',
+      customClass: 'share-dialog',
+      showCancelButton: false
+    }
+  )
+}
+
+// 批量分享
+const handleBatchShare = () => {
+  // 实现批量分享功能
+  const shareUrl = `http://localhost:5175/admin/recruitment-management/recruitment-requirements?ids=${selectedIds.value.join(',')}`
+  
+  ElMessageBox.alert(
+    `<div style="padding: 20px;">
+      <h3 style="margin-bottom: 16px;">分享到</h3>
+      <div style="margin-bottom: 16px;">
+        <p><strong>分享链接：</strong></p>
+        <input type="text" value="${shareUrl}" readonly style="width: 100%; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px;" />
+      </div>
+      <div style="margin-bottom: 16px;">
+        <p>选择分享平台</p>
+        <div style="display: flex; gap: 16px; margin-top: 12px;">
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;">
+            📱 微信
+          </button>
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;">
+            💬 QQ
+          </button>
+          <button type="button" style="width: 100px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;">
+            🔗 复制链接
+          </button>
+        </div>
+      </div>
+    </div>`,
+    '批量分享招聘需求',
+    {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '关闭',
+      customClass: 'share-dialog',
+      showCancelButton: false
+    }
+  )
 }
 
 // 初始化

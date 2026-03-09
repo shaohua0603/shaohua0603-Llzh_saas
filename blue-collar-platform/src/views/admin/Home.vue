@@ -68,6 +68,12 @@
         <el-card class="tasks-card">
           <el-tabs v-model="activeTab">
             <el-tab-pane label="待办事项" name="todo">
+              <template #label>
+                <div class="tab-with-badge">
+                  <span>待办事项</span>
+                  <el-badge v-if="todoList.length > 0" :value="todoList.length" type="danger" />
+                </div>
+              </template>
               <el-empty v-if="todoList.length === 0" description="暂无待办事项" />
               <el-list v-else>
                 <el-list-item v-for="(item, index) in todoList" :key="index">
@@ -86,6 +92,12 @@
               </el-list>
             </el-tab-pane>
             <el-tab-pane label="消息通知" name="message">
+              <template #label>
+                <div class="tab-with-badge">
+                  <span>消息通知</span>
+                  <el-badge v-if="messageList.length > 0" :value="messageList.length" type="danger" />
+                </div>
+              </template>
               <el-empty v-if="messageList.length === 0" description="暂无消息通知" />
               <el-list v-else>
                 <el-list-item v-for="(item, index) in messageList" :key="index">
@@ -104,6 +116,12 @@
               </el-list>
             </el-tab-pane>
             <el-tab-pane label="预警信息" name="warning">
+              <template #label>
+                <div class="tab-with-badge">
+                  <span>预警信息</span>
+                  <el-badge v-if="warningList.length > 0" :value="warningList.length" type="danger" />
+                </div>
+              </template>
               <el-empty v-if="warningList.length === 0" description="暂无预警信息" />
               <el-list v-else>
                 <el-list-item v-for="(item, index) in warningList" :key="index">
@@ -370,5 +388,11 @@ const handleWarning = (id: number) => {
   .section-title {
     font-size: 16px;
   }
+}
+
+.tab-with-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
 }
 </style>

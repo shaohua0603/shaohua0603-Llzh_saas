@@ -28,7 +28,8 @@ const handleLogin = () => {
   // 硬编码的登录验证逻辑
   const testAccounts = [
     { phone: '13800138001', password: '123456', role: 'worker', name: '张三' },
-    { phone: '13800138002', password: '123456', role: 'tenant', name: '李四' },
+    { phone: '13800138002', password: '123456', role: 'tenant', name: '李四', tenantType: 'pc' },
+    { phone: '13800138003', password: '123456', role: 'tenant', name: '王五', tenantType: 'mobile' },
     { phone: '13800138004', password: '123456', role: 'platform_admin', name: '赵六' }
   ]
   
@@ -46,6 +47,7 @@ const handleLogin = () => {
       phone: user.phone,
       name: user.name,
       role: user.role,
+      tenantType: user.tenantType,
       avatar: 'https://trae-api-cn.mchost.guru/api/ide/v1/text_to_image?prompt=professional%20ID%20photo%20of%20a%20Chinese%20male%20worker%20with%20plain%20white%20background%2C%20passport%20style%2C%20front%20view%2C%20clear%20features%2C%20formal%20clothing&image_size=square',
       ...(user.role === 'worker' && {
         currentLaborCompany: '南通富民劳务服务有限公司',
@@ -160,10 +162,11 @@ const handleLogin = () => {
         router.push('/worker/home')
         break
       case 'tenant':
-        // 检测设备类型，跳转到PC端或移动端
-        console.log('跳转到租户页面，设备宽度:', window.innerWidth)
-        console.log('准备跳转到:', window.innerWidth > 768 ? '/tenant/home' : '/tenant-mobile/home')
-        router.push('/tenant/home')
+        // 根据账号类型跳转到PC端或移动端
+        console.log('跳转到租户页面，账号类型:', user.tenantType)
+        const tenantPath = user.tenantType === 'mobile' ? '/tenant-mobile/home' : '/tenant/home'
+        console.log('准备跳转到:', tenantPath)
+        router.push(tenantPath)
         break
       case 'platform_admin':
         console.log('跳转到平台管理员页面')
@@ -243,7 +246,8 @@ const goToForgotPassword = () => {
       <div class="login-test-info">
         <h4>测试账号信息：</h4>
         <p>工人：13800138001 / 123456</p>
-        <p>租户：13800138002 / 123456</p>
+        <p>租户（PC端）：13800138002 / 123456</p>
+        <p>租户（移动端）：13800138003 / 123456</p>
         <p>平台管理员：13800138004 / 123456</p>
       </div>
     </div>

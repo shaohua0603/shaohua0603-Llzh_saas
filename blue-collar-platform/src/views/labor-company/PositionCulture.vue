@@ -18,7 +18,7 @@
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="标题">
+        <el-form-item label="标题" v-if="searchExpanded">
           <el-input
             v-model="searchForm.title"
             placeholder="请输入标题"
@@ -29,6 +29,11 @@
         <el-form-item>
           <el-button type="primary" @click="handleSearch">查询</el-button>
           <el-button @click="handleReset">重置</el-button>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="text" @click="toggleSearch">
+            {{ searchExpanded ? '收起' : '展开' }}<el-icon class="ml-1"><ArrowDown /></el-icon>
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
@@ -44,17 +49,13 @@
       :data="tableData"
       :columns="columns"
       :pagination="pagination"
+      :stats-info="`共 ${pagination.total} 条岗位文化记录`"
       table-id="position-culture"
       @selection-change="handleSelectionChange"
       @size-change="handleSizeChange"
       @current-change="handleCurrentChange"
     >
-      <template #toolbar-right>
-        <el-button type="primary" @click="handleAdd">
-          新增岗位文化
-        </el-button>
-      </template>
-      <template #operations="{ row }">
+      <template #actions="{ row }">
         <el-button size="small" type="primary" @click="handleEdit(row)">
           编辑
         </el-button>
@@ -63,77 +64,23 @@
         </el-button>
       </template>
     </CommonTable>
-
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="800px"
-      :close-on-click-modal="false"
-      @close="handleDialogClose"
-    >
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        label-position="right"
-      >
-        <el-form-item label="工厂" prop="factoryId">
-          <el-select
-            v-model="formData.factoryId"
-            placeholder="请选择工厂"
-            filterable
-            style="width: 100%"
-          >
-            <el-option
-              v-for="factory in factoryList"
-              :key="factory.id"
-              :label="factory.name"
-              :value="factory.id"
-            />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="岗位文化标题" prop="title">
-          <el-input
-            v-model="formData.title"
-            placeholder="请输入岗位文化标题"
-            maxlength="100"
-            show-word-limit
-          />
-        </el-form-item>
-        
-        <el-form-item label="岗位文化内容" prop="content">
-          <RichTextEditor
-            v-model="formData.content"
-            placeholder="请输入岗位文化内容"
-            :height="300"
-            :auto-save="true"
-            :draft-storage-key="'position-culture-draft'"
-          />
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitting">
-          保存
-        </el-button>
-      </template>
-    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import RichTextEditor from '@/components/RichTextEditor.vue'
+import { useRouter } from 'vue-router'
+import { ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
-import { fetchPositionCultureList, savePositionCulture, deletePositionCulture, fetchFactoryListAPI } from '@/api/companyCulture'
+import { fetchPositionCultureList, deletePositionCulture, fetchFactoryListAPI } from '@/api/companyCulture'
+
+const router = useRouter()
 
 const loading = ref(false)
 const tableData = ref<any[]>([])
 const selectedRows = ref<any[]>([])
+const searchExpanded = ref(false)
 
 const pagination = reactive({
   page: 1,
@@ -146,31 +93,11 @@ const searchForm = reactive({
   title: ''
 })
 
-const dialogVisible = ref(false)
-const dialogTitle = ref('')
-const submitting = ref(false)
-const formRef = ref()
-
-const formData = reactive({
-  id: '',
-  factoryId: '',
-  title: '',
-  content: ''
-})
-
-const formRules = {
-  factoryId: [
-    { required: true, message: '请选择工厂', trigger: 'change' }
-  ],
-  title: [
-    { required: true, message: '请输入岗位文化标题', trigger: 'blur' }
-  ],
-  content: [
-    { required: true, message: '请输入岗位文化内容', trigger: 'blur' }
-  ]
-}
-
 const factoryList = ref<any[]>([])
+
+const toggleSearch = () => {
+  searchExpanded.value = !searchExpanded.value
+}
 
 const columns = [
   { prop: 'factoryName', label: '工厂名称', minWidth: 150, showTooltip: true },
@@ -224,25 +151,11 @@ const handleReset = () => {
 }
 
 const handleAdd = () => {
-  dialogTitle.value = '新增岗位文化'
-  Object.assign(formData, {
-    id: '',
-    factoryId: '',
-    title: '',
-    content: ''
-  })
-  dialogVisible.value = true
+  router.push('/tenant/position-culture/add')
 }
 
 const handleEdit = (row: any) => {
-  dialogTitle.value = '编辑岗位文化'
-  Object.assign(formData, {
-    id: row.id,
-    factoryId: row.factoryId,
-    title: row.title,
-    content: row.content
-  })
-  dialogVisible.value = true
+  router.push(`/tenant/position-culture/edit/${row.id}`)
 }
 
 const handleDelete = async (row: any) => {
@@ -259,34 +172,6 @@ const handleDelete = async (row: any) => {
     }
   } catch {
   }
-}
-
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  
-  await formRef.value.validate(async (valid: boolean) => {
-    if (valid) {
-      submitting.value = true
-      try {
-        const response = await savePositionCulture(formData)
-        if (response.code === 200) {
-          ElMessage.success('保存成功')
-          dialogVisible.value = false
-          fetchData()
-        } else {
-          ElMessage.error(response.message || '保存失败')
-        }
-      } catch (error) {
-        ElMessage.error('保存失败')
-      } finally {
-        submitting.value = false
-      }
-    }
-  })
-}
-
-const handleDialogClose = () => {
-  formRef.value?.resetFields()
 }
 
 const handleSelectionChange = (selection: any[]) => {
@@ -311,16 +196,23 @@ onMounted(() => {
 
 <style scoped>
 .position-culture-container {
-  padding: 20px;
+  padding: 16px;
 }
 
 .search-card {
   margin-bottom: 20px;
+  padding: 16px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.ml-1 {
+  margin-left: 4px;
 }
 
 .action-bar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: flex-start;
   gap: 12px;
   margin-bottom: 20px;
   padding: 16px 20px;
@@ -331,25 +223,26 @@ onMounted(() => {
 
 @media screen and (max-width: 768px) {
   .position-culture-container {
-    padding: 12px;
+    padding: 16px;
   }
 
-  .search-card :deep(.el-form) {
+  .search-body :deep(.el-form) {
     flex-direction: column;
   }
 
-  .search-card :deep(.el-form-item) {
+  .search-body :deep(.el-form-item) {
     width: 100%;
   }
 
-  .search-card :deep(.el-select),
-  .search-card :deep(.el-input) {
+  .search-body :deep(.el-select),
+  .search-body :deep(.el-input) {
     width: 100% !important;
   }
 
   .action-bar {
     flex-direction: column;
-    align-items: stretch;
+    align-items: flex-start;
+    gap: 12px;
   }
 }
 </style>

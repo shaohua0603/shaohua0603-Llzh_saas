@@ -196,13 +196,13 @@ const handleReset = () => {
 
 const handleAdd = () => {
   // 跳转到新增页面
-  router.push({ name: 'LaborCompanyEmployeeAdd' })
+  router.push({ name: 'TenantEmployeeAdd' })
 }
 
 const handleView = (row: Employee) => {
   // 跳转到详情页面
   router.push({
-    name: 'LaborCompanyEmployeeDetail',
+    name: 'TenantEmployeeDetail',
     params: { id: row.id }
   })
 }
@@ -210,7 +210,7 @@ const handleView = (row: Employee) => {
 const handleEdit = (row: Employee) => {
   // 跳转到编辑页面
   router.push({
-    name: 'LaborCompanyEmployeeEdit',
+    name: 'TenantEmployeeEdit',
     params: { id: row.id }
   })
 }

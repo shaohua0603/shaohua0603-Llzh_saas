@@ -80,12 +80,11 @@ const goBack = () => {
 
 // 编辑信息
 const handleEdit = () => {
-  router.push(`/labor-company/workers/${workerId.value}/edit`)
+  router.push(`/tenant/workers/${workerId.value}/edit`)
 }
 
-// 岗位调动
 const handleTransfer = () => {
-  router.push(`/labor-company/workers/${workerId.value}/transfer`)
+  router.push(`/tenant/workers/${workerId.value}/transfer`)
 }
 
 // 获取工人详细信息
@@ -248,7 +247,9 @@ const fetchWorkerDetail = async () => {
       ],
       
       // 生命周期状态
-      lifecycleStatus: 'entered'
+      lifecycleStatus: 'entered',
+      // 结算方式
+      paymentType: '月结'
     }
   } catch (error) {
     console.error('获取工人详情失败:', error)
@@ -301,6 +302,9 @@ onMounted(() => {
                 <h3 class="worker-name">{{ workerInfo.name }}</h3>
                 <el-tag :type="getLifecycleStatus().type" size="large">
                   {{ getLifecycleStatus().text }}
+                </el-tag>
+                <el-tag v-if="workerInfo.paymentType" :type="workerInfo.paymentType === '日结' ? 'warning' : 'success'" size="large">
+                  {{ workerInfo.paymentType }}
                 </el-tag>
               </div>
               <div class="info-grid">

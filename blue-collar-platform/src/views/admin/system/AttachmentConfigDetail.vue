@@ -1,10 +1,11 @@
 <template>
   <el-dialog
-    v-model="visible"
+    :model-value="visible"
     title="附件配置详情"
     width="900px"
     :close-on-click-modal="false"
     @close="handleClose"
+    @update:model-value="(value) => emit('update:visible', value)"
   >
     <el-scrollbar max-height="600px">
       <div v-loading="loading" class="detail-content">
@@ -13,8 +14,14 @@
             {{ configData.attachmentName }}
           </el-descriptions-item>
           <el-descriptions-item label="附件类型">
-            <el-tag :type="getAttachmentTypeTag(configData.attachmentType)" size="small">
-              {{ AttachmentTypeConfig[configData.attachmentType]?.label || configData.attachmentType }}
+            <el-tag
+              v-for="type in (configData.attachmentTypes || [])"
+              :key="type"
+              :type="getAttachmentTypeTag(type)"
+              size="small"
+              style="margin-right: 4px"
+            >
+              {{ AttachmentTypeConfig[type as AttachmentType]?.label || type }}
             </el-tag>
           </el-descriptions-item>
           <el-descriptions-item label="关联菜单">
@@ -143,7 +150,7 @@ const configData = ref<AttachmentConfig>({
   menuName: '',
   menuPath: '',
   attachmentName: '',
-  attachmentType: AttachmentType.IMAGE,
+  attachmentTypes: [AttachmentType.IMAGE],
   maxSize: 0,
   required: false,
   templateFileId: '',
@@ -176,8 +183,8 @@ const operationRecords = ref<any[]>([
   }
 ])
 
-const getAttachmentTypeTag = (type: AttachmentType) => {
-  const tags: Record<AttachmentType, string> = {
+const getAttachmentTypeTag = (type: string) => {
+  const tags: Record<string, string> = {
     [AttachmentType.IMAGE]: 'success',
     [AttachmentType.FILE]: 'primary',
     [AttachmentType.VIDEO]: 'warning',

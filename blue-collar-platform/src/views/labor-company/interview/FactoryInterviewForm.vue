@@ -42,7 +42,7 @@
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="imageLevel" label="形象级别" width="100">
+        <el-table-column prop="imageLevel" label="形象" width="100">
           <template #default="{ row }">
             <el-tag :type="getImageLevelType(row.imageLevel)">
               {{ row.imageLevel }}
@@ -101,20 +101,18 @@
           <el-col :span="12">
             <el-form-item label="推荐等级">
               <el-select v-model="candidateForm.recommendationLevel" placeholder="请选择等级" style="width: 100%">
-                <el-option label="A" value="A" />
-                <el-option label="B" value="B" />
-                <el-option label="C" value="C" />
-                <el-option label="D" value="D" />
+                <el-option label="优先推荐" value="优先推荐" />
+                <el-option label="一般" value="一般" />
+                <el-option label="不建议" value="不建议" />
               </el-select>
             </el-form-item>
           </el-col>
           <el-col :span="12">
-            <el-form-item label="形象级别">
+            <el-form-item label="形象">
               <el-select v-model="candidateForm.imageLevel" placeholder="请选择级别" style="width: 100%">
-                <el-option label="A" value="A" />
-                <el-option label="B" value="B" />
-                <el-option label="C" value="C" />
-                <el-option label="D" value="D" />
+                <el-option label="优秀" value="优秀" />
+                <el-option label="一般" value="一般" />
+                <el-option label="其他" value="其他" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -186,6 +184,10 @@ const formData = ref({
   socialCreditCode: '',
   manager: '',
   managerPhone: '',
+  factoryManager: '',
+  factoryManagerPhone: '',
+  clerk: '',
+  clerkPhone: '',
   interviewTime: '',
   interviewLocation: '',
   factoryContact: '',
@@ -225,6 +227,38 @@ const formConfig: FormConfig = {
       type: 'TEXT',
       required: true,
       placeholder: '请输入负责人手机号',
+      span: 12
+    },
+    {
+      field: 'factoryManager',
+      label: '驻厂负责人',
+      type: 'TEXT',
+      required: true,
+      placeholder: '请输入驻厂负责人',
+      span: 12
+    },
+    {
+      field: 'factoryManagerPhone',
+      label: '驻厂负责人手机号',
+      type: 'TEXT',
+      required: true,
+      placeholder: '请输入驻厂负责人手机号',
+      span: 12
+    },
+    {
+      field: 'clerk',
+      label: '文员',
+      type: 'TEXT',
+      required: true,
+      placeholder: '请输入文员',
+      span: 12
+    },
+    {
+      field: 'clerkPhone',
+      label: '文员手机号',
+      type: 'TEXT',
+      required: true,
+      placeholder: '请输入文员手机号',
       span: 12
     },
     {
@@ -276,8 +310,8 @@ const candidateList = ref([
     phone: '13900139000',
     age: 28,
     gender: '男',
-    recommendationLevel: 'A',
-    imageLevel: 'A',
+    recommendationLevel: '优先推荐',
+    imageLevel: '优秀',
     education: '高中',
     positionCategory: '普工',
     expectedLocation: '深圳市',
@@ -289,8 +323,8 @@ const candidateList = ref([
     phone: '13700137000',
     age: 32,
     gender: '男',
-    recommendationLevel: 'B',
-    imageLevel: 'B',
+    recommendationLevel: '一般',
+    imageLevel: '一般',
     education: '初中',
     positionCategory: '普工',
     expectedLocation: '深圳市',
@@ -307,8 +341,8 @@ const candidateForm = ref({
   phone: '',
   age: 25,
   gender: '男',
-  recommendationLevel: 'B',
-  imageLevel: 'B',
+  recommendationLevel: '一般',
+  imageLevel: '一般',
   education: '高中',
   positionCategory: '',
   expectedLocation: '',
@@ -349,8 +383,8 @@ const handleAddCandidate = () => {
     phone: '',
     age: 25,
     gender: '男',
-    recommendationLevel: 'B',
-    imageLevel: 'B',
+    recommendationLevel: '一般',
+    imageLevel: '一般',
     education: '高中',
     positionCategory: '',
     expectedLocation: '',
@@ -397,21 +431,19 @@ const handleDeleteCandidate = (index: number) => {
 // 获取推荐等级类型
 const getRecommendationLevelType = (level: string) => {
   const typeMap: Record<string, any> = {
-    A: 'success',
-    B: 'primary',
-    C: 'warning',
-    D: 'danger'
+    '优先推荐': 'success',
+    '一般': 'primary',
+    '不建议': 'danger'
   }
   return typeMap[level] || 'info'
 }
 
-// 获取形象级别类型
+// 获取形象类型
 const getImageLevelType = (level: string) => {
   const typeMap: Record<string, any> = {
-    A: 'success',
-    B: 'primary',
-    C: 'warning',
-    D: 'danger'
+    '优秀': 'success',
+    '一般': 'primary',
+    '其他': 'info'
   }
   return typeMap[level] || 'info'
 }
@@ -428,6 +460,10 @@ const loadInterviewDetail = () => {
       socialCreditCode: '91440300MA5DXXXXXX',
       manager: '张三',
       managerPhone: '13800138000',
+      factoryManager: '赵六',
+      factoryManagerPhone: '13700137000',
+      clerk: '钱七',
+      clerkPhone: '13600136000',
       interviewTime: '2024-02-27 10:00:00',
       interviewLocation: '东莞长安工业区面试点',
       factoryContact: '李四',

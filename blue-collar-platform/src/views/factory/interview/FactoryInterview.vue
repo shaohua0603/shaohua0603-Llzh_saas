@@ -254,7 +254,7 @@ const handleDelete = async (row: FactoryInterview) => {
 }
 
 const handleAdd = () => {
-  router.push('/labor-company/interview/factory-interview/add')
+  router.push('/factory/factory-interview/add')
 }
 
 const handleImport = () => {
@@ -433,7 +433,7 @@ onMounted(() => {
 .stats-section p {
   margin: 0;
   font-size: 14px;
-  color: #606266;
+  color: #f56c6c;
   line-height: 1.5;
 }
 

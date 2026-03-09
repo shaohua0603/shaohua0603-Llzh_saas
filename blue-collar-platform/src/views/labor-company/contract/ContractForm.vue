@@ -279,6 +279,7 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
+  padding-bottom: 80px;
 }
 
 .person-select-wrapper {

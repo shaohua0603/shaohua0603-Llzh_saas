@@ -1,135 +1,187 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
+import { House, Grid, Document, Message, User } from '@element-plus/icons-vue'
+
+const router = useRouter()
+const route = useRoute()
+const activeIndex = ref('1')
+
+const menuItems = [
+  {
+    index: '1',
+    path: '/tenant-mobile/home',
+    title: '首页',
+    icon: 'House'
+  },
+  {
+    index: '2',
+    path: '/tenant-mobile/workbench',
+    title: '工作台',
+    icon: 'Grid'
+  },
+  {
+    index: '3',
+    path: '/tenant-mobile/news',
+    title: '资讯',
+    icon: 'Document'
+  },
+  {
+    index: '4',
+    path: '/tenant-mobile/messages',
+    title: '消息',
+    icon: 'Message'
+  },
+  {
+    index: '5',
+    path: '/tenant-mobile/profile',
+    title: '我的',
+    icon: 'User'
+  }
+]
+
+const handleSelect = (key: string) => {
+  activeIndex.value = key
+  const menuItem = menuItems.find(item => item.index === key)
+  if (menuItem) {
+    router.push(menuItem.path)
+  }
+}
+
+onMounted(() => {
+  const currentPath = route.path
+  const menuItem = menuItems.find(item => currentPath.includes(item.path))
+  if (menuItem) {
+    activeIndex.value = menuItem.index
+  }
+})
+</script>
+
 <template>
-  <div class="labor-company-mobile-layout">
-    <!-- 顶部导航栏 -->
-    <header class="mobile-header">
-      <h1 class="header-title">{{ currentTitle }}</h1>
-    </header>
-    
-    <!-- 主体内容 -->
-    <main class="mobile-content">
-      <router-view v-slot="{ Component }">
-        <transition name="fade" mode="out-in">
-          <component :is="Component" />
-        </transition>
-      </router-view>
+  <div class="worker-layout">
+    <!-- 页面内容 -->
+    <main class="worker-content">
+      <router-view />
     </main>
     
     <!-- 底部导航栏 -->
-    <footer class="mobile-footer">
-      <el-tabbar v-model="activeTab" class="footer-tabbar">
-        <el-tabbar-item :to="'/tenant-mobile/home'" icon="HomeFilled" label="首页">
-          首页
-        </el-tabbar-item>
-        <el-tabbar-item :to="'/tenant-mobile/workers'" icon="UserFilled" label="工人">
-          工人
-        </el-tabbar-item>
-        <el-tabbar-item :to="'/tenant-mobile/attendance'" icon="TimerFilled" label="考勤">
-          考勤
-        </el-tabbar-item>
-        <el-tabbar-item :to="'/tenant-mobile/profile'" icon="SettingFilled" label="我的">
-          我的
-        </el-tabbar-item>
-      </el-tabbar>
+    <footer class="worker-footer">
+      <el-menu
+        :default-active="activeIndex"
+        class="worker-nav"
+        mode="horizontal"
+        @select="handleSelect"
+      >
+        <!-- 首页 -->
+        <el-menu-item index="1" @click="router.push('/tenant-mobile/home')">
+          <span class="nav-item">🏠 首页</span>
+        </el-menu-item>
+        
+        <!-- 工作台 -->
+        <el-menu-item index="2" @click="router.push('/tenant-mobile/workbench')">
+          <span class="nav-item">📋 工作台</span>
+        </el-menu-item>
+        
+        <!-- 资讯 -->
+        <el-menu-item index="3" @click="router.push('/tenant-mobile/news')">
+          <span class="nav-item">📚 资讯</span>
+        </el-menu-item>
+        
+        <!-- 消息 -->
+        <el-menu-item index="4" @click="router.push('/tenant-mobile/messages')">
+          <span class="nav-item">💬 消息</span>
+        </el-menu-item>
+        
+        <!-- 我的 -->
+        <el-menu-item index="5" @click="router.push('/tenant-mobile/profile')">
+          <span class="nav-item">👤 我的</span>
+        </el-menu-item>
+      </el-menu>
     </footer>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, computed, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-
-// 路由实例
-const route = useRoute()
-const router = useRouter()
-
-// 当前激活的标签
-const activeTab = ref('home')
-
-// 当前页面标题
-const currentTitle = computed(() => {
-  return route.meta.title as string || '劳务公司'
-})
-
-// 监听路由变化，更新激活的标签
-watch(() => route.path, (newPath) => {
-  if (newPath.includes('home')) {
-    activeTab.value = 'home'
-  } else if (newPath.includes('workers')) {
-    activeTab.value = 'workers'
-  } else if (newPath.includes('attendance')) {
-    activeTab.value = 'attendance'
-  } else if (newPath.includes('profile')) {
-    activeTab.value = 'profile'
-  }
-}, { immediate: true })
-</script>
-
 <style scoped>
-.labor-company-mobile-layout {
+.worker-layout {
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  width: 100%;
   background-color: #FFFFFF;
+  overflow: hidden;
 }
 
-/* 确保主体内容可以滚动 */
-.mobile-content {
+.worker-content {
   flex: 1;
+  padding-bottom: 60px;
   overflow-y: auto;
-  padding: 16px;
-  -webkit-overflow-scrolling: touch; /* 优化移动端滚动体验 */
-  scroll-behavior: smooth; /* 平滑滚动 */
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  height: calc(100vh - 60px);
 }
 
-/* 顶部导航栏 */
-.mobile-header {
-  height: 50px;
+.worker-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #fff;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+}
+
+.worker-nav {
   display: flex;
+  justify-content: space-around;
+  height: 60px;
+  border-top: 1px solid #eaeaea;
+}
+
+.worker-nav .el-menu-item {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  background-color: #409eff;
-  color: #fff;
-  position: sticky;
-  top: 0;
-  z-index: 10;
+  padding: 0;
+  height: 60px;
+  min-width: 60px;
 }
 
-.header-title {
-  font-size: 18px;
-  font-weight: bold;
-  margin: 0;
+.worker-nav .el-menu-item .nav-icon {
+  margin-bottom: 4px;
+  font-size: 20px;
 }
 
-/* 主体内容 */
-.mobile-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px;
+.worker-nav .el-menu-item span {
+  font-size: 12px;
 }
 
-/* 底部导航栏 */
-.mobile-footer {
-  height: 56px;
-  background-color: #fff;
-  border-top: 1px solid #e4e7ed;
-  position: sticky;
-  bottom: 0;
-  z-index: 10;
+.worker-nav .el-menu-item.is-active {
+  color: #667eea;
 }
 
-.footer-tabbar {
-  height: 100%;
-}
-
-.footer-tabbar :deep(.el-tabbar__item) {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-}
-
-.footer-tabbar :deep(.el-tabbar__item.is-active) {
-  color: #409eff;
+@media (max-width: 768px) {
+  .worker-content {
+    padding-bottom: 55px;
+  }
+  
+  .worker-footer {
+    height: 55px;
+  }
+  
+  .worker-nav {
+    height: 55px;
+  }
+  
+  .worker-nav .el-menu-item {
+    height: 55px;
+  }
+  
+  .worker-nav .el-menu-item .nav-icon {
+    font-size: 18px;
+  }
+  
+  .worker-nav .el-menu-item span {
+    font-size: 11px;
+  }
 }
 </style>

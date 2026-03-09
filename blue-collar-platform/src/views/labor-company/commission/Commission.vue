@@ -407,7 +407,7 @@ const handleSubmitIssue = () => {
 
 // 详情
 const handleView = (row: any) => {
-  router.push({ name: 'LaborCompanyCommissionDetail', params: { id: row.id } })
+  router.push({ name: 'TenantCommissionDetail', params: { id: row.id } })
 }
 
 // 导出

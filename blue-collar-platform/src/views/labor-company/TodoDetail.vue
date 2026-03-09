@@ -1,6 +1,7 @@
 <template>
   <div class="labor-company-todo-detail">
-    <div class="detail-container">
+    <!-- 内容区域 -->
+    <div class="detail-content">
       <!-- 基本信息 -->
       <el-card class="detail-card" shadow="never">
         <template #header>
@@ -67,120 +68,35 @@
         <template #header>
           <span>审批记录</span>
         </template>
-        <ApprovalFlow
-          :flow-config="flowConfig"
-          :approval-status="approvalStatus"
-          :show-approval-form="canApprove"
-          :readonly="!canApprove"
-          @approve="handleApprove"
-          @reject="handleReject"
-          @transfer="handleTransfer"
+        <ApprovalComponent
+          ref="approvalComponentRef"
+          :is-approval-mode="canApprove"
+          :can-approve="canApprove"
+          :approval-records="approvalStatus.records"
+          :on-submit="handleApprovalSubmit"
         />
       </el-card>
-
-      <!-- 操作按钮 -->
-      <div v-if="canApprove" class="action-buttons">
-        <el-button type="primary" size="large" @click="handleQuickApprove">
-          <el-icon><Select /></el-icon>
-          审批通过
-        </el-button>
-        <el-button type="danger" size="large" @click="handleQuickReject">
-          <el-icon><Close /></el-icon>
-          审批驳回
-        </el-button>
-        <el-button size="large" @click="handleTransfer">
-          <el-icon><Switch /></el-icon>
-          转交他人
-        </el-button>
-      </div>
-      <div v-else class="action-buttons">
-        <el-button size="large" @click="handleViewBusinessDetail">
-          <el-icon><View /></el-icon>
-          查看业务详情
-        </el-button>
-      </div>
     </div>
 
-    <!-- 快速审批对话框 -->
-    <el-dialog
-      v-model="quickApproveVisible"
-      title="快速审批"
-      width="600px"
-      :close-on-click-modal="false"
-    >
-      <el-form :model="approvalForm" label-width="100px">
-        <el-form-item label="审批结果" required>
-          <el-radio-group v-model="approvalForm.result">
-            <el-radio label="approved">
-              <el-icon color="#67c23a"><CircleCheck /></el-icon>
-              通过
-            </el-radio>
-            <el-radio label="rejected">
-              <el-icon color="#f56c6c"><CircleClose /></el-icon>
-              驳回
-            </el-radio>
-          </el-radio-group>
-        </el-form-item>
-        <el-form-item label="审批意见">
-          <el-input
-            v-model="approvalForm.comment"
-            type="textarea"
-            :rows="4"
-            placeholder="请输入审批意见"
-          />
-        </el-form-item>
-        <el-form-item v-if="approvalForm.result === 'rejected'" label="驳回原因" required>
-          <el-input
-            v-model="approvalForm.rejectReason"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入驳回原因"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="quickApproveVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitApproval">提交</el-button>
-      </template>
-    </el-dialog>
+    <!-- 底部按钮栏 -->
+    <div class="detail-footer">
+      <el-button @click="goBack">
+        <el-icon><Back /></el-icon>
+        返回
+      </el-button>
+      <el-button v-if="canApprove" type="primary" @click="handleSubmitApprovalFromButton">
+        <el-icon><Check /></el-icon>
+        提交审核
+      </el-button>
+      <el-button v-else @click="handleViewBusinessDetail">
+        <el-icon><View /></el-icon>
+        查看业务详情
+      </el-button>
+    </div>
 
-    <!-- 转交对话框 -->
-    <el-dialog
-      v-model="transferVisible"
-      title="转交他人"
-      width="500px"
-      :close-on-click-modal="false"
-    >
-      <el-form :model="transferForm" label-width="100px">
-        <el-form-item label="转交人" required>
-          <el-select
-            v-model="transferForm.toUser"
-            placeholder="请选择转交人"
-            filterable
-            style="width: 100%"
-          >
-            <el-option
-              v-for="user in availableUsers"
-              :key="user.id"
-              :label="user.name"
-              :value="user.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="转交说明">
-          <el-input
-            v-model="transferForm.remark"
-            type="textarea"
-            :rows="3"
-            placeholder="请输入转交说明"
-          />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="transferVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmitTransfer">确定</el-button>
-      </template>
-    </el-dialog>
+
+
+
   </div>
 </template>
 
@@ -190,20 +106,16 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Download,
-  Select,
+  Check,
   Close,
-  Switch,
   Back,
   View,
   CircleCheck,
   CircleClose
 } from '@element-plus/icons-vue'
-import ApprovalFlow from '@/components/ApprovalFlow.vue'
-import type {
-  ApprovalFlowConfig,
-  ApprovalStatus,
-  ApprovalFormData
-} from '@/types/approval-flow'
+import ApprovalComponent from '@/components/ApprovalComponent.vue'
+import type { ApprovalFormData } from '@/types/approval-flow'
+import type { ApprovalRecord } from '@/types/livingExpense'
 
 const route = useRoute()
 const router = useRouter()
@@ -230,37 +142,12 @@ const todoDetail = ref<any>({
   ]
 })
 
-// 审批流程配置
-const flowConfig = ref<ApprovalFlowConfig>({
-  id: 'flow-001',
-  name: '请假审批流程',
-  code: 'leave-approval',
-  description: '员工请假审批流程',
-  status: 'enabled',
-  nodes: [
-    {
-      id: 'node-001',
-      name: '部门主管审批',
-      type: 'approval',
-      approvers: ['user-001', 'user-002'],
-      approvalMode: 'or',
-      required: true
-    },
-    {
-      id: 'node-002',
-      name: '人事审批',
-      type: 'approval',
-      approvers: ['user-003'],
-      approvalMode: 'or',
-      required: true
-    }
-  ],
-  createdAt: '2026-02-25T09:00:00Z',
-  updatedAt: '2026-02-25T09:00:00Z'
-})
-
 // 审批状态
-const approvalStatus = ref<ApprovalStatus>({
+const approvalStatus = ref<{
+  status: string
+  currentNodeId: string
+  records: ApprovalRecord[]
+}>({
   status: 'pending',
   currentNodeId: 'node-001',
   records: [
@@ -268,8 +155,8 @@ const approvalStatus = ref<ApprovalStatus>({
       nodeId: 'node-001',
       nodeName: '部门主管审批',
       approver: '张主管',
-      approvalTime: new Date('2026-02-25T10:00:00Z'),
-      approvalResult: 'pending',
+      approvalTime: '2026-02-25 10:00:00',
+      approvalResult: 'approved',
       approvalComment: ''
     }
   ]
@@ -288,26 +175,8 @@ const availableUsers = ref([
   { id: 'user-004', name: '钱总监' }
 ])
 
-// 快速审批对话框
-const quickApproveVisible = ref(false)
-
-// 转交对话框
-const transferVisible = ref(false)
-
-// 审批表单
-const approvalForm = reactive<ApprovalFormData>({
-  comment: '',
-  result: 'approved',
-  rejectReason: '',
-  transferTo: '',
-  attachments: []
-})
-
-// 转交表单
-const transferForm = reactive({
-  toUser: '',
-  remark: ''
-})
+// ApprovalComponent 引用
+const approvalComponentRef = ref<any>(null)
 
 // 返回
 const goBack = () => {
@@ -319,110 +188,52 @@ const handleDownload = (file: any) => {
   ElMessage.info(`下载附件: ${file.name}`)
 }
 
-// 快速审批通过
-const handleQuickApprove = () => {
-  approvalForm.result = 'approved'
-  approvalForm.comment = ''
-  approvalForm.rejectReason = ''
-  quickApproveVisible.value = true
-}
-
-// 快速审批驳回
-const handleQuickReject = () => {
-  approvalForm.result = 'rejected'
-  approvalForm.comment = ''
-  approvalForm.rejectReason = ''
-  quickApproveVisible.value = true
-}
-
-// 转交他人
-const handleTransfer = () => {
-  transferVisible.value = true
-}
-
-// 提交审批
-const handleSubmitApproval = () => {
-  if (approvalForm.result === 'rejected' && !approvalForm.rejectReason) {
-    ElMessage.warning('请输入驳回原因')
+// 从底部按钮提交审核
+const handleSubmitApprovalFromButton = async () => {
+  if (!approvalComponentRef.value) return
+  
+  // 验证表单
+  if (!approvalComponentRef.value.validateForm()) {
     return
   }
+  
+  // 获取表单数据
+  const formData = approvalComponentRef.value.getFormData()
+  
+  // 提交审核
+  await handleApprovalSubmit(formData.result, formData.reason, formData.comment)
+}
 
-  ElMessageBox.confirm('确定要提交审批吗?', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
+// 审批提交处理
+const handleApprovalSubmit = async (result: 'approved' | 'rejected', reason: string, comment: string) => {
+  try {
     // 模拟API调用
-    setTimeout(() => {
-      ElMessage.success('审批提交成功')
-      quickApproveVisible.value = false
-      // 更新状态
-      if (approvalForm.result === 'approved') {
-        todoDetail.value.status = 'approved'
-      } else {
-        todoDetail.value.status = 'rejected'
-      }
-      // 添加审批记录
-      approvalStatus.value.records.push({
-        nodeId: approvalStatus.value.currentNodeId!,
-        nodeName: '部门主管审批',
-        approver: '当前用户',
-        approvalTime: new Date(),
-        approvalResult: approvalForm.result as any,
-        approvalComment: approvalForm.comment
-      })
-    }, 500)
-  }).catch(() => {})
-}
-
-// 审批通过
-const handleApprove = (data: ApprovalFormData) => {
-  ElMessage.success('审批通过')
-  todoDetail.value.status = 'approved'
-  approvalStatus.value.records.push({
-    nodeId: approvalStatus.value.currentNodeId!,
-    nodeName: '部门主管审批',
-    approver: '当前用户',
-    approvalTime: new Date(),
-    approvalResult: 'approved',
-    approvalComment: data.comment
-  })
-}
-
-// 审批驳回
-const handleReject = (data: ApprovalFormData) => {
-  ElMessage.success('已驳回')
-  todoDetail.value.status = 'rejected'
-  approvalStatus.value.records.push({
-    nodeId: approvalStatus.value.currentNodeId!,
-    nodeName: '部门主管审批',
-    approver: '当前用户',
-    approvalTime: new Date(),
-    approvalResult: 'rejected',
-    approvalComment: data.comment
-  })
-}
-
-// 提交转交
-const handleSubmitTransfer = () => {
-  if (!transferForm.toUser) {
-    ElMessage.warning('请选择转交人')
-    return
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    ElMessage.success(result === 'approved' ? '审批通过' : '已驳回')
+    todoDetail.value.status = result
+    
+    // 添加审批记录
+    const now = new Date()
+    const approvalTime = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')} ${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:${String(now.getSeconds()).padStart(2, '0')}`
+    
+    approvalStatus.value.records.push({
+      nodeId: approvalStatus.value.currentNodeId!,
+      nodeName: '部门主管审批',
+      approver: '当前用户',
+      approvalTime: approvalTime,
+      approvalResult: result,
+      approvalComment: comment || reason
+    })
+    
+    return true
+  } catch (error) {
+    ElMessage.error('审批失败')
+    return false
   }
-
-  ElMessageBox.confirm('确定要转交给他人吗?', '提示', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    type: 'warning'
-  }).then(() => {
-    // 模拟API调用
-    setTimeout(() => {
-      ElMessage.success('转交成功')
-      transferVisible.value = false
-      goBack()
-    }, 500)
-  }).catch(() => {})
 }
+
+
 
 // 查看业务详情
 const handleViewBusinessDetail = () => {
@@ -432,16 +243,16 @@ const handleViewBusinessDetail = () => {
 
   switch (businessType) {
     case 'leave':
-      router.push(`/labor-company/leave-detail/${businessId}`)
+      router.push(`/tenant/on-duty/leave-detail/${businessId}`)
       break
     case 'transfer':
-      router.push(`/labor-company/transfer-detail/${businessId}`)
+      router.push(`/tenant/on-duty/transfer-detail/${businessId}`)
       break
     case 'resignation':
-      router.push(`/labor-company/resignation-detail/${businessId}`)
+      router.push(`/tenant/resignation/${businessId}`)
       break
     case 'contract':
-      router.push(`/labor-company/contract-detail/${businessId}`)
+      router.push(`/tenant/contract/${businessId}`)
       break
     default:
       ElMessage.info('暂无业务详情页')
@@ -523,28 +334,20 @@ onMounted(() => {
 .labor-company-todo-detail {
   width: 100%;
   height: 100%;
-  padding: 20px;
-  overflow-y: auto;
-}
-
-.page-header {
-  margin-bottom: 20px;
-}
-
-.page-title {
-  font-size: 18px;
-  font-weight: bold;
-  color: #303133;
-}
-
-.detail-container {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  background-color: #f5f7fa;
+}
+
+.detail-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 80px;
 }
 
 .detail-card {
-  margin-bottom: 0;
+  margin-bottom: 20px;
 }
 
 .card-header {
@@ -574,26 +377,34 @@ onMounted(() => {
   line-height: 1.6;
 }
 
-.action-buttons {
+.detail-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  right: 0;
   display: flex;
   justify-content: center;
-  gap: 16px;
-  padding: 20px 0;
-  border-top: 1px solid #ebeef5;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-top: 1px solid #e4e7ed;
+  z-index: 100;
+  transition: left var(--transition-base);
 }
 
-/* 响应式设计 */
+/* 响应式适配 */
 @media screen and (max-width: 768px) {
-  .labor-company-todo-detail {
-    padding: 10px;
-  }
-
-  .action-buttons {
+  .detail-footer {
+    left: 0;
     flex-direction: column;
   }
-
-  .action-buttons .el-button {
+  
+  .detail-footer .el-button {
     width: 100%;
+  }
+  
+  .detail-content {
+    padding-bottom: 120px;
   }
 }
 </style>

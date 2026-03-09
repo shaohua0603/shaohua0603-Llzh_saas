@@ -609,6 +609,9 @@ onMounted(() => {
               <div class="name-section">
                 <h3>{{ userInfo?.name || '未登录' }}</h3>
                 <span v-if="userInfo?.workType === '派遣工' || userInfo?.workType === '派遣'" class="dispatch-tag">派遣</span>
+                <span v-if="userInfo?.workInfo?.paymentMethod" :class="userInfo.workInfo.paymentMethod === '日结' ? 'daily-tag' : 'monthly-tag'">
+                  {{ userInfo.workInfo.paymentMethod }}
+                </span>
               </div>
               <p class="factory-info">
                 {{ userInfo?.currentFactory || '暂无工厂信息' }}
@@ -1373,6 +1376,9 @@ onMounted(() => {
               <div class="name-section">
                 <h3>{{ userInfo?.name || '未登录' }}</h3>
                 <span v-if="userInfo?.workType === '派遣工' || userInfo?.workType === '派遣'" class="dispatch-tag">派遣</span>
+                <span v-if="userInfo?.workInfo?.paymentMethod" :class="userInfo.workInfo.paymentMethod === '日结' ? 'daily-tag' : 'monthly-tag'">
+                  {{ userInfo.workInfo.paymentMethod }}
+                </span>
               </div>
               <p class="factory-info">
                 {{ userInfo?.currentFactory || '暂无工厂信息' }}
@@ -1645,6 +1651,28 @@ onMounted(() => {
   font-size: 10px;
   font-weight: bold;
   box-shadow: 0 2px 4px rgba(255, 77, 79, 0.3);
+}
+
+.daily-tag {
+  background-color: #faad14;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 14px;
+  font-size: 10px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(250, 173, 20, 0.3);
+  margin-left: 8px;
+}
+
+.monthly-tag {
+  background-color: #52c41a;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 14px;
+  font-size: 10px;
+  font-weight: bold;
+  box-shadow: 0 2px 4px rgba(82, 196, 26, 0.3);
+  margin-left: 8px;
 }
 
 .factory-info {

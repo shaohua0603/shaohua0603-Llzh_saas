@@ -468,7 +468,7 @@ const handleBack = () => {
 // 编辑
 const handleEdit = () => {
   router.push({
-    path: '/labor-company/on-duty/transfer',
+    path: '/tenant/on-duty/transfer',
     query: { action: 'edit', id: transferDetail.value.id }
   })
 }

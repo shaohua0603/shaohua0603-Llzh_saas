@@ -81,6 +81,11 @@ const openTabs = ref<PageTab[]>([
     path: '/tenant/todo',
     title: '待办任务',
     fixed: true
+  },
+  {
+    path: '/tenant/on-duty/entertainment/add',
+    title: '新增文娱活动',
+    fixed: false
   }
 ])
 
@@ -203,31 +208,31 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
           code: 'communication',
           name: '沟通管理',
           icon: 'ChatLineSquare',
-          path: '/tenant/communication'
+          path: '/tenant/on-duty/communication'
         },
         {
           code: 'entertainment',
           name: '文娱活动',
           icon: 'Trophy',
-          path: '/tenant/entertainment'
+          path: '/tenant/on-duty/entertainment'
         },
         {
           code: 'registration',
           name: '报名管理',
           icon: 'Edit',
-          path: '/tenant/registration'
+          path: '/tenant/on-duty/registration'
         },
         {
           code: 'publish-news',
           name: '发布资讯',
           icon: 'Promotion',
-          path: '/tenant/publish-news'
+          path: '/tenant/on-duty/news'
         },
         {
           code: 'club-management',
           name: '社团管理',
           icon: 'UserFilled',
-          path: '/tenant/club-management'
+          path: '/tenant/on-duty/community'
         }
       ]
     },
@@ -428,13 +433,20 @@ const menuConfig = ref<Record<string, SecondLevelMenu[]>>({
       code: 'process',
       name: '流程管理',
       icon: 'Connection',
-      path: '/tenant/process'
-    },
-    {
-      code: 'process-config',
-      name: '流程配置',
-      icon: 'Operation',
-      path: '/tenant/process-config'
+      children: [
+        {
+          code: 'process-custom',
+          name: '流程自定义',
+          icon: 'Edit',
+          path: '/tenant/process'
+        },
+        {
+          code: 'process-config',
+          name: '流程配置',
+          icon: 'Operation',
+          path: '/tenant/process-config'
+        }
+      ]
     },
     {
       code: 'attachment',
@@ -492,22 +504,56 @@ const handleSecondLevelMenuSelect = (path: string) => {
 
 // 添加或更新页面标签
 const addOrUpdateTab = (path: string) => {
-  const existingTab = openTabs.value.find(tab => tab.path === path)
+  // 从路径中提取基本路径（去除查询参数）
+  const basePath = path.split('?')[0]
+  console.log('=== 添加或更新标签 ===')
+  console.log('原始路径:', path)
+  console.log('基本路径:', basePath)
+  
+  const existingTab = openTabs.value.find(tab => tab.path === basePath)
+  console.log('是否存在标签:', existingTab)
+  if (existingTab) {
+    console.log('现有标签标题:', existingTab.title)
+  }
+
+  // 直接使用getPageTitle函数获取标题
+  let title = getPageTitle(basePath)
+  console.log('从getPageTitle获取到的标题:', title)
+  
+  // 强制设置文娱活动相关页面的标题
+  if (basePath === '/tenant/on-duty/entertainment/add') {
+    title = '新增文娱活动'
+  } else if (basePath.includes('/tenant/on-duty/entertainment/edit/')) {
+    title = '编辑文娱活动'
+  } else if (basePath.includes('/tenant/on-duty/entertainment/detail/')) {
+    title = '文娱活动详情'
+  } else if (basePath === '/tenant/on-duty/entertainment') {
+    title = '文娱活动'
+  }
+  console.log('强制设置后的标题:', title)
 
   if (existingTab) {
-    // 标签已存在，不需要添加
+    // 标签已存在，更新标题
+    // 使用新对象替换旧对象，确保Vue能够检测到变化
+    const index = openTabs.value.findIndex(tab => tab.path === basePath)
+    if (index > -1) {
+      console.log('更新标签标题:', title)
+      openTabs.value.splice(index, 1, {
+        ...existingTab,
+        title
+      })
+    }
     return
   }
 
-  // 根据路径获取页面标题
-  const title = getPageTitle(path)
-
   // 添加新标签
+  console.log('添加新标签:', basePath, title)
   openTabs.value.push({
-    path,
+    path: basePath,
     title,
     fixed: false
   })
+  console.log('openTabs数组:', openTabs.value)
 
   // 滚动到新标签
   setTimeout(() => {
@@ -517,6 +563,186 @@ const addOrUpdateTab = (path: string) => {
 
 // 根据路径获取页面标题
 const getPageTitle = (path: string): string => {
+  console.log('=== 获取页面标题 ===')
+  console.log('路径:', path)
+  console.log('是否包含 entertainment/add:', path.includes('entertainment/add'))
+  console.log('是否包含 entertainment:', path.includes('entertainment'))
+  
+  // 处理文娱活动路径
+  if (path.includes('entertainment/add')) {
+    console.log('返回: 新增文娱活动')
+    return '新增文娱活动'
+  } else if (path.includes('entertainment/edit/')) {
+    console.log('返回: 编辑文娱活动')
+    return '编辑文娱活动'
+  } else if (path.includes('entertainment/detail/')) {
+    console.log('返回: 文娱活动详情')
+    return '文娱活动详情'
+  } else if (path.includes('entertainment')) {
+    console.log('返回: 文娱活动')
+    return '文娱活动'
+  }
+  
+  // 特殊处理：常见详情页面
+  if (path.includes('/on-duty/living-expense/detail/')) {
+    console.log('匹配生活费详情页面')
+    return '生活费申请详情'
+  } else if (path.includes('/recruitment/detail/')) {
+    return '招聘需求详情'
+  } else if (path.includes('/recruitment/resume/')) {
+    return '简历详情'
+  } else if (path.includes('/interview/pickup/')) {
+    return '接送详情'
+  } else if (path.includes('/interview/initial-interview/')) {
+    return '初步面试详情'
+  } else if (path.includes('/interview/invitation/')) {
+    return '面试邀约详情'
+  } else if (path.includes('/interview/factory-interview/')) {
+    return '工厂面试详情'
+  } else if (path.includes('/contract/')) {
+    if (path.includes('/add')) {
+      return '新增合同'
+    } else if (path.includes('/edit/')) {
+      return '编辑合同'
+    } else if (path.includes('/detail/')) {
+      return '合同详情'
+    }
+  } else if (path.includes('/workers/')) {
+    if (path.includes('/create')) {
+      return '新增工人'
+    } else if (path.includes('/edit/')) {
+      return '编辑工人'
+    } else if (path.includes('/transfer')) {
+      return '岗位调动'
+    } else if (path.includes('/detail/')) {
+      return '工人信息详情'
+    }
+  } else if (path.includes('/on-duty/salary/')) {
+    return '工资详情'
+  } else if (path.includes('/on-duty/claim/')) {
+    return '理赔详情'
+  } else if (path.includes('/on-duty/special-case/')) {
+    if (path.includes('/form') && !path.includes('/detail/')) {
+      if (path.includes('/form/')) {
+        return '编辑特殊情况'
+      } else {
+        return '新增特殊情况'
+      }
+    } else if (path.includes('/detail/')) {
+      return '特殊情况详情'
+    } else {
+      return '特殊情况管理'
+    }
+  } else if (path.includes('/on-duty/leave/')) {
+    return '请假详情'
+  } else if (path.includes('/on-duty/transfer/')) {
+    return '调岗详情'
+  } else if (path.includes('/on-duty/reward-punishment/')) {
+    return '奖惩详情'
+  } else if (path.includes('/on-duty/learning-material/')) {
+    return '学习材料详情'
+  } else if (path.includes('/on-duty/question-bank/')) {
+    return '题库详情'
+  } else if (path.includes('/on-duty/exam/')) {
+    return '考试详情'
+  } else if (path.includes('/on-duty/exam-result/')) {
+    return '考试成绩详情'
+  } else if (path.includes('/on-duty/abnormal/')) {
+    return '异常详情'
+  } else if (path.includes('/on-duty/complaint/')) {
+    return '投诉/建议详情'
+  } else if (path.includes('/on-duty/communication/')) {
+    return '沟通详情'
+  } else if (path.includes('/on-duty/registration/')) {
+    return '报名详情'
+  } else if (path.includes('/on-duty/news/')) {
+    return '资讯详情'
+  } else if (path.includes('/on-duty/community/')) {
+    return '社团详情'
+  } else if (path.includes('/on-duty/insurance/')) {
+    if (path.includes('/form') && !path.includes('/detail/')) {
+      if (path.includes('/form/')) {
+        return '编辑保险'
+      } else {
+        return '新增保险'
+      }
+    } else if (path.includes('/detail/')) {
+      return '保险详情'
+    } else {
+      return '保险管理'
+    }
+  } else if (path.includes('/resignation/')) {
+    if (path.includes('/add')) {
+      return '新增离职'
+    } else if (path.includes('/edit/')) {
+      return '编辑离职'
+    } else if (path.includes('/detail/')) {
+      return '离职详情'
+    }
+  } else if (path.includes('/settlement/')) {
+    if (path.includes('/add')) {
+      return '新建结算'
+    } else if (path.includes('/edit/')) {
+      return '编辑结算'
+    } else if (path.includes('/detail/')) {
+      return '结算详情'
+    }
+  } else if (path.includes('/referral/')) {
+    if (path.includes('/add')) {
+      return '新增转介绍'
+    } else if (path.includes('/edit/')) {
+      return '编辑转介绍'
+    } else if (path.includes('/detail/')) {
+      return '转介绍详情'
+    }
+  } else if (path.includes('/commission/')) {
+    return '佣金详情'
+  } else if (path.includes('/departments/')) {
+    if (path.includes('/add')) {
+      return '新增部门'
+    } else if (path.includes('/edit/')) {
+      return '编辑部门'
+    } else if (path.includes('/detail/')) {
+      return '部门详情'
+    }
+  } else if (path.includes('/employees/')) {
+    if (path.includes('/add')) {
+      return '新增员工'
+    } else if (path.includes('/edit/')) {
+      return '编辑员工'
+    } else if (path.includes('/detail/')) {
+      return '员工详情'
+    }
+  }
+  
+  // 直接遍历所有路由，找到匹配的路由
+  const allRoutes = router.getRoutes()
+  
+  for (const route of allRoutes) {
+    console.log('检查路由:', route.path, '是否匹配:', path)
+    // 处理精确匹配
+    if (route.path === path) {
+      console.log('精确匹配:', route.path)
+      if (route.meta?.title) {
+        console.log('返回路由标题:', route.meta.title)
+        return route.meta.title as string
+      }
+    }
+    // 处理带参数的路由
+    if (route.path.includes(':')) {
+      // 构建正则表达式
+      const pathPattern = route.path.replace(/:\w+/g, '[^/]+')
+      const regex = new RegExp(`^${pathPattern}$`)
+      if (regex.test(path)) {
+        console.log('带参数匹配:', route.path)
+        if (route.meta?.title) {
+          console.log('返回路由标题:', route.meta.title)
+          return route.meta.title as string
+        }
+      }
+    }
+  }
+
   // 处理详情页面路径（如 /path/id）
   const pathParts = path.split('/')
   if (pathParts.length > 2) {
@@ -581,20 +807,7 @@ const getPageTitle = (path: string): string => {
     }
   }
 
-  // 从路由元信息获取标题
-  const matchedRoute = router.getRoutes().find(r => {
-    if (r.path === path) {
-      return true
-    }
-    // 处理带参数的路由
-    if (r.path.includes(':')) {
-      const pathPattern = r.path.replace(/:\w+/g, '[^/]+')
-      const regex = new RegExp(`^${pathPattern}$`)
-      return regex.test(path)
-    }
-    return false
-  })
-  return matchedRoute?.meta?.title as string || '页面'
+  return '页面'
 }
 
 // 处理标签点击
@@ -657,17 +870,26 @@ const handleSidebarCollapseChange = (collapsed: boolean) => {
 }
 
 // 监听路由变化，自动添加标签
+console.log('设置路由监听')
 watch(
-  () => route.path,
+  () => route.fullPath,
   (newPath) => {
-    // 检查是否需要添加标签
-    const existingTab = openTabs.value.find(tab => tab.path === newPath)
-    if (!existingTab) {
-      addOrUpdateTab(newPath)
-    }
+    console.log('路由变化:', newPath)
+    // 始终更新或添加标签，确保标题正确
+    addOrUpdateTab(newPath)
   },
   { immediate: true }
 )
+
+// 手动调用一次，确保标签标题正确
+setTimeout(() => {
+  console.log('手动调用addOrUpdateTab')
+  addOrUpdateTab(route.fullPath)
+}, 1000)
+
+// 立即调用一次
+console.log('立即调用addOrUpdateTab')
+addOrUpdateTab(route.fullPath)
 
 // 初始化
 onMounted(() => {

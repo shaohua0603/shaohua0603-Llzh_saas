@@ -70,7 +70,114 @@ blue-collar-platform/
 - 组件通信使用 props 和 emit
 - 避免组件深度嵌套
 
-### 3.3 样式管理
+### 3.3 工人选择组件规范
+
+#### 3.3.1 组件介绍
+- **组件名称**：`WorkerSelect` 和 `WorkerSelectDialog`
+- **组件路径**：`src/components/WorkerSelect.vue` 和 `src/components/WorkerSelectDialog.vue`
+- **组件用途**：统一的工人选择组件，用于在系统中选择工人时使用
+
+#### 3.3.2 组件功能
+- 支持单选和多选模式
+- 支持搜索（姓名、手机号、工号）
+- 支持按工人状态过滤（在职/离职）
+- 显示工人详细信息（姓名、工号、证件号、手机号、性别、年龄等）
+- 支持分页
+- 支持自定义显示字段和返回字段
+
+#### 3.3.3 组件属性
+
+**WorkerSelect 组件属性**：
+| 属性名 | 类型 | 默认值 | 说明 |
+|-------|------|-------|------|
+| multiple | boolean | false | 是否多选 |
+| displayFields | string[] | ['name', 'workerId', 'idCard', 'phone', 'gender', 'age'] | 显示字段 |
+| returnFields | string[] | ['id', 'name', 'workerId', 'idCard', 'phone', 'gender', 'age'] | 返回字段 |
+
+**WorkerSelectDialog 组件属性**：
+| 属性名 | 类型 | 默认值 | 说明 |
+|-------|------|-------|------|
+| visible | boolean | false | 对话框是否可见 |
+| title | string | '选择工人' | 对话框标题 |
+| width | string | '800px' | 对话框宽度 |
+| multiple | boolean | false | 是否多选 |
+| displayFields | string[] | ['name', 'workerId', 'idCard', 'phone', 'gender', 'age'] | 显示字段 |
+| returnFields | string[] | ['id', 'name', 'workerId', 'idCard', 'phone', 'gender', 'age'] | 返回字段 |
+
+#### 3.3.4 组件事件
+
+**WorkerSelect 组件事件**：
+| 事件名 | 参数 | 说明 |
+|-------|------|------|
+| confirm | selected: any | 选择确认时触发，返回选中的工人数据 |
+| cancel | 无 | 取消选择时触发 |
+
+**WorkerSelectDialog 组件事件**：
+| 事件名 | 参数 | 说明 |
+|-------|------|------|
+| update:visible | visible: boolean | 对话框可见性变化时触发 |
+| confirm | selected: any | 选择确认时触发，返回选中的工人数据 |
+| cancel | 无 | 取消选择时触发 |
+
+#### 3.3.5 使用示例
+
+**基本使用**：
+```vue
+<template>
+  <div>
+    <el-button @click="dialogVisible = true">选择工人</el-button>
+    <WorkerSelectDialog
+      v-model:visible="dialogVisible"
+      @confirm="handleConfirm"
+      @cancel="handleCancel"
+    />
+  </div>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue'
+import WorkerSelectDialog from '@/components/WorkerSelectDialog.vue'
+
+const dialogVisible = ref(false)
+
+const handleConfirm = (selected) => {
+  console.log('Selected worker:', selected)
+  // 处理选中的工人数据
+}
+
+const handleCancel = () => {
+  console.log('Canceled')
+}
+</script>
+```
+
+**自定义显示字段**：
+```vue
+<WorkerSelectDialog
+  v-model:visible="dialogVisible"
+  :display-fields="['name', 'workerId', 'phone', 'department', 'position']"
+  :return-fields="['id', 'name', 'workerId', 'phone']"
+  @confirm="handleConfirm"
+/>
+```
+
+**多选模式**：
+```vue
+<WorkerSelectDialog
+  v-model:visible="dialogVisible"
+  :multiple="true"
+  @confirm="handleConfirm"
+/>
+```
+
+#### 3.3.6 最佳实践
+1. **统一使用**：所有需要选择工人的地方都应使用此组件，确保用户体验一致
+2. **字段配置**：根据业务场景合理配置显示字段和返回字段
+3. **性能优化**：当工人数量较多时，建议使用分页功能
+4. **错误处理**：处理组件的加载状态和错误状态
+5. **样式一致性**：保持与系统其他组件的样式一致
+
+### 3.4 样式管理
 - 使用 scoped 样式
 - 避免使用 !important
 - 合理使用 CSS 变量
@@ -87,7 +194,52 @@ blue-collar-platform/
 - 工人端：底部固定导航栏，包含 5 个主要模块
 - 其他端：左侧可折叠菜单，顶部面包屑导航
 
-### 4.3 响应式布局
+### 4.3 4级导航页签名称规范
+
+#### 4.3.1 页签名称显示原则
+- **页签名称**：4级导航页签的名称应清晰反映当前页面的功能
+- **内容区域**：内容区域不需要显示页面标题，避免重复
+- **一致性**：相同功能的页面应使用统一的页签名称
+
+#### 4.3.2 页签名称映射方法
+- **实现位置**：在布局组件（如 `TenantLayout.vue`）中通过 `titleMap` 对象进行映射
+- **映射规则**：
+  - 精确路径匹配：为每个具体路径定义对应的页签名称
+  - 动态参数路径：使用带参数的路径模式（如 `/path/:id`）
+  - 编辑页面：统一使用 "编辑XX" 格式
+  - 新增页面：统一使用 "新增XX" 格式
+  - 详情页面：统一使用 "XX详情" 格式
+
+#### 4.3.3 实现示例
+```typescript
+// 在布局组件中的titleMap对象
+const titleMap = {
+  // 列表页面
+  '/tenant/on-duty/insurance': '保险管理',
+  // 新增页面
+  '/tenant/on-duty/insurance/form': '新增保险',
+  // 编辑页面
+  '/tenant/on-duty/insurance/form/:id': '编辑保险',
+  // 详情页面
+  '/tenant/on-duty/insurance/detail/:id': '保险详情',
+  // 其他页面类似
+}
+```
+
+#### 4.3.4 路径匹配逻辑
+- **精确匹配**：优先匹配完整路径
+- **动态参数匹配**：使用正则表达式处理带参数的路径
+- **编辑/新增页面**：特殊处理包含 `/edit/` 或 `/add` 的路径
+- **详情页面**：处理路径最后部分为数字ID或包含 `detail` 的情况
+
+#### 4.3.5 最佳实践
+1. **统一命名**：保持页签名称与功能描述一致
+2. **格式规范**：使用简洁明了的中文名称
+3. **路径规范**：遵循路由配置的路径结构
+4. **一致性**：相同类型的页面使用统一的命名格式
+5. **维护性**：当新增页面时，及时更新 `titleMap` 映射
+
+### 4.4 响应式布局
 - 移动端：单列布局，适配小屏幕
 - 平板：双列布局，适配中等屏幕
 - 桌面：多列布局，适配大屏幕

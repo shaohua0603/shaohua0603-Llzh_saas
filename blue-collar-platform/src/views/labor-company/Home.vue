@@ -41,6 +41,12 @@
         <el-card class="tasks-card">
           <el-tabs v-model="activeTab">
             <el-tab-pane label="待办事项" name="todo">
+              <template #label>
+                <div class="tab-with-badge">
+                  <span>待办事项</span>
+                  <el-badge v-if="todoList.length > 0" :value="todoList.length" type="danger" />
+                </div>
+              </template>
               <el-empty v-if="todoList.length === 0" description="暂无待办事项" />
               <div v-else class="task-list">
                 <div v-for="(item, index) in todoList" :key="index" class="task-item" @click="handleTodoItem(item.id)">
@@ -59,6 +65,12 @@
               </div>
             </el-tab-pane>
             <el-tab-pane label="消息通知" name="message">
+              <template #label>
+                <div class="tab-with-badge">
+                  <span>消息通知</span>
+                  <el-badge v-if="messageList.length > 0" :value="messageList.length" type="danger" />
+                </div>
+              </template>
               <el-empty v-if="messageList.length === 0" description="暂无消息通知" />
               <div v-else class="task-list">
                 <div v-for="(item, index) in messageList" :key="index" class="task-item" @click="viewMessageDetail(item.id)">
@@ -77,6 +89,12 @@
               </div>
             </el-tab-pane>
             <el-tab-pane label="预警信息" name="warning">
+              <template #label>
+                <div class="tab-with-badge">
+                  <span>预警信息</span>
+                  <el-badge v-if="warningList.length > 0" :value="warningList.length" type="danger" />
+                </div>
+              </template>
               <el-empty v-if="warningList.length === 0" description="暂无预警信息" />
               <div v-else class="task-list">
                 <div v-for="(item, index) in warningList" :key="index" class="task-item" @click="handleWarning(item.id)">
@@ -115,37 +133,37 @@ const availableFunctions = [
     id: 'recruitment',
     title: '招聘管理',
     icon: UserFilled,
-    path: '/labor-company/recruitment'
+    path: '/tenant/recruitment'
   },
   {
     id: 'workers',
     title: '工人管理',
     icon: UserFilled,
-    path: '/labor-company/workers'
+    path: '/tenant/workers'
   },
   {
     id: 'attendance',
     title: '考勤管理',
     icon: Timer,
-    path: '/labor-company/attendance'
+    path: '/tenant/attendance'
   },
   {
     id: 'salary',
     title: '结算管理',
     icon: Money,
-    path: '/labor-company/salary'
+    path: '/tenant/salary'
   },
   {
     id: 'departments',
     title: '部门管理',
     icon: OfficeBuilding,
-    path: '/labor-company/departments'
+    path: '/tenant/departments'
   },
   {
     id: 'roles',
     title: '角色管理',
     icon: Key,
-    path: '/labor-company/roles'
+    path: '/tenant/roles'
   }
 ]
 
@@ -171,26 +189,26 @@ const navigateTo = (path: string) => {
 }
 
 const goToQuickAccessSettings = () => {
-  router.push('/labor-company/quick-access-settings')
+  router.push('/tenant/quick-access-settings')
 }
 
 const newsList = ref([
   {
-    id: 1,
-    title: '新的招聘政策发布',
-    content: '关于2026年春季招聘的最新政策已发布，请及时查看并遵守相关规定。',
+    id: '1',
+    title: '电工技能提升培训课程',
+    content: '提供专业的电工技能培训，帮助工人提升职业技能水平',
     date: '2026-02-25'
   },
   {
-    id: 2,
-    title: '系统功能更新通知',
-    content: '系统已更新至最新版本，新增了工人管理的多项功能，请查看更新日志。',
+    id: '2',
+    title: '最新岗位招聘信息',
+    content: '最新岗位信息，待遇优厚，福利完善',
     date: '2026-02-20'
   },
   {
-    id: 3,
-    title: '考勤系统升级',
-    content: '考勤系统将于本周末进行升级维护，请提前做好相关准备工作。',
+    id: '3',
+    title: '成人高考学历提升指南',
+    content: '成人高考学历提升的详细指南和备考建议',
     date: '2026-02-15'
   }
 ])
@@ -248,21 +266,22 @@ const warningList = ref([
 
 const viewNewsDetail = (id: number) => {
   console.log('查看资讯详情:', id)
+  router.push(`/tenant/on-duty/news/detail/${id}`)
 }
 
 const handleTodoItem = (id: number) => {
   console.log('处理待办事项:', id)
-  router.push(`/labor-company/todo-detail/${id}`)
+  router.push(`/tenant/todo-detail/${id}`)
 }
 
 const viewMessageDetail = (id: number) => {
   console.log('查看消息详情:', id)
-  router.push(`/labor-company/message-detail/${id}`)
+  router.push(`/tenant/message-detail/${id}`)
 }
 
 const handleWarning = (id: number) => {
   console.log('处理预警信息:', id)
-  router.push(`/labor-company/warning-detail/${id}`)
+  router.push(`/tenant/warning-detail/${id}`)
 }
 
 onMounted(() => {

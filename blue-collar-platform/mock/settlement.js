@@ -49,7 +49,7 @@ const commissionPayments = Mock.mock({
         return statusMap[this.status]
       },
       'payTime': function() {
-        return this.status === 'paid' ? '@datetime("yyyy-MM-dd HH:mm:ss") : '-'
+        return this.status === 'paid' ? '@datetime("yyyy-MM-dd HH:mm:ss")' : '-'
       },
       'tenantName': '@ctitle(2, 4)',
       'createdAt': '@datetime',
@@ -79,7 +79,7 @@ const referralRewards = Mock.mock({
         return statusMap[this.status]
       },
       'payTime': function() {
-        return this.status === 'paid' ? '@datetime("yyyy-MM-dd HH:mm:ss") : '-'
+        return this.status === 'paid' ? '@datetime("yyyy-MM-dd HH:mm:ss")' : '-'
       },
       'tenantName': '@ctitle(2, 4)',
       'createdAt': '@datetime',

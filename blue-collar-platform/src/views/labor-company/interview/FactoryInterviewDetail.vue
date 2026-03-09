@@ -307,7 +307,7 @@ const handleBack = () => {
 
 // 编辑
 const handleEdit = () => {
-  router.push(`/labor-company/interview/factory-interview/edit/${interviewDetail.value.id}`)
+  router.push(`/tenant/interview/factory-interview/edit/${interviewDetail.value.id}`)
 }
 
 // 删除

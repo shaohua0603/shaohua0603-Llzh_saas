@@ -334,15 +334,15 @@ const handleReset = () => {
 }
 
 const handleAdd = () => {
-  router.push({ name: 'LaborCompanyResignationAdd' })
+  router.push({ name: 'TenantResignationAdd' })
 }
 
 const handleEdit = (row: Resignation) => {
-  router.push({ name: 'LaborCompanyResignationEdit', params: { id: row.id } })
+  router.push({ name: 'TenantResignationEdit', params: { id: row.id } })
 }
 
 const handleView = (row: Resignation) => {
-  router.push({ name: 'LaborCompanyResignationDetail', params: { id: row.id } })
+  router.push({ name: 'TenantResignationDetail', params: { id: row.id } })
 }
 
 const handleDelete = (row: Resignation) => {

@@ -58,6 +58,12 @@
       @size-change="handleSizeChange"
     >
 
+      <template #column-paymentType="{ row }">
+        <el-tag :type="row.paymentType === 'daily' ? 'warning' : 'success'">
+          {{ row.paymentType === 'daily' ? '日结' : '月结' }}
+        </el-tag>
+      </template>
+
       <template #column-materialType="{ row }">
         <el-tag :type="getMaterialTypeTag(row.materialType)">
           {{ getMaterialTypeText(row.materialType) }}
@@ -78,6 +84,7 @@ interface LearningTimeRecord {
   id: string
   workerName: string
   workerNo: string
+  paymentType: 'daily' | 'monthly'
   totalLearningTime: number
   monthLearningTime: number
   materialType: 'pre_job' | 'daily'
@@ -89,6 +96,7 @@ interface LearningTimeRecord {
 const columns = [
   { prop: 'workerName', label: '姓名', minWidth: 100, sortable: true },
   { prop: 'workerNo', label: '工号', minWidth: 120, sortable: true },
+  { prop: 'paymentType', label: '结算方式', minWidth: 100 },
   { prop: 'totalLearningTime', label: '累计学习时长(小时)', minWidth: 150, sortable: true },
   { prop: 'monthLearningTime', label: '当月学习时长(小时)', minWidth: 160, sortable: true },
   { prop: 'materialType', label: '学习材料类型', minWidth: 120, sortable: true },
@@ -123,6 +131,7 @@ const mockData: LearningTimeRecord[] = [
     id: '1',
     workerName: '张三',
     workerNo: 'W001',
+    paymentType: 'daily',
     totalLearningTime: 45,
     monthLearningTime: 8,
     materialType: 'pre_job',
@@ -133,6 +142,7 @@ const mockData: LearningTimeRecord[] = [
     id: '2',
     workerName: '张三',
     workerNo: 'W001',
+    paymentType: 'daily',
     totalLearningTime: 45,
     monthLearningTime: 8,
     materialType: 'daily',
@@ -143,6 +153,7 @@ const mockData: LearningTimeRecord[] = [
     id: '3',
     workerName: '李四',
     workerNo: 'W002',
+    paymentType: 'monthly',
     totalLearningTime: 32,
     monthLearningTime: 5,
     materialType: 'pre_job',
@@ -153,6 +164,7 @@ const mockData: LearningTimeRecord[] = [
     id: '4',
     workerName: '李四',
     workerNo: 'W002',
+    paymentType: 'monthly',
     totalLearningTime: 32,
     monthLearningTime: 5,
     materialType: 'daily',
@@ -163,6 +175,7 @@ const mockData: LearningTimeRecord[] = [
     id: '5',
     workerName: '王五',
     workerNo: 'W003',
+    paymentType: 'daily',
     totalLearningTime: 28,
     monthLearningTime: 3,
     materialType: 'pre_job',
@@ -173,6 +186,7 @@ const mockData: LearningTimeRecord[] = [
     id: '6',
     workerName: '赵六',
     workerNo: 'W004',
+    paymentType: 'monthly',
     totalLearningTime: 56,
     monthLearningTime: 12,
     materialType: 'daily',
@@ -183,6 +197,7 @@ const mockData: LearningTimeRecord[] = [
     id: '7',
     workerName: '钱七',
     workerNo: 'W005',
+    paymentType: 'daily',
     totalLearningTime: 18,
     monthLearningTime: 2,
     materialType: 'pre_job',
@@ -193,6 +208,7 @@ const mockData: LearningTimeRecord[] = [
     id: '8',
     workerName: '孙八',
     workerNo: 'W006',
+    paymentType: 'monthly',
     totalLearningTime: 40,
     monthLearningTime: 6,
     materialType: 'daily',

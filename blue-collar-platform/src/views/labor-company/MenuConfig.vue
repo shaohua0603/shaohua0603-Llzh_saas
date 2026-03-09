@@ -29,7 +29,7 @@
     </el-card>
 
     <div class="action-bar">
-      <el-button type="primary" @click="handleCreate" v-permission="'MENU_CONFIG_CREATE'">
+      <el-button type="primary" @click="handleCreate" v-permission="['MENU_CONFIG_CREATE']">
         <el-icon><Plus /></el-icon>
         新增
       </el-button>
@@ -81,7 +81,7 @@
               type="primary"
               link
               @click.stop="handleAddChild(row)"
-              v-permission="'MENU_CONFIG_CREATE'"
+              v-permission="['MENU_CONFIG_CREATE']"
             >
               添加子项
             </el-button>
@@ -89,7 +89,7 @@
               type="primary"
               link
               @click.stop="handleEdit(row)"
-              v-permission="'MENU_CONFIG_UPDATE'"
+              v-permission="['MENU_CONFIG_UPDATE']"
             >
               编辑
             </el-button>
@@ -97,7 +97,7 @@
               type="danger"
               link
               @click.stop="handleDelete(row)"
-              v-permission="'MENU_CONFIG_DELETE'"
+              v-permission="['MENU_CONFIG_DELETE']"
             >
               删除
             </el-button>
@@ -218,10 +218,10 @@
           </el-col>
         </el-row>
 
-        <el-form-item label="组件路径" prop="componentPath">
+        <el-form-item label="组件路径" prop="componentPath" v-if="formData.menuType === MenuType.MENU">
           <el-input
             v-model="formData.componentPath"
-            placeholder="请输入组件路径（如：/views/labor-company/Department）"
+            placeholder="请输入组件路径（如：/views/tenant/Department）"
             maxlength="200"
           />
         </el-form-item>
@@ -286,7 +286,7 @@ const router = useRouter()
 const tableRef = ref()
 const loading = ref(false)
 const menuList = ref<Menu[]>([])
-const expandAll = ref(false)
+const expandAll = ref(true)
 
 const queryParams = reactive<MenuQueryParams>({
   page: 1,
@@ -366,10 +366,11 @@ const loadMenuList = async () => {
         menuType: MenuType.DIRECTORY,
         menuIcon: 'House',
         businessCode: 'WORK_CENTER',
-        menuPath: '/labor-company/work-center',
+        menuPath: '/tenant/work-center',
         sortOrder: 1,
         menuStatus: MenuStatus.ENABLED,
         visible: MenuVisible.TRUE,
+        hasChildren: true,
         children: [
           {
             id: 11,
@@ -378,7 +379,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Task',
             businessCode: 'TODO',
-            menuPath: '/labor-company/todo',
+            menuPath: '/tenant/todo',
             sortOrder: 1,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -390,7 +391,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Message',
             businessCode: 'MESSAGE',
-            menuPath: '/labor-company/messages',
+            menuPath: '/tenant/messages',
             sortOrder: 2,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -402,7 +403,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Warning',
             businessCode: 'WARNING',
-            menuPath: '/labor-company/warnings',
+            menuPath: '/tenant/warnings',
             sortOrder: 3,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -416,10 +417,11 @@ const loadMenuList = async () => {
         menuType: MenuType.DIRECTORY,
         menuIcon: 'UserFilled',
         businessCode: 'RECRUITMENT',
-        menuPath: '/labor-company/recruitment',
+        menuPath: '/tenant/recruitment',
         sortOrder: 2,
         menuStatus: MenuStatus.ENABLED,
         visible: MenuVisible.TRUE,
+        hasChildren: true,
         children: [
           {
             id: 21,
@@ -428,7 +430,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Document',
             businessCode: 'RECRUITMENT_DEMAND',
-            menuPath: '/labor-company/recruitment',
+            menuPath: '/tenant/recruitment',
             sortOrder: 1,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -440,7 +442,690 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Files',
             businessCode: 'RESUME',
-            menuPath: '/labor-company/recruitment/resume',
+            menuPath: '/tenant/recruitment/resume',
+            sortOrder: 2,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          }
+        ]
+      },
+      {
+        id: 3,
+        parentId: 0,
+        menuName: '面试管理',
+        menuType: MenuType.DIRECTORY,
+        menuIcon: 'ChatLineRound',
+        businessCode: 'INTERVIEW',
+        menuPath: '/tenant/interview',
+        sortOrder: 3,
+        menuStatus: MenuStatus.ENABLED,
+        visible: MenuVisible.TRUE,
+        hasChildren: true,
+        children: [
+          {
+            id: 31,
+            parentId: 3,
+            menuName: '接送管理',
+            menuType: MenuType.MENU,
+            menuIcon: 'Van',
+            businessCode: 'PICKUP',
+            menuPath: '/tenant/interview/pickup',
+            sortOrder: 1,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          },
+          {
+            id: 32,
+            parentId: 3,
+            menuName: '初步面试',
+            menuType: MenuType.MENU,
+            menuIcon: 'ChatDotRound',
+            businessCode: 'INITIAL_INTERVIEW',
+            menuPath: '/tenant/interview/initial-interview',
+            sortOrder: 2,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          },
+          {
+            id: 33,
+            parentId: 3,
+            menuName: '面试邀约',
+            menuType: MenuType.MENU,
+            menuIcon: 'Bell',
+            businessCode: 'INTERVIEW_INVITATION',
+            menuPath: '/tenant/interview/invitation',
+            sortOrder: 3,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          },
+          {
+            id: 34,
+            parentId: 3,
+            menuName: '工厂面试',
+            menuType: MenuType.MENU,
+            menuIcon: 'OfficeBuilding',
+            businessCode: 'FACTORY_INTERVIEW',
+            menuPath: '/tenant/interview/factory-interview',
+            sortOrder: 4,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          }
+        ]
+      },
+      {
+        id: 4,
+        parentId: 0,
+        menuName: '工人管理',
+        menuType: MenuType.DIRECTORY,
+        menuIcon: 'User',
+        businessCode: 'WORKER_MANAGEMENT',
+        menuPath: '/tenant/workers',
+        sortOrder: 4,
+        menuStatus: MenuStatus.ENABLED,
+        visible: MenuVisible.TRUE,
+        hasChildren: true,
+        children: [
+          {
+            id: 41,
+            parentId: 4,
+            menuName: '工人信息',
+            menuType: MenuType.MENU,
+            menuIcon: 'List',
+            businessCode: 'WORKER_INFO',
+            menuPath: '/tenant/workers',
+            sortOrder: 1,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE,
+            hasChildren: true,
+            children: [
+              {
+                id: 411,
+                parentId: 41,
+                menuName: '新增工人',
+                menuType: MenuType.BUTTON,
+                businessCode: 'WORKER_CREATE',
+                sortOrder: 1,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 412,
+                parentId: 41,
+                menuName: '编辑工人',
+                menuType: MenuType.BUTTON,
+                businessCode: 'WORKER_UPDATE',
+                sortOrder: 2,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 413,
+                parentId: 41,
+                menuName: '删除工人',
+                menuType: MenuType.BUTTON,
+                businessCode: 'WORKER_DELETE',
+                sortOrder: 3,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 5,
+        parentId: 0,
+        menuName: '合同管理',
+        menuType: MenuType.DIRECTORY,
+        menuIcon: 'Document',
+        businessCode: 'CONTRACT_MANAGEMENT',
+        menuPath: '/tenant/contract',
+        sortOrder: 5,
+        menuStatus: MenuStatus.ENABLED,
+        visible: MenuVisible.TRUE,
+        hasChildren: true,
+        children: [
+          {
+            id: 51,
+            parentId: 5,
+            menuName: '签订合同',
+            menuType: MenuType.MENU,
+            menuIcon: 'Document',
+            businessCode: 'CONTRACT_SIGN',
+            menuPath: '/tenant/contract',
+            sortOrder: 1,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE,
+            hasChildren: true,
+            children: [
+              {
+                id: 511,
+                parentId: 51,
+                menuName: '新增合同',
+                menuType: MenuType.BUTTON,
+                businessCode: 'CONTRACT_CREATE',
+                sortOrder: 1,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 512,
+                parentId: 51,
+                menuName: '编辑合同',
+                menuType: MenuType.BUTTON,
+                businessCode: 'CONTRACT_UPDATE',
+                sortOrder: 2,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 513,
+                parentId: 51,
+                menuName: '删除合同',
+                menuType: MenuType.BUTTON,
+                businessCode: 'CONTRACT_DELETE',
+                sortOrder: 3,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: 6,
+        parentId: 0,
+        menuName: '在职管理',
+        menuType: MenuType.DIRECTORY,
+        menuIcon: 'Management',
+        businessCode: 'EMPLOYMENT_MANAGEMENT',
+        menuPath: '/tenant/on-duty',
+        sortOrder: 6,
+        menuStatus: MenuStatus.ENABLED,
+        visible: MenuVisible.TRUE,
+        hasChildren: true,
+        children: [
+          {
+            id: 61,
+            parentId: 6,
+            menuName: '工作与生活',
+            menuType: MenuType.DIRECTORY,
+            menuIcon: 'Coffee',
+            businessCode: 'WORK_AND_LIFE',
+            menuPath: '/tenant/on-duty/work-and-life',
+            sortOrder: 1,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE,
+            hasChildren: true,
+            children: [
+              {
+                id: 611,
+                parentId: 61,
+                menuName: '生活费管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'Wallet',
+                businessCode: 'LIVING_EXPENSE',
+                menuPath: '/tenant/on-duty/living-expense',
+                sortOrder: 1,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 612,
+                parentId: 61,
+                menuName: '工资管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'Money',
+                businessCode: 'SALARY_MANAGEMENT',
+                menuPath: '/tenant/on-duty/salary',
+                sortOrder: 2,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 613,
+                parentId: 61,
+                menuName: '理赔管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'DocumentChecked',
+                businessCode: 'CLAIM_MANAGEMENT',
+                menuPath: '/tenant/on-duty/claim',
+                sortOrder: 3,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              }
+            ]
+          },
+          {
+            id: 62,
+            parentId: 6,
+            menuName: '管理与关怀',
+            menuType: MenuType.DIRECTORY,
+            menuIcon: 'Management',
+            businessCode: 'MANAGEMENT_AND_CARE',
+            menuPath: '/tenant/on-duty/management-and-care',
+            sortOrder: 2,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE,
+            hasChildren: true,
+            children: [
+              {
+                id: 621,
+                parentId: 62,
+                menuName: '沟通管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'ChatLineSquare',
+                businessCode: 'COMMUNICATION_MANAGEMENT',
+                menuPath: '/tenant/on-duty/communication',
+                sortOrder: 1,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 622,
+                parentId: 62,
+                menuName: '文娱活动',
+                menuType: MenuType.MENU,
+                menuIcon: 'Trophy',
+                businessCode: 'ENTERTAINMENT',
+                menuPath: '/tenant/on-duty/entertainment',
+                sortOrder: 2,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 623,
+                parentId: 62,
+                menuName: '报名管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'Edit',
+                businessCode: 'REGISTRATION',
+                menuPath: '/tenant/on-duty/registration',
+                sortOrder: 3,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 624,
+                parentId: 62,
+                menuName: '发布资讯',
+                menuType: MenuType.MENU,
+                menuIcon: 'Promotion',
+                businessCode: 'NEWS',
+                menuPath: '/tenant/on-duty/news',
+                sortOrder: 4,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 625,
+                parentId: 62,
+                menuName: '社团管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'UserFilled',
+                businessCode: 'COMMUNITY',
+                menuPath: '/tenant/on-duty/community',
+                sortOrder: 5,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              }
+            ]
+          },
+          {
+            id: 63,
+            parentId: 6,
+            menuName: '特殊情况',
+            menuType: MenuType.MENU,
+            menuIcon: 'WarningFilled',
+            businessCode: 'SPECIAL_CASE',
+            menuPath: '/tenant/on-duty/special-case',
+            sortOrder: 3,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          },
+          {
+            id: 64,
+            parentId: 6,
+            menuName: '保险管理',
+            menuType: MenuType.DIRECTORY,
+            menuIcon: 'Document',
+            businessCode: 'INSURANCE_MANAGEMENT',
+            menuPath: '/tenant/on-duty/insurance',
+            sortOrder: 4,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE,
+            hasChildren: true,
+            children: [
+              {
+                id: 641,
+                parentId: 64,
+                menuName: '保险管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'Document',
+                businessCode: 'INSURANCE',
+                menuPath: '/tenant/on-duty/insurance',
+                sortOrder: 1,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 642,
+                parentId: 64,
+                menuName: '理赔管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'DocumentChecked',
+                businessCode: 'INSURANCE_CLAIM',
+                menuPath: '/tenant/on-duty/claim',
+                sortOrder: 2,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 643,
+                parentId: 64,
+                menuName: '参保登记',
+                menuType: MenuType.MENU,
+                menuIcon: 'EditPen',
+                businessCode: 'INSURANCE_REGISTRATION',
+                menuPath: '/tenant/on-duty/insurance-record',
+                sortOrder: 3,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              }
+            ]
+          },
+          {
+            id: 65,
+            parentId: 6,
+            menuName: '考勤管理',
+            menuType: MenuType.MENU,
+            menuIcon: 'Check',
+            businessCode: 'ATTENDANCE',
+            menuPath: '/tenant/attendance',
+            sortOrder: 5,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE,
+            hasChildren: true,
+            children: [
+              {
+                id: 651,
+                parentId: 65,
+                menuName: '导入考勤',
+                menuType: MenuType.BUTTON,
+                businessCode: 'ATTENDANCE_IMPORT',
+                sortOrder: 1,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 652,
+                parentId: 65,
+                menuName: '导出考勤',
+                menuType: MenuType.BUTTON,
+                businessCode: 'ATTENDANCE_EXPORT',
+                sortOrder: 2,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 653,
+                parentId: 65,
+                menuName: '审核考勤',
+                menuType: MenuType.BUTTON,
+                businessCode: 'ATTENDANCE_APPROVE',
+                sortOrder: 3,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              }
+            ]
+          },
+          {
+            id: 66,
+            parentId: 6,
+            menuName: '请假管理',
+            menuType: MenuType.MENU,
+            menuIcon: 'Calendar',
+            businessCode: 'LEAVE_MANAGEMENT',
+            menuPath: '/tenant/on-duty/leave',
+            sortOrder: 6,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE,
+            hasChildren: true,
+            children: [
+              {
+                id: 661,
+                parentId: 66,
+                menuName: '审核请假',
+                menuType: MenuType.BUTTON,
+                businessCode: 'LEAVE_APPROVE',
+                sortOrder: 1,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 662,
+                parentId: 66,
+                menuName: '导出请假记录',
+                menuType: MenuType.BUTTON,
+                businessCode: 'LEAVE_EXPORT',
+                sortOrder: 2,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              }
+            ]
+          },
+          {
+            id: 67,
+            parentId: 6,
+            menuName: '调岗管理',
+            menuType: MenuType.MENU,
+            menuIcon: 'Sort',
+            businessCode: 'TRANSFER_MANAGEMENT',
+            menuPath: '/tenant/on-duty/transfer',
+            sortOrder: 7,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          },
+          {
+            id: 68,
+            parentId: 6,
+            menuName: '奖惩管理',
+            menuType: MenuType.MENU,
+            menuIcon: 'Medal',
+            businessCode: 'REWARD_PUNISHMENT',
+            menuPath: '/tenant/on-duty/reward-punishment',
+            sortOrder: 8,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          },
+          {
+            id: 69,
+            parentId: 6,
+            menuName: '业务课堂',
+            menuType: MenuType.DIRECTORY,
+            menuIcon: 'Reading',
+            businessCode: 'BUSINESS_CLASSROOM',
+            menuPath: '/tenant/on-duty/business-classroom',
+            sortOrder: 9,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE,
+            hasChildren: true,
+            children: [
+              {
+                id: 691,
+                parentId: 69,
+                menuName: '学习材料',
+                menuType: MenuType.MENU,
+                menuIcon: 'Document',
+                businessCode: 'LEARNING_MATERIAL',
+                menuPath: '/tenant/on-duty/learning-material',
+                sortOrder: 1,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 692,
+                parentId: 69,
+                menuName: '题库管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'Notebook',
+                businessCode: 'QUESTION_BANK',
+                menuPath: '/tenant/on-duty/question-bank',
+                sortOrder: 2,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 693,
+                parentId: 69,
+                menuName: '学习时长管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'Clock',
+                businessCode: 'LEARNING_TIME',
+                menuPath: '/tenant/on-duty/learning-time',
+                sortOrder: 3,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 694,
+                parentId: 69,
+                menuName: '考试管理',
+                menuType: MenuType.MENU,
+                menuIcon: 'EditPen',
+                businessCode: 'EXAM_MANAGEMENT',
+                menuPath: '/tenant/on-duty/exam',
+                sortOrder: 4,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 695,
+                parentId: 69,
+                menuName: '考试成绩',
+                menuType: MenuType.MENU,
+                menuIcon: 'DataAnalysis',
+                businessCode: 'EXAM_RESULT',
+                menuPath: '/tenant/on-duty/exam-result',
+                sortOrder: 5,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              }
+            ]
+          },
+          {
+            id: 610,
+            parentId: 6,
+            menuName: '异常管理',
+            menuType: MenuType.MENU,
+            menuIcon: 'Warning',
+            businessCode: 'ABNORMAL_MANAGEMENT',
+            menuPath: '/tenant/on-duty/abnormal',
+            sortOrder: 10,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          },
+          {
+            id: 611,
+            parentId: 6,
+            menuName: '投诉/建议',
+            menuType: MenuType.MENU,
+            menuIcon: 'ChatDotRound',
+            businessCode: 'COMPLAINT',
+            menuPath: '/tenant/on-duty/complaint',
+            sortOrder: 11,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          }
+        ]
+      },
+      {
+        id: 7,
+        parentId: 0,
+        menuName: '离职管理',
+        menuType: MenuType.DIRECTORY,
+        menuIcon: 'RemoveFilled',
+        businessCode: 'RESIGNATION_MANAGEMENT',
+        menuPath: '/tenant/resignation',
+        sortOrder: 7,
+        menuStatus: MenuStatus.ENABLED,
+        visible: MenuVisible.TRUE,
+        hasChildren: true,
+        children: [
+          {
+            id: 71,
+            parentId: 7,
+            menuName: '离职管理',
+            menuType: MenuType.MENU,
+            menuIcon: 'RemoveFilled',
+            businessCode: 'RESIGNATION',
+            menuPath: '/tenant/resignation',
+            sortOrder: 1,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
+          }
+        ]
+      },
+      {
+        id: 8,
+        parentId: 0,
+        menuName: '结算管理',
+        menuType: MenuType.DIRECTORY,
+        menuIcon: 'Wallet',
+        businessCode: 'SETTLEMENT_MANAGEMENT',
+        menuPath: '/tenant/settlement',
+        sortOrder: 8,
+        menuStatus: MenuStatus.ENABLED,
+        visible: MenuVisible.TRUE,
+        hasChildren: true,
+        children: [
+          {
+            id: 81,
+            parentId: 8,
+            menuName: '工作转介绍',
+            menuType: MenuType.DIRECTORY,
+            menuIcon: 'Share',
+            businessCode: 'WORK_REFERRAL',
+            menuPath: '/tenant/referral',
+            sortOrder: 1,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE,
+            hasChildren: true,
+            children: [
+              {
+                id: 811,
+                parentId: 81,
+                menuName: '工作转介绍',
+                menuType: MenuType.MENU,
+                menuIcon: 'Share',
+                businessCode: 'REFERRAL',
+                menuPath: '/tenant/referral',
+                sortOrder: 1,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 812,
+                parentId: 81,
+                menuName: '佣金发放',
+                menuType: MenuType.MENU,
+                menuIcon: 'Wallet',
+                businessCode: 'COMMISSION',
+                menuPath: '/tenant/commission',
+                sortOrder: 2,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              }
+            ]
+          },
+          {
+            id: 82,
+            parentId: 8,
+            menuName: '结算管理',
+            menuType: MenuType.MENU,
+            menuIcon: 'Money',
+            businessCode: 'SETTLEMENT',
+            menuPath: '/tenant/settlement',
             sortOrder: 2,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -452,12 +1137,13 @@ const loadMenuList = async () => {
         parentId: 0,
         menuName: '系统管理',
         menuType: MenuType.DIRECTORY,
-        menuIcon: 'Setting',
+        menuIcon: 'Tools',
         businessCode: 'SYSTEM',
-        menuPath: '/labor-company/system',
+        menuPath: '/tenant/system',
         sortOrder: 9,
         menuStatus: MenuStatus.ENABLED,
         visible: MenuVisible.TRUE,
+        hasChildren: true,
         children: [
           {
             id: 91,
@@ -466,10 +1152,37 @@ const loadMenuList = async () => {
             menuType: MenuType.DIRECTORY,
             menuIcon: 'OfficeBuilding',
             businessCode: 'COMPANY_INTRO',
-            menuPath: '/labor-company/company-culture',
+            menuPath: '/tenant/company-culture',
             sortOrder: 1,
             menuStatus: MenuStatus.ENABLED,
-            visible: MenuVisible.TRUE
+            visible: MenuVisible.TRUE,
+            hasChildren: true,
+            children: [
+              {
+                id: 911,
+                parentId: 91,
+                menuName: '企业文化介绍',
+                menuType: MenuType.MENU,
+                menuIcon: 'Document',
+                businessCode: 'COMPANY_CULTURE',
+                menuPath: '/tenant/company-culture',
+                sortOrder: 1,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              },
+              {
+                id: 912,
+                parentId: 91,
+                menuName: '岗位文化介绍',
+                menuType: MenuType.MENU,
+                menuIcon: 'Position',
+                businessCode: 'POSITION_CULTURE',
+                menuPath: '/tenant/position-culture',
+                sortOrder: 2,
+                menuStatus: MenuStatus.ENABLED,
+                visible: MenuVisible.TRUE
+              }
+            ]
           },
           {
             id: 92,
@@ -478,7 +1191,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Organization',
             businessCode: 'DEPARTMENT',
-            menuPath: '/labor-company/departments',
+            menuPath: '/tenant/departments',
             sortOrder: 2,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -490,7 +1203,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'User',
             businessCode: 'EMPLOYEE',
-            menuPath: '/labor-company/employees',
+            menuPath: '/tenant/employees',
             sortOrder: 3,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -500,9 +1213,9 @@ const loadMenuList = async () => {
             parentId: 9,
             menuName: '岗位管理',
             menuType: MenuType.MENU,
-            menuIcon: 'Avatar',
-            businessCode: 'ROLE',
-            menuPath: '/labor-company/roles',
+            menuIcon: 'Position',
+            businessCode: 'POSITION_MANAGEMENT',
+            menuPath: '/tenant/positions',
             sortOrder: 4,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -514,7 +1227,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'List',
             businessCode: 'RULE_CONFIG',
-            menuPath: '/labor-company/rules',
+            menuPath: '/tenant/rules',
             sortOrder: 5,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -526,7 +1239,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Menu',
             businessCode: 'MENU_CONFIG',
-            menuPath: '/labor-company/menu-config',
+            menuPath: '/tenant/menu-config',
             sortOrder: 6,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -538,7 +1251,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Notebook',
             businessCode: 'DICTIONARY',
-            menuPath: '/labor-company/dictionary',
+            menuPath: '/tenant/dictionary',
             sortOrder: 7,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -550,7 +1263,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Tools',
             businessCode: 'SYSTEM_PARAM',
-            menuPath: '/labor-company/system-parameter',
+            menuPath: '/tenant/system-parameter',
             sortOrder: 8,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -562,7 +1275,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Operation',
             businessCode: 'PROCESS',
-            menuPath: '/labor-company/process',
+            menuPath: '/tenant/process',
             sortOrder: 9,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -574,7 +1287,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Connection',
             businessCode: 'PROCESS_CONFIG',
-            menuPath: '/labor-company/process-config',
+            menuPath: '/tenant/process-config',
             sortOrder: 10,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -586,7 +1299,7 @@ const loadMenuList = async () => {
             menuType: MenuType.MENU,
             menuIcon: 'Folder',
             businessCode: 'ATTACHMENT',
-            menuPath: '/labor-company/attachment',
+            menuPath: '/tenant/attachment',
             sortOrder: 11,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE
@@ -598,10 +1311,11 @@ const loadMenuList = async () => {
             menuType: MenuType.DIRECTORY,
             menuIcon: 'Printer',
             businessCode: 'PRINT',
-            menuPath: '/labor-company/print',
+            menuPath: '/tenant/print',
             sortOrder: 12,
             menuStatus: MenuStatus.ENABLED,
             visible: MenuVisible.TRUE,
+            hasChildren: true,
             children: [
               {
                 id: 9121,
@@ -610,7 +1324,7 @@ const loadMenuList = async () => {
                 menuType: MenuType.MENU,
                 menuIcon: 'Document',
                 businessCode: 'PRINT_TEMPLATE',
-                menuPath: '/labor-company/template-config',
+                menuPath: '/tenant/template-config',
                 sortOrder: 1,
                 menuStatus: MenuStatus.ENABLED,
                 visible: MenuVisible.TRUE
@@ -622,12 +1336,24 @@ const loadMenuList = async () => {
                 menuType: MenuType.MENU,
                 menuIcon: 'Setting',
                 businessCode: 'PRINT_CONFIG',
-                menuPath: '/labor-company/print-config',
+                menuPath: '/tenant/print-config',
                 sortOrder: 2,
                 menuStatus: MenuStatus.ENABLED,
                 visible: MenuVisible.TRUE
               }
             ]
+          },
+          {
+            id: 913,
+            parentId: 9,
+            menuName: '角色管理',
+            menuType: MenuType.MENU,
+            menuIcon: 'Key',
+            businessCode: 'ROLE_MANAGEMENT',
+            menuPath: '/tenant/roles',
+            sortOrder: 13,
+            menuStatus: MenuStatus.ENABLED,
+            visible: MenuVisible.TRUE
           }
         ]
       }
@@ -758,6 +1484,10 @@ const handleRefresh = () => {
 const handleMenuTypeChange = (value: MenuType) => {
   if (value === MenuType.DIRECTORY) {
     formData.menuPath = ''
+    formData.componentPath = ''
+  } else if (value === MenuType.BUTTON) {
+    formData.menuPath = ''
+    formData.componentPath = ''
   }
 }
 

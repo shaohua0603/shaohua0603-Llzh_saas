@@ -1,355 +1,262 @@
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
+
+const router = useRouter()
+const records = ref<any[]>([])
+const loading = ref(true)
+
+const getRecords = async () => {
+  loading.value = true
+  try {
+    await new Promise(resolve => setTimeout(resolve, 500))
+    records.value = [
+      {
+        id: 1,
+        workerName: '张三',
+        factory: '富士康科技',
+        date: '2026-02-15',
+        checkInTime: '08:55',
+        checkOutTime: '18:05',
+        workHours: 9,
+        status: '正常',
+        type: '出勤'
+      },
+      {
+        id: 2,
+        workerName: '李四',
+        factory: '华为技术',
+        date: '2026-02-15',
+        checkInTime: '09:15',
+        checkOutTime: '18:00',
+        workHours: 8.5,
+        status: '迟到',
+        type: '出勤'
+      },
+      {
+        id: 3,
+        workerName: '王五',
+        factory: '京东物流',
+        date: '2026-02-15',
+        checkInTime: '-',
+        checkOutTime: '-',
+        workHours: 0,
+        status: '缺勤',
+        type: '出勤'
+      },
+      {
+        id: 4,
+        workerName: '赵六',
+        factory: '富士康科技',
+        date: '2026-02-15',
+        checkInTime: '08:50',
+        checkOutTime: '17:50',
+        workHours: 8.5,
+        status: '正常',
+        type: '出勤'
+      }
+    ]
+  } catch (error) {
+    ElMessage.error('获取考勤记录失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const goToDetail = (record: any) => {
+  router.push(`/tenant/attendance-detail/${record.id}`)
+}
+
+const getStatusType = (status: string) => {
+  const types: Record<string, string> = {
+    '正常': 'success',
+    '迟到': 'warning',
+    '早退': 'warning',
+    '缺勤': 'danger'
+  }
+  return types[status] || 'info'
+}
+
+onMounted(() => {
+  getRecords()
+})
+</script>
+
 <template>
-  <div class="labor-company-mobile-attendance">
-    <h2 class="page-title">考勤管理</h2>
-    
-    <!-- 搜索和筛选 -->
-    <div class="search-filter">
-      <el-date-picker
-        v-model="attendanceDate"
-        type="month"
-        placeholder="选择月份"
-        style="margin-bottom: 16px; width: 100%"
-      />
-      <el-select
-        v-model="statusFilter"
-        placeholder="筛选状态"
-        style="margin-bottom: 16px; width: 100%"
-      >
-        <el-option label="全部" value="" />
-        <el-option label="出勤" value="present" />
-        <el-option label="缺勤" value="absent" />
-        <el-option label="请假" value="leave" />
-        <el-option label="迟到" value="late" />
-        <el-option label="早退" value="early" />
-      </el-select>
-      <el-input
-        v-model="searchQuery"
-        placeholder="搜索工人姓名"
-        prefix-icon="Search"
-        style="margin-bottom: 16px; width: 100%"
-      />
-      <el-button type="primary" @click="handleSearch" style="width: 100%">搜索</el-button>
+  <div class="mobile-page">
+    <div class="page-header">
+      <h2>考勤管理</h2>
     </div>
     
-    <!-- 考勤统计 -->
-    <div class="attendance-stats">
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ attendanceStats.totalWorkers }}</div>
-          <div class="stat-label">总人数</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ attendanceStats.presentCount }}</div>
-          <div class="stat-label">出勤人数</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ attendanceStats.absentCount }}</div>
-          <div class="stat-label">缺勤人数</div>
-        </div>
-      </el-card>
-      <el-card class="stat-card">
-        <div class="stat-content">
-          <div class="stat-number">{{ attendanceStats.attendanceRate }}%</div>
-          <div class="stat-label">出勤率</div>
-        </div>
-      </el-card>
-    </div>
-    
-    <!-- 考勤列表 -->
-    <div class="attendance-list">
-      <el-card 
-        v-for="attendance in attendanceList" 
-        :key="attendance.id" 
-        class="attendance-card"
-      >
-        <div class="attendance-info">
-          <div class="worker-name">{{ attendance.workerName }}</div>
-          <div class="attendance-details">
-            <div class="detail-item">
-              <span class="detail-label">日期：</span>
-              <span class="detail-value">{{ attendance.date }}</span>
+    <div class="page-content">
+      <div v-if="loading" class="loading-state">
+        <span>加载中...</span>
+      </div>
+      
+      <div v-else-if="records.length === 0" class="empty-state">
+        <p>暂无考勤记录</p>
+      </div>
+      
+      <div v-else class="record-list">
+        <div 
+          v-for="record in records" 
+          :key="record.id" 
+          class="record-item"
+          @click="goToDetail(record)"
+        >
+          <div class="item-header">
+            <div class="worker-info">
+              <span class="worker-name">{{ record.workerName }}</span>
+              <span class="record-type">{{ record.type }}</span>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">状态：</span>
-              <el-tag :type="getStatusType(attendance.status)">
-                {{ getStatusText(attendance.status) }}
-              </el-tag>
+            <el-tag :type="getStatusType(record.status)" size="small">
+              {{ record.status }}
+            </el-tag>
+          </div>
+          
+          <div class="item-info">
+            <div class="info-row">
+              <span class="label">用工企业：</span>
+              <span class="value">{{ record.factory }}</span>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">上班时间：</span>
-              <span class="detail-value">{{ attendance.checkInTime }}</span>
+            <div class="info-row">
+              <span class="label">考勤日期：</span>
+              <span class="value">{{ record.date }}</span>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">下班时间：</span>
-              <span class="detail-value">{{ attendance.checkOutTime }}</span>
+            <div class="info-row">
+              <span class="label">上班时间：</span>
+              <span class="value">{{ record.checkInTime }}</span>
             </div>
-            <div class="detail-item">
-              <span class="detail-label">工作时长：</span>
-              <span class="detail-value">{{ attendance.workHours }}小时</span>
+            <div class="info-row">
+              <span class="label">下班时间：</span>
+              <span class="value">{{ record.checkOutTime }}</span>
+            </div>
+            <div class="info-row">
+              <span class="label">工作时长：</span>
+              <span class="value">{{ record.workHours }}小时</span>
             </div>
           </div>
-          <div class="attendance-actions">
-            <el-button size="small" type="primary" @click="handleViewAttendance(attendance)">
-              查看
-            </el-button>
-            <el-button size="small" type="success" @click="handleEditAttendance(attendance)">
-              编辑
-            </el-button>
-          </div>
         </div>
-      </el-card>
-    </div>
-    
-    <!-- 分页 -->
-    <div class="pagination" style="margin-top: 16px">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :page-sizes="[10, 20, 50]"
-        layout="total, sizes, prev, pager, next"
-        :total="totalAttendance"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
+      </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
-
-// 搜索和筛选
-const searchQuery = ref('')
-const attendanceDate = ref('')
-const statusFilter = ref('')
-
-// 分页
-const currentPage = ref(1)
-const pageSize = ref(10)
-const totalAttendance = ref(0)
-
-// 考勤统计
-const attendanceStats = ref({
-  totalWorkers: 0,
-  presentCount: 0,
-  absentCount: 0,
-  attendanceRate: 0
-})
-
-// 考勤列表
-const attendanceList = ref<any[]>([])
-
-// 获取状态类型
-const getStatusType = (status: string) => {
-  const typeMap: Record<string, string> = {
-    'present': 'success',
-    'absent': 'danger',
-    'leave': 'warning',
-    'late': 'warning',
-    'early': 'warning'
-  }
-  return typeMap[status] || 'default'
-}
-
-// 获取状态文本
-const getStatusText = (status: string) => {
-  const textMap: Record<string, string> = {
-    'present': '出勤',
-    'absent': '缺勤',
-    'leave': '请假',
-    'late': '迟到',
-    'early': '早退'
-  }
-  return textMap[status] || status
-}
-
-// 搜索
-const handleSearch = async () => {
-  currentPage.value = 1
-  await fetchAttendance()
-}
-
-// 查看考勤
-const handleViewAttendance = (attendance: any) => {
-  console.log('查看考勤:', attendance)
-  // 这里可以跳转到考勤详情页
-}
-
-// 编辑考勤
-const handleEditAttendance = (attendance: any) => {
-  console.log('编辑考勤:', attendance)
-  // 这里可以跳转到编辑考勤页面
-}
-
-// 分页大小变化
-const handleSizeChange = (size: number) => {
-  pageSize.value = size
-  fetchAttendance()
-}
-
-// 当前页变化
-const handleCurrentChange = (current: number) => {
-  currentPage.value = current
-  fetchAttendance()
-}
-
-// 获取考勤数据
-const fetchAttendance = async () => {
-  try {
-    // 获取考勤统计
-    const statsResponse = await axios.get('/api/labor-company/attendance-stats', {
-      params: {
-        date: attendanceDate.value
-      }
-    })
-    attendanceStats.value = statsResponse.data
-    
-    // 获取考勤列表
-    const listResponse = await axios.get('/api/labor-company/attendance', {
-      params: {
-        page: currentPage.value,
-        pageSize: pageSize.value,
-        search: searchQuery.value,
-        date: attendanceDate.value,
-        status: statusFilter.value
-      }
-    })
-    attendanceList.value = listResponse.data.items
-    totalAttendance.value = listResponse.data.total
-  } catch (error) {
-    console.error('获取考勤数据失败:', error)
-  }
-}
-
-// 初始化数据
-onMounted(() => {
-  // 设置默认月份为当前月
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = String(now.getMonth() + 1).padStart(2, '0')
-  attendanceDate.value = `${year}-${month}`
-  
-  fetchAttendance()
-})
-</script>
-
 <style scoped>
-.labor-company-mobile-attendance {
-  padding: 16px;
+.mobile-page {
+  min-height: 100vh;
+  background-color: #f5f5f5;
 }
 
-.page-title {
-  font-size: 20px;
+.page-header {
+  background-color: #fff;
+  padding: 15px;
+  border-bottom: 1px solid #eaeaea;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.page-header h2 {
+  margin: 0;
+  font-size: 18px;
   font-weight: bold;
-  margin-bottom: 20px;
-  color: #303133;
+  color: #333;
 }
 
-/* 搜索和筛选 */
-.search-filter {
-  margin-bottom: 20px;
+.page-content {
+  padding: 15px;
 }
 
-/* 考勤统计 */
-.attendance-stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: 40px 0;
+  color: #999;
+}
+
+.record-list {
+  display: flex;
+  flex-direction: column;
   gap: 12px;
-  margin-bottom: 20px;
 }
 
-.stat-card {
-  height: 100px;
+.record-item {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
-.stat-content {
+.record-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.item-header {
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  height: 100%;
+  margin-bottom: 12px;
 }
 
-.stat-number {
-  font-size: 20px;
-  font-weight: bold;
-  color: #409eff;
-  margin-bottom: 4px;
-}
-
-.stat-label {
-  font-size: 12px;
-  color: #606266;
-}
-
-/* 考勤列表 */
-.attendance-list {
-  margin-bottom: 20px;
-}
-
-.attendance-card {
-  margin-bottom: 16px;
-}
-
-.attendance-info {
+.worker-info {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  gap: 10px;
 }
 
 .worker-name {
   font-size: 16px;
   font-weight: bold;
-  margin-bottom: 12px;
-  color: #303133;
+  color: #333;
 }
 
-.attendance-details {
-  margin-bottom: 16px;
+.record-type {
+  padding: 2px 8px;
+  background-color: #e6f7ff;
+  color: #1890ff;
+  border-radius: 10px;
+  font-size: 12px;
 }
 
-.detail-item {
-  margin-bottom: 8px;
-  font-size: 14px;
+.item-info {
+  margin-bottom: 0;
 }
 
-.detail-label {
-  color: #606266;
-  margin-right: 8px;
-}
-
-.detail-value {
-  color: #303133;
-}
-
-.attendance-actions {
+.info-row {
   display: flex;
-  gap: 12px;
-  justify-content: flex-end;
+  font-size: 13px;
+  line-height: 1.8;
 }
 
-/* 分页 */
-.pagination {
-  display: flex;
-  justify-content: center;
+.info-row .Label {
+  color: #999;
+  min-width: 70px;
 }
 
-/* 响应式设计 */
-@media screen and (max-width: 768px) {
-  .attendance-actions {
-    flex-direction: column;
+.info-row .value {
+  color: #333;
+}
+
+@media (max-width: 768px) {
+  .page-header {
+    padding: 12px 15px;
   }
   
-  .attendance-actions .el-button {
-    width: 100%;
+  .page-header h2 {
+    font-size: 16px;
   }
   
-  .attendance-stats {
-    grid-template-columns: repeat(2, 1fr);
+  .page-content {
+    padding: 10px;
+  }
+  
+  .record-item {
+    padding: 12px;
   }
 }
 </style>

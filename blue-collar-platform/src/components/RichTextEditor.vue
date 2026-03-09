@@ -9,7 +9,7 @@
             :type="isFormatActive('bold') ? 'primary' : 'default'"
             @click="execCommand('bold')"
           >
-            粗体
+            <el-icon><Grid /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip content="斜体" placement="top">
@@ -17,7 +17,7 @@
             :type="isFormatActive('italic') ? 'primary' : 'default'"
             @click="execCommand('italic')"
           >
-            斜体
+            <el-icon><Grid /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip content="下划线" placement="top">
@@ -25,7 +25,7 @@
             :type="isFormatActive('underline') ? 'primary' : 'default'"
             @click="execCommand('underline')"
           >
-            下划线
+            <el-icon><Grid /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip content="删除线" placement="top">
@@ -33,7 +33,7 @@
             :type="isFormatActive('strikeThrough') ? 'primary' : 'default'"
             @click="execCommand('strikeThrough')"
           >
-            删除线
+            <el-icon><Grid /></el-icon>
           </el-button>
         </el-tooltip>
       </el-button-group>
@@ -82,7 +82,7 @@
             :type="isFormatActive('justifyLeft') ? 'primary' : 'default'"
             @click="execCommand('justifyLeft')"
           >
-            左对齐
+            <el-icon><ArrowLeft /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip content="居中" placement="top">
@@ -90,7 +90,7 @@
             :type="isFormatActive('justifyCenter') ? 'primary' : 'default'"
             @click="execCommand('justifyCenter')"
           >
-            居中
+            <el-icon><Grid /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip content="右对齐" placement="top">
@@ -98,7 +98,7 @@
             :type="isFormatActive('justifyRight') ? 'primary' : 'default'"
             @click="execCommand('justifyRight')"
           >
-            右对齐
+            <el-icon><ArrowRight /></el-icon>
           </el-button>
         </el-tooltip>
       </el-button-group>
@@ -112,7 +112,7 @@
             :type="isFormatActive('insertUnorderedList') ? 'primary' : 'default'"
             @click="execCommand('insertUnorderedList')"
           >
-            无序列表
+            <el-icon><List /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip content="有序列表" placement="top">
@@ -120,7 +120,7 @@
             :type="isFormatActive('insertOrderedList') ? 'primary' : 'default'"
             @click="execCommand('insertOrderedList')"
           >
-            有序列表
+            <el-icon><List /></el-icon>
           </el-button>
         </el-tooltip>
       </el-button-group>
@@ -131,17 +131,22 @@
       <el-button-group>
         <el-tooltip content="插入链接" placement="top">
           <el-button @click="showLinkDialog = true">
-            链接
+            <el-icon><Link /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip content="插入表格" placement="top">
           <el-button @click="showTableDialog = true">
-            表格
+            <el-icon><Grid /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip content="插入图片" placement="top">
           <el-button @click="showImageDialog = true">
-            图片
+            <el-icon><Picture /></el-icon>
+          </el-button>
+        </el-tooltip>
+        <el-tooltip content="插入文件" placement="top">
+          <el-button @click="showFileDialog = true">
+            <el-icon><Document /></el-icon>
           </el-button>
         </el-tooltip>
       </el-button-group>
@@ -151,7 +156,7 @@
       <!-- 变量选择 -->
       <el-tooltip content="插入变量" placement="top">
         <el-button @click="showVariableDialog = true">
-          变量
+          <el-icon><DataAnalysis /></el-icon>
         </el-button>
       </el-tooltip>
 
@@ -161,17 +166,17 @@
       <el-button-group>
         <el-tooltip content="撤销" placement="top">
           <el-button @click="execCommand('undo')">
-            撤销
+            <el-icon><ArrowLeft /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip content="重做" placement="top">
           <el-button @click="execCommand('redo')">
-            重做
+            <el-icon><ArrowRight /></el-icon>
           </el-button>
         </el-tooltip>
         <el-tooltip content="清除格式" placement="top">
           <el-button @click="execCommand('removeFormat')">
-            清除格式
+            <el-icon><Refresh /></el-icon>
           </el-button>
         </el-tooltip>
       </el-button-group>
@@ -186,7 +191,7 @@
       class="editor-content"
       :class="{ 'editor-disabled': disabled }"
       :style="{ height: height, minHeight: minHeight }"
-      contenteditable="true"
+      :contenteditable="!disabled"
       @input="handleInput"
       @blur="handleBlur"
       @focus="handleFocus"
@@ -342,13 +347,63 @@
         <el-button @click="showVariableDialog = false">取消</el-button>
       </template>
     </el-dialog>
+
+    <!-- 插入文件对话框 -->
+    <el-dialog
+      v-model="showFileDialog"
+      title="插入文件"
+      width="600px"
+      :close-on-click-modal="false"
+    >
+      <el-tabs v-model="fileTab">
+        <el-tab-pane label="本地上传" name="upload">
+          <el-upload
+            :action="uploadAction"
+            :headers="uploadHeaders"
+            :data="uploadData"
+            :file-list="fileFileList"
+            :limit="1"
+            accept=".doc,.docx,.xls,.xlsx,.pdf,.mp4,.webm,.mov,.jpg,.jpeg,.png,.gif,.webp"
+            list-type="text"
+            :on-success="handleFileUploadSuccess"
+            :on-remove="handleFileRemove"
+            :before-upload="handleBeforeFileUpload"
+            :on-error="handleFileUploadError"
+          >
+            <el-button type="primary" :loading="isFileUploading">
+              <el-icon v-if="isFileUploading"><Loading /></el-icon>
+              {{ isFileUploading ? '上传中...' : '点击上传' }}
+            </el-button>
+            <template #tip>
+              <div class="el-upload__tip">
+                支持上传图片、Word、Excel、PDF、视频等格式文件，单个文件大小不超过10MB
+              </div>
+            </template>
+          </el-upload>
+        </el-tab-pane>
+        <el-tab-pane label="网络文件" name="url">
+          <el-input
+            v-model="fileUrl"
+            placeholder="请输入文件地址"
+            clearable
+          />
+        </el-tab-pane>
+      </el-tabs>
+      <template #footer>
+        <el-button @click="showFileDialog = false">取消</el-button>
+        <el-button type="primary" @click="insertFile">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Search } from '@element-plus/icons-vue'
+import { Loading, 
+  Search, List, Link, Grid, Picture, Document, 
+  DataAnalysis, ArrowLeft, ArrowRight, Refresh 
+} from '@element-plus/icons-vue'
 
 // Props定义
 interface Props {
@@ -425,15 +480,20 @@ const backColor = ref('#ffffff')
 const showLinkDialog = ref(false)
 const showTableDialog = ref(false)
 const showImageDialog = ref(false)
+const showFileDialog = ref(false)
 const showVariableDialog = ref(false)
 const imageTab = ref('upload')
 const imageFileList = ref<any[]>([])
 const imageUrl = ref('')
+const fileTab = ref('upload')
+const fileFileList = ref<any[]>([])
+const fileUrl = ref('')
 const currentLength = ref(0)
 const lastSavedTime = ref<Date | null>(null)
 const autoSaveTimer = ref<any>(null)
 const isFocused = ref(false)
 const variableSearch = ref('')
+const isFileUploading = ref(false)
 
 // 链接表单
 const linkForm = ref({
@@ -608,6 +668,116 @@ const handleVariableSelect = (row: any) => {
   execCommand('insertText', variableText)
   showVariableDialog.value = false
   variableSearch.value = ''
+}
+
+// 文件上传前验证
+const handleBeforeFileUpload = (file: any) => {
+  const maxSize = 10 * 1024 * 1024 // 10MB
+  if (file.size > maxSize) {
+    ElMessage.error('文件大小不能超过10MB')
+    return false
+  }
+  isFileUploading.value = true
+  return true
+}
+
+// 文件上传成功
+const handleFileUploadSuccess = (response: any, file: any, fileList: any[]) => {
+  fileFileList.value = fileList
+  isFileUploading.value = false
+}
+
+// 文件上传失败
+const handleFileUploadError = () => {
+  ElMessage.error('文件上传失败，请重试')
+  isFileUploading.value = false
+}
+
+// 移除文件
+const handleFileRemove = (file: any, fileList: any[]) => {
+  fileFileList.value = fileList
+  isFileUploading.value = false
+}
+
+// 获取文件图标
+const getFileIcon = (fileName: string) => {
+  const ext = fileName.toLowerCase().split('.').pop()
+  switch (ext) {
+    case 'doc':
+    case 'docx':
+      return '📄'
+    case 'xls':
+    case 'xlsx':
+      return '📊'
+    case 'pdf':
+      return '📋'
+    case 'mp4':
+    case 'webm':
+    case 'mov':
+      return '🎬'
+    case 'jpg':
+    case 'jpeg':
+    case 'png':
+    case 'gif':
+    case 'webp':
+      return '🖼️'
+    default:
+      return '📎'
+  }
+}
+
+// 插入文件
+const insertFile = () => {
+  let fileUrl = ''
+  let fileName = ''
+
+  if (fileTab.value === 'upload') {
+    if (fileFileList.value.length === 0) {
+      ElMessage.warning('请先上传文件')
+      return
+    }
+    fileUrl = fileFileList.value[0].response?.data?.url || fileFileList.value[0].url
+    fileName = fileFileList.value[0].name
+  } else {
+    if (!fileUrl.value) {
+      ElMessage.warning('请输入文件地址')
+      return
+    }
+    fileUrl = fileUrl.value
+    fileName = fileUrl.split('/').pop() || '文件'
+  }
+
+  const selection = window.getSelection()
+  if (selection && selection.rangeCount > 0) {
+    const range = selection.getRangeAt(0)
+    
+    const link = document.createElement('a')
+    link.href = fileUrl
+    link.target = '_blank'
+    link.style.textDecoration = 'none'
+    link.style.color = '#409eff'
+    link.style.display = 'inline-flex'
+    link.style.alignItems = 'center'
+    link.style.gap = '4px'
+    
+    const iconSpan = document.createElement('span')
+    iconSpan.textContent = getFileIcon(fileName)
+    iconSpan.style.fontSize = '16px'
+    
+    const textSpan = document.createElement('span')
+    textSpan.textContent = fileName
+    
+    link.appendChild(iconSpan)
+    link.appendChild(textSpan)
+
+    range.deleteContents()
+    range.insertNode(link)
+
+    showFileDialog.value = false
+    fileFileList.value = []
+    fileUrl.value = ''
+    updateContent()
+  }
 }
 
 // 获取变量类型颜色

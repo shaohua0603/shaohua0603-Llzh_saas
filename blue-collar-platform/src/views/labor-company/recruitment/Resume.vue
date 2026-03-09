@@ -433,7 +433,7 @@ const handleBatchDelete = () => {
 
 // 查看详情
 const handleDetail = (row: any) => {
-  router.push(`/labor-company/recruitment/resume/${row.id}`)
+  router.push(`/tenant/recruitment/resume/${row.id}`)
 }
 
 // 联系
@@ -628,7 +628,7 @@ onMounted(() => {
   border-radius: 4px;
   border-left: 4px solid #409eff;
   font-size: 14px;
-  color: #606266;
+  color: #f56c6c;
   line-height: 1.5;
 }
 

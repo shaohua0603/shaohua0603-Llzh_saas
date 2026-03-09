@@ -72,6 +72,13 @@
           </el-select>
         </el-form-item>
         
+        <el-form-item label="结算方式" prop="paymentType">
+          <el-radio-group v-model="formData.paymentType">
+            <el-radio label="日结">日结</el-radio>
+            <el-radio label="月结">月结</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        
         <el-form-item label="入职日期" prop="entryDate">
           <el-date-picker
             v-model="formData.entryDate"
@@ -80,6 +87,22 @@
             format="YYYY-MM-DD"
             value-format="YYYY-MM-DD"
           />
+        </el-form-item>
+        
+        <el-form-item label="驻厂负责人" prop="factoryManager">
+          <el-input v-model="formData.factoryManager" placeholder="请输入驻厂负责人" />
+        </el-form-item>
+        
+        <el-form-item label="驻厂负责人手机号" prop="factoryManagerPhone">
+          <el-input v-model="formData.factoryManagerPhone" placeholder="请输入驻厂负责人手机号" />
+        </el-form-item>
+        
+        <el-form-item label="文员" prop="clerk">
+          <el-input v-model="formData.clerk" placeholder="请输入文员" />
+        </el-form-item>
+        
+        <el-form-item label="文员手机号" prop="clerkPhone">
+          <el-input v-model="formData.clerkPhone" placeholder="请输入文员手机号" />
         </el-form-item>
       </el-form>
     </el-card>
@@ -122,7 +145,12 @@ interface FormData {
   positionType: string
   positionName: string
   lifecycleStatus: string
+  paymentType: '日结' | '月结'
   entryDate?: string
+  factoryManager: string
+  factoryManagerPhone: string
+  clerk: string
+  clerkPhone: string
 }
 
 interface StatusOption {
@@ -144,7 +172,12 @@ const formData = reactive<FormData>({
   positionType: '',
   positionName: '',
   lifecycleStatus: 'REGISTERED',
-  entryDate: ''
+  paymentType: '月结',
+  entryDate: '',
+  factoryManager: '',
+  factoryManagerPhone: '',
+  clerk: '',
+  clerkPhone: ''
 })
 
 const statusOptions: StatusOption[] = [
@@ -172,18 +205,23 @@ const formRules = {
   productionLine: [{ required: true, message: '请输入产线', trigger: 'blur' }],
   positionType: [{ required: true, message: '请输入岗位类别', trigger: 'blur' }],
   positionName: [{ required: true, message: '请输入岗位名称', trigger: 'blur' }],
-  lifecycleStatus: [{ required: true, message: '请选择工人状态', trigger: 'change' }]
+  lifecycleStatus: [{ required: true, message: '请选择工人状态', trigger: 'change' }],
+  paymentType: [{ required: true, message: '请选择结算方式', trigger: 'change' }],
+  factoryManager: [{ required: true, message: '请输入驻厂负责人', trigger: 'blur' }],
+  factoryManagerPhone: [{ required: true, message: '请输入驻厂负责人手机号', trigger: 'blur' }],
+  clerk: [{ required: true, message: '请输入文员', trigger: 'blur' }],
+  clerkPhone: [{ required: true, message: '请输入文员手机号', trigger: 'blur' }]
 }
 
 const goBack = () => {
-  router.push('/labor-company/workers')
+  router.push('/tenant/workers')
 }
 
 const fetchWorkerDetail = async () => {
   const id = route.params.id as string
   if (!id) {
     ElMessage.error('工人ID不存在')
-    router.push('/labor-company/workers')
+    router.push('/tenant/workers')
     return
   }
   
@@ -207,7 +245,12 @@ const fetchWorkerDetail = async () => {
       positionType: '普工',
       positionName: '操作工',
       lifecycleStatus: 'ENTERED',
-      entryDate: '2023-01-15'
+      paymentType: '月结',
+      entryDate: '2023-01-15',
+      factoryManager: '赵六',
+      factoryManagerPhone: '13700137000',
+      clerk: '钱七',
+      clerkPhone: '13600136000'
     }
     
     Object.assign(formData, mockData)
@@ -229,7 +272,7 @@ const handleSubmit = async () => {
     await new Promise(resolve => setTimeout(resolve, 500))
     
     ElMessage.success('编辑工人成功')
-    router.push('/labor-company/workers')
+    router.push('/tenant/workers')
   } catch (error) {
     console.error('提交失败:', error)
   }

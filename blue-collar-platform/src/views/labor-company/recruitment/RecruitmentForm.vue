@@ -347,6 +347,7 @@ onMounted(() => {
   flex: 1;
   overflow-y: auto;
   padding: 20px;
+  padding-bottom: 80px;
 }
 
 .page-header {
@@ -419,12 +420,37 @@ onMounted(() => {
 }
 
 .form-footer {
-  flex-shrink: 0;
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  right: 0;
   display: flex;
   justify-content: center;
   gap: 12px;
   padding: 16px;
   background-color: #f5f7fa;
   border-top: 1px solid #e4e7ed;
+  z-index: 100;
+  transition: left var(--transition-base);
+}
+
+@media screen and (max-width: 768px) {
+  .form-content {
+    padding: 12px;
+    padding-bottom: 120px;
+  }
+
+  .form-footer {
+    left: 0;
+    flex-direction: column;
+  }
+  
+  .form-footer .el-button {
+    width: 100%;
+  }
+
+  .form-content {
+    padding-bottom: 120px;
+  }
 }
 </style>

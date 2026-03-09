@@ -80,9 +80,6 @@
           <el-descriptions-item label="工作经验">{{ resumeDetail.experience }}</el-descriptions-item>
           <el-descriptions-item label="期望工作地点">{{ resumeDetail.expectedLocation }}</el-descriptions-item>
           <el-descriptions-item label="到岗时间">{{ resumeDetail.availableTime }}</el-descriptions-item>
-          <el-descriptions-item label="推荐等级">
-            <el-rate v-model="resumeDetail.recommendationLevel" disabled />
-          </el-descriptions-item>
         </el-descriptions>
         <div class="description-section">
           <div class="section-title">自我评价</div>
@@ -219,7 +216,6 @@ const resumeDetail = ref({
   experience: '2年',
   expectedLocation: '深圳市',
   availableTime: '随时到岗',
-  recommendationLevel: 4,
   selfEvaluation: '工作认真负责，吃苦耐劳，有较强的团队协作精神，能够快速适应工作环境。',
   workExperiences: [
     {

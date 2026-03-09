@@ -202,7 +202,7 @@ const handleBack = () => {
 
 // 新增
 const handleAdd = () => {
-  router.push('/labor-company/interview/invitation/add')
+  router.push('/tenant/interview/invitation/add')
 }
 
 // 搜索
@@ -253,12 +253,12 @@ const handleRowClick = (row: any) => {
 
 // 查看
 const handleDetail = (row: any) => {
-  router.push(`/labor-company/interview/invitation/${row.id}`)
+  router.push(`/tenant/interview/invitation/${row.id}`)
 }
 
 // 编辑
 const handleEdit = (row: any) => {
-  router.push(`/labor-company/interview/invitation/edit/${row.id}`)
+  router.push(`/tenant/interview/invitation/edit/${row.id}`)
 }
 
 // 删除
@@ -449,7 +449,7 @@ onMounted(() => {
   background-color: #f5f7fa;
   border-radius: 4px;
   font-size: 14px;
-  color: #606266;
+  color: #f56c6c;
   line-height: 1.5;
 }
 

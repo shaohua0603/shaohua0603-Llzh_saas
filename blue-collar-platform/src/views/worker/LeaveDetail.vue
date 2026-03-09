@@ -12,6 +12,18 @@
         <div class="detail-section">
           <h3>基本信息</h3>
           <div class="detail-item">
+            <span class="label">工厂:</span>
+            <span>{{ leaveDetail.factory || '无' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">区域:</span>
+            <span>{{ leaveDetail.area || '无' }}</span>
+          </div>
+          <div class="detail-item">
+            <span class="label">产线:</span>
+            <span>{{ leaveDetail.productionLine || '无' }}</span>
+          </div>
+          <div class="detail-item">
             <span class="label">请假类型:</span>
             <el-tag :type="getLeaveType(leaveDetail.type)">{{ getLeaveTypeText(leaveDetail.type) }}</el-tag>
           </div>
@@ -34,6 +46,10 @@
           <div class="detail-item">
             <span class="label">状态:</span>
             <el-tag :type="getStatusType(leaveDetail.status)">{{ getStatusText(leaveDetail.status) }}</el-tag>
+          </div>
+          <div class="detail-item">
+            <span class="label">销假状态:</span>
+            <el-tag :type="leaveDetail.cancelled ? 'info' : 'default'">{{ leaveDetail.cancelled ? '已销假' : '未销假' }}</el-tag>
           </div>
         </div>
         
@@ -72,13 +88,31 @@
         <span>加载中...</span>
       </div>
     </div>
+    
+    <!-- 底部按钮 -->
+    <div class="detail-footer" v-if="leaveDetail">
+      <el-button @click="goBack">
+        <el-icon><ArrowLeft /></el-icon>
+        返回
+      </el-button>
+      <el-button 
+        v-if="leaveDetail.status === 'approved' && !leaveDetail.cancelled" 
+        type="success" 
+        @click="handleCancelLeave"
+      >
+        <el-icon><Check /></el-icon>
+        销假
+      </el-button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import BackButton from '../../components/BackButton.vue'
+import { ArrowLeft, Check } from '@element-plus/icons-vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -87,12 +121,16 @@ const leaveDetail = ref<any>(null)
 // 模拟请假详情数据
 const mockLeaveDetail = {
   id: '1',
+  factory: '工厂A',
+  area: '区域1',
+  productionLine: '产线1',
   type: 'personal',
   reason: '家中有事需要处理',
   startDate: '2024-01-15 08:00',
   endDate: '2024-01-17 18:00',
   applyDate: '2024-01-10 14:30',
   status: 'approved',
+  cancelled: false,
   approvalRecords: [
     {
       id: '1',
@@ -169,6 +207,27 @@ const fetchLeaveDetail = async () => {
   } catch (error) {
     console.error('获取请假详情失败:', error)
   }
+}
+
+// 处理销假
+const handleCancelLeave = () => {
+  // 模拟销假操作
+  ElMessage.confirm('确定要销假吗？', '提示', {
+    confirmButtonText: '确定',
+    cancelButtonText: '取消',
+    type: 'warning'
+  }).then(() => {
+    // 标记为已销假
+    leaveDetail.value.cancelled = true
+    ElMessage.success('销假成功')
+  }).catch(() => {
+    // 用户取消
+  })
+}
+
+// 返回
+const goBack = () => {
+  router.push('/worker/leave-record')
 }
 
 // 初始化数据
@@ -317,6 +376,21 @@ onMounted(() => {
   margin-right: 10px;
 }
 
+/* 底部按钮 */
+.detail-footer {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  padding: 20px;
+  margin-top: 20px;
+  background-color: #f5f5f5;
+  border-radius: 8px;
+}
+
+.detail-footer .el-button {
+  padding: 10px 20px;
+}
+
 /* 移动端适配 */
 @media (max-width: 768px) {
   .worker-leave-detail {
@@ -360,6 +434,14 @@ onMounted(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 5px;
+  }
+
+  .detail-footer {
+    flex-direction: column;
+  }
+
+  .detail-footer .el-button {
+    width: 100%;
   }
 }
 </style>

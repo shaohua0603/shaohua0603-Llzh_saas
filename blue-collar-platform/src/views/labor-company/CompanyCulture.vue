@@ -1,59 +1,58 @@
 <template>
-  <div class="company-culture-container">
-    <el-card class="form-card">
-      <template #header>
-        <div class="card-header">
-          <span>企业文化介绍</span>
-          <el-button type="primary" @click="handleSave" :loading="saving">
-            保存
-          </el-button>
-        </div>
-      </template>
-      
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="140px"
-        label-position="right"
-      >
-        <el-form-item label="企业文化标题" prop="title">
-          <el-input
-            v-model="formData.title"
-            placeholder="请输入企业文化标题"
-            maxlength="100"
-            show-word-limit
-          />
-        </el-form-item>
-        
-        <el-form-item label="企业简称" prop="shortName">
-          <el-input
-            v-model="formData.shortName"
-            placeholder="请输入企业简称"
-            maxlength="50"
-            show-word-limit
-          />
-        </el-form-item>
-        
-        <el-form-item label="企业文化内容" prop="content">
-          <RichTextEditor
-            v-model="formData.content"
-            placeholder="请输入企业文化内容"
-            :height="400"
-            :auto-save="true"
-            :draft-storage-key="'company-culture-draft'"
-          />
-        </el-form-item>
-      </el-form>
-    </el-card>
+  <div class="form-container">
+    <div class="form-content">
+      <el-card class="form-card">
+        <el-form
+          ref="formRef"
+          :model="formData"
+          :rules="formRules"
+          label-width="140px"
+          label-position="right"
+        >
+          <el-form-item label="企业文化标题" prop="title">
+            <el-input
+              v-model="formData.title"
+              placeholder="请输入企业文化标题"
+              maxlength="100"
+              show-word-limit
+            />
+          </el-form-item>
+          
+          <el-form-item label="企业简称" prop="shortName">
+            <el-input
+              v-model="formData.shortName"
+              placeholder="请输入企业简称"
+              maxlength="50"
+              show-word-limit
+            />
+          </el-form-item>
+          
+          <el-form-item label="企业文化内容" prop="content">
+            <RichTextEditor
+              v-model="formData.content"
+              :height="'400px'"
+              :min-height="'300px'"
+              :placeholder="'请输入企业文化内容'"
+            />
+          </el-form-item>
+        </el-form>
+      </el-card>
+    </div>
+    
+    <!-- 底部按钮栏 -->
+    <div class="form-footer">
+      <el-button type="primary" @click="handleSave" :loading="saving">
+        保存
+      </el-button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import RichTextEditor from '@/components/RichTextEditor.vue'
 import { fetchCompanyCulture, saveCompanyCulture } from '@/api/companyCulture'
+import RichTextEditor from '@/components/RichTextEditor.vue'
 
 const formRef = ref()
 const saving = ref(false)
@@ -115,36 +114,64 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.company-culture-container {
-  padding: 20px;
+/* 表单页容器 - 使用flex布局实现内部滚动 */
+.form-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: #f5f7fa;
+}
+
+/* 内容区域 - 垂直滚动 */
+.form-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  padding-bottom: 80px; /* 为底部按钮栏留出空间 */
 }
 
 .form-card {
   max-width: 1200px;
   margin: 0 auto;
+  padding: 16px;
 }
 
-.card-header {
+/* 底部按钮栏 - 固定悬浮 */
+.form-footer {
+  position: fixed;
+  bottom: 0;
+  left: var(--sidebar-width);
+  right: 0;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background-color: #f5f7fa;
+  border-top: 1px solid #e4e7ed;
+  z-index: 100;
+  transition: left var(--transition-base);
 }
 
-.card-header span {
-  font-size: 16px;
-  font-weight: 600;
-  color: #303133;
-}
-
+/* 响应式适配 */
 @media screen and (max-width: 768px) {
-  .company-culture-container {
-    padding: 12px;
+  .form-footer {
+    left: 0;
+    flex-direction: column;
   }
-
+  
+  .form-footer .el-button {
+    width: 100%;
+  }
+  
+  .form-content {
+    padding-bottom: 120px; /* 为垂直排列的按钮栏留出更多空间 */
+  }
+  
   .form-card {
     max-width: 100%;
   }
-
+  
   :deep(.el-form) {
     label-width: 100px !important;
   }

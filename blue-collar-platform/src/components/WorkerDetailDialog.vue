@@ -1,10 +1,11 @@
 <template>
   <el-dialog
-    v-model="visible"
+    :model-value="visible"
     title="工人信息详情"
     width="900px"
     :close-on-click-modal="false"
     @close="handleClose"
+    @update:model-value="(value) => visible = value"
   >
     <el-scrollbar v-if="workerDetail" max-height="600px">
       <!-- 个人证件照片 -->

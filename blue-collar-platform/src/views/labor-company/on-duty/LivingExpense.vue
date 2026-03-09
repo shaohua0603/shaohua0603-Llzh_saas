@@ -128,6 +128,12 @@
           {{ row.issueDate ? formatDate(row.issueDate) : '-' }}
         </template>
 
+        <template #column-paymentType="{ row }">
+          <el-tag :type="row.paymentType === '日结' ? 'warning' : 'success'">
+            {{ row.paymentType }}
+          </el-tag>
+        </template>
+
         <template #actions="{ row }">
           <el-button
             size="small"
@@ -300,49 +306,7 @@
       </template>
     </el-dialog>
 
-    <!-- 详情对话框 -->
-    <el-dialog
-      v-model="detailDialogVisible"
-      title="生活费申请详情"
-      width="600px"
-    >
-      <div v-if="currentRow" class="detail-content">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="申请人">
-            {{ currentRow.workerName }}
-          </el-descriptions-item>
-          <el-descriptions-item label="手机号">
-            {{ currentRow.phone }}
-          </el-descriptions-item>
-          <el-descriptions-item label="申请金额">
-            ¥{{ currentRow.amount.toFixed(2) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="申请时间">
-            {{ formatDate(currentRow.applyDate) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="申请状态">
-            <el-tag :type="getStatusType(currentRow.status)">
-              {{ getStatusText(currentRow.status) }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="发放时间">
-            {{ currentRow.issueDate ? formatDate(currentRow.issueDate) : '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item label="申请说明" :span="2">
-            {{ currentRow.description || '-' }}
-          </el-descriptions-item>
-          <el-descriptions-item v-if="currentRow.rejectReason" label="驳回原因" :span="2">
-            {{ currentRow.rejectReason }}
-          </el-descriptions-item>
-          <el-descriptions-item v-if="currentRow.remark" label="备注" :span="2">
-            {{ currentRow.remark }}
-          </el-descriptions-item>
-        </el-descriptions>
-      </div>
-      <template #footer>
-        <el-button @click="detailDialogVisible = false">关闭</el-button>
-      </template>
-    </el-dialog>
+
 
     <!-- 导入对话框 -->
     <el-dialog
@@ -384,9 +348,11 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 import { Search, RefreshLeft, Upload, Download, Setting, Money, View, Check, Delete, ArrowUp, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 import type { ColumnConfig } from '../../types/common-table'
+import { fetchLivingExpenseList, updateLivingExpenseStatus, deleteLivingExpense, batchUpdateLivingExpenseStatus } from '@/api/livingExpense'
 
 // 类型定义
 interface LivingExpenseRecord {
@@ -400,6 +366,7 @@ interface LivingExpenseRecord {
   description?: string
   rejectReason?: string
   remark?: string
+  paymentType: '日结' | '月结'
 }
 
 // 响应式数据
@@ -417,11 +384,13 @@ const loading = ref(false)
 const selectedRows = ref<LivingExpenseRecord[]>([])
 const currentRow = ref<LivingExpenseRecord | null>(null)
 
+// 路由实例
+const router = useRouter()
+
 // 对话框控制
 const configDialogVisible = ref(false)
 const approveDialogVisible = ref(false)
 const issueDialogVisible = ref(false)
-const detailDialogVisible = ref(false)
 const importDialogVisible = ref(false)
 
 // 配置表单
@@ -451,6 +420,7 @@ const issueForm = reactive({
 const tableColumns = [
   { prop: 'workerName', label: '工人姓名', width: 120, sortable: true },
   { prop: 'phone', label: '手机号', width: 130 },
+  { prop: 'paymentType', label: '结算方式', width: 100, sortable: true },
   { prop: 'amount', label: '申请金额', width: 120, sortable: true },
   { prop: 'status', label: '状态', width: 100, sortable: true },
   { prop: 'applyDate', label: '申请时间', width: 160, sortable: true },
@@ -475,6 +445,7 @@ const generateMockData = (): LivingExpenseRecord[] => {
     const status = statuses[Math.floor(Math.random() * statuses.length)]
     const applyDate = new Date()
     applyDate.setDate(applyDate.getDate() - Math.floor(Math.random() * 30))
+    const paymentType = Math.random() > 0.5 ? '日结' : '月结'
 
     data.push({
       id: `LE${String(i + 1).padStart(6, '0')}`,
@@ -485,15 +456,15 @@ const generateMockData = (): LivingExpenseRecord[] => {
       applyDate: applyDate.toISOString().split('T')[0],
       issueDate: status === 'issued' ? new Date(applyDate.getTime() + 86400000).toISOString().split('T')[0] : undefined,
       description: '日常生活费用申请',
-      rejectReason: status === 'rejected' ? '申请金额超出可发放范围' : undefined
+      rejectReason: status === 'rejected' ? '申请金额超出可发放范围' : undefined,
+      paymentType
     })
   }
 
   return data
 }
 
-// 所有模拟数据
-const allData = ref<LivingExpenseRecord[]>([])
+// 所有模拟数据已移至api/livingExpense.ts中
 
 // 获取状态类型
 const getStatusType = (status: string): string => {
@@ -576,46 +547,35 @@ const handleGlobalSearch = (keyword: string) => {
 
 
 // 获取数据
-const fetchData = () => {
+const fetchData = async () => {
   loading.value = true
-
-  // 模拟过滤
-  let filteredData = [...allData.value]
-
-  if (searchForm.keyword) {
-    const keyword = searchForm.keyword.toLowerCase()
-    filteredData = filteredData.filter(
-      item =>
-        item.workerName.toLowerCase().includes(keyword) ||
-        item.phone.includes(keyword)
-    )
+  try {
+    const params = {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      keyword: searchForm.keyword,
+      status: searchForm.status,
+      dateRange: searchForm.dateRange
+    }
+    const response = fetchLivingExpenseList(params)
+    if (response.code === 200) {
+      tableData.value = response.data.list
+      total.value = response.data.total
+      
+      // 更新统计
+      stats.totalCount = response.data.total
+      // 这里可以根据需要从API获取统计数据，现在暂时使用前端计算
+      stats.pendingCount = tableData.value.filter(item => item.status === 'pending').length
+      stats.approvedCount = tableData.value.filter(item => item.status === 'approved').length
+      stats.issuedAmount = tableData.value
+        .filter(item => item.status === 'issued')
+        .reduce((sum, item) => sum + item.amount, 0)
+    }
+  } catch (error) {
+    ElMessage.error('获取数据失败')
+  } finally {
+    loading.value = false
   }
-
-  if (searchForm.status) {
-    filteredData = filteredData.filter(item => item.status === searchForm.status)
-  }
-
-  if (searchForm.dateRange && searchForm.dateRange.length === 2) {
-    filteredData = filteredData.filter(item => {
-      return item.applyDate >= searchForm.dateRange[0] && item.applyDate <= searchForm.dateRange[1]
-    })
-  }
-
-  // 更新统计
-  stats.pendingCount = filteredData.filter(item => item.status === 'pending').length
-  stats.approvedCount = filteredData.filter(item => item.status === 'approved').length
-  stats.issuedAmount = filteredData
-    .filter(item => item.status === 'issued')
-    .reduce((sum, item) => sum + item.amount, 0)
-  stats.totalCount = filteredData.length
-
-  // 分页
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  tableData.value = filteredData.slice(start, end)
-  total.value = filteredData.length
-
-  loading.value = false
 }
 
 // 打开规则配置
@@ -632,21 +592,19 @@ const handleSaveConfig = () => {
 
 // 查看
 const handleView = (row: LivingExpenseRecord) => {
-  currentRow.value = row
-  detailDialogVisible.value = true
+  router.push(`/tenant/on-duty/living-expense/detail/${row.id}`)
 }
 
 // 审核
 const handleApprove = (row: LivingExpenseRecord) => {
-  currentRow.value = row
-  approveForm.result = 'approved'
-  approveForm.reason = ''
-  approveForm.comment = ''
-  approveDialogVisible.value = true
+  router.push({
+    path: `/tenant/on-duty/living-expense/detail/${row.id}`,
+    query: { mode: 'approve' }
+  })
 }
 
 // 提交审核
-const handleSubmitApprove = () => {
+const handleSubmitApprove = async () => {
   if (!currentRow.value) return
 
   if (approveForm.result === 'rejected' && !approveForm.reason) {
@@ -654,18 +612,20 @@ const handleSubmitApprove = () => {
     return
   }
 
-  // 更新数据
-  const index = allData.value.findIndex(item => item.id === currentRow.value!.id)
-  if (index > -1) {
-    allData.value[index].status = approveForm.result as LivingExpenseRecord['status']
-    if (approveForm.result === 'rejected') {
-      allData.value[index].rejectReason = approveForm.reason
+  try {
+    const data = {
+      reason: approveForm.reason,
+      comment: approveForm.comment
     }
+    const response = updateLivingExpenseStatus(currentRow.value.id, approveForm.result as LivingExpenseRecord['status'], data)
+    if (response.code === 200) {
+      ElMessage.success(approveForm.result === 'approved' ? '审核通过' : '已驳回')
+      approveDialogVisible.value = false
+      fetchData()
+    }
+  } catch (error) {
+    ElMessage.error('审核失败')
   }
-
-  ElMessage.success(approveForm.result === 'approved' ? '审核通过' : '已驳回')
-  approveDialogVisible.value = false
-  fetchData()
 }
 
 // 发放
@@ -679,20 +639,23 @@ const handleIssue = (row: LivingExpenseRecord) => {
 }
 
 // 提交发放
-const handleSubmitIssue = () => {
+const handleSubmitIssue = async () => {
   if (!currentRow.value) return
 
-  // 更新数据
-  const index = allData.value.findIndex(item => item.id === currentRow.value!.id)
-  if (index > -1) {
-    allData.value[index].status = 'issued'
-    allData.value[index].issueDate = issueForm.issueDate
-    allData.value[index].remark = issueForm.comment
+  try {
+    const data = {
+      issueDate: issueForm.issueDate,
+      remark: issueForm.comment
+    }
+    const response = updateLivingExpenseStatus(currentRow.value.id, 'issued', data)
+    if (response.code === 200) {
+      ElMessage.success('生活费发放成功')
+      issueDialogVisible.value = false
+      fetchData()
+    }
+  } catch (error) {
+    ElMessage.error('发放失败')
   }
-
-  ElMessage.success('生活费发放成功')
-  issueDialogVisible.value = false
-  fetchData()
 }
 
 // 删除
@@ -701,13 +664,16 @@ const handleDelete = (row: LivingExpenseRecord) => {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
     type: 'warning'
-  }).then(() => {
-    const index = allData.value.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      allData.value.splice(index, 1)
+  }).then(async () => {
+    try {
+      const response = deleteLivingExpense(row.id)
+      if (response.code === 200) {
+        ElMessage.success('删除成功')
+        fetchData()
+      }
+    } catch (error) {
+      ElMessage.error('删除失败')
     }
-    ElMessage.success('删除成功')
-    fetchData()
   }).catch(() => {})
 }
 
@@ -727,16 +693,20 @@ const handleBatchIssue = () => {
       cancelButtonText: '取消',
       type: 'warning'
     }
-  ).then(() => {
-    approvedRows.forEach(row => {
-      const index = allData.value.findIndex(item => item.id === row.id)
-      if (index > -1) {
-        allData.value[index].status = 'issued'
-        allData.value[index].issueDate = new Date().toISOString().split('T')[0]
+  ).then(async () => {
+    try {
+      const ids = approvedRows.map(row => row.id)
+      const data = {
+        issueDate: new Date().toISOString().split('T')[0]
       }
-    })
-    ElMessage.success('批量发放成功')
-    fetchData()
+      const response = batchUpdateLivingExpenseStatus(ids, 'issued', data)
+      if (response.code === 200) {
+        ElMessage.success('批量发放成功')
+        fetchData()
+      }
+    } catch (error) {
+      ElMessage.error('批量发放失败')
+    }
   }).catch(() => {})
 }
 
@@ -769,7 +739,6 @@ const handleExport = () => {
 
 // 生命周期
 onMounted(() => {
-  allData.value = generateMockData()
   fetchData()
 })
 </script>
@@ -831,7 +800,7 @@ onMounted(() => {
   border-radius: 4px;
   border-left: 4px solid #409eff;
   font-size: 14px;
-  color: #606266;
+  color: #f56c6c;
 }
 
 .table-stats p {

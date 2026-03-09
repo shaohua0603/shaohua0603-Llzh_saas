@@ -79,6 +79,20 @@
             {{ PackageStatusDict[packageDetail.status]?.label }}
           </el-tag>
         </el-descriptions-item>
+        <el-descriptions-item label="授权菜单" :span="2">
+          <div v-if="packageDetail.menuIds && packageDetail.menuIds.length > 0" class="menu-list">
+            <el-tag
+              v-for="menuId in packageDetail.menuIds"
+              :key="menuId"
+              class="menu-tag"
+            >
+              {{ getMenuNameById(menuId) }}
+            </el-tag>
+          </div>
+          <div v-else class="no-menu">
+            未授权任何菜单
+          </div>
+        </el-descriptions-item>
         <el-descriptions-item label="创建时间">
           {{ formatDate(packageDetail.createdAt) }}
         </el-descriptions-item>
@@ -110,6 +124,7 @@ import {
   TenantTypeDict
 } from '@/types/system/packageTypes'
 import type { PackageDetail } from '@/types/system/packageTypes'
+import * as menuApi from '@/api/system/menuApi'
 
 const router = useRouter()
 const route = useRoute()
@@ -117,6 +132,7 @@ const packageStore = usePackageStore()
 
 const packageDetail = ref<PackageDetail | null>(null)
 const loading = ref(false)
+const menuTree = ref<any[]>([])
 
 /**
  * 格式化日期
@@ -128,12 +144,43 @@ const formatDate = (date: string) => {
 }
 
 /**
+ * 获取菜单树
+ */
+const fetchMenuTree = async () => {
+  try {
+    const response = await menuApi.getMenuTree({ menuStatus: 'enabled' })
+    menuTree.value = response.data
+  } catch (error) {
+    console.error('获取菜单树失败:', error)
+  }
+}
+
+/**
+ * 根据菜单ID获取菜单名称
+ * @param menuId 菜单ID
+ */
+const getMenuNameById = (menuId: number) => {
+  const findMenu = (menus: any[]): string => {
+    for (const menu of menus) {
+      if (menu.id === menuId) return menu.menuName
+      if (menu.children) {
+        const found = findMenu(menu.children)
+        if (found) return found
+      }
+    }
+    return `菜单ID: ${menuId}`
+  }
+  return findMenu(menuTree.value)
+}
+
+/**
  * 获取套餐详情
  */
 const fetchPackageDetail = async () => {
   try {
     loading.value = true
-    packageDetail.value = await packageStore.fetchPackageDetail(route.params.id as string)
+    const detail = await packageStore.fetchPackageDetail(route.params.id as string)
+    packageDetail.value = detail
   } catch (error) {
     console.error('获取套餐详情失败:', error)
     ElMessage.error('获取套餐详情失败')
@@ -211,8 +258,9 @@ const handleBack = () => {
   router.push('/admin/package-management/package-info')
 }
 
-onMounted(() => {
-  fetchPackageDetail()
+onMounted(async () => {
+  await fetchMenuTree()
+  await fetchPackageDetail()
 })
 </script>
 
@@ -258,6 +306,23 @@ onMounted(() => {
   color: #409eff;
 }
 
+.menu-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.menu-tag {
+  margin-bottom: 8px;
+}
+
+.no-menu {
+  color: #909399;
+  font-style: italic;
+  margin-top: 4px;
+}
+
 @media screen and (max-width: 768px) {
   .card-header {
     flex-direction: column;
@@ -281,6 +346,15 @@ onMounted(() => {
 
   :deep(.el-descriptions__label) {
     width: 120px;
+  }
+
+  .menu-list {
+    flex-direction: column;
+  }
+
+  .menu-tag {
+    width: 100%;
+    text-align: center;
   }
 }
 </style>

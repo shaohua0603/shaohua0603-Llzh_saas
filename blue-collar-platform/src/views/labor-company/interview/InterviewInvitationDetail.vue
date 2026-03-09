@@ -45,19 +45,20 @@
           </el-table-column>
           <el-table-column prop="name" label="姓名" width="100" />
           <el-table-column prop="phone" label="手机号" width="120" />
+          <el-table-column prop="idCard" label="身份证号" width="180" />
           <el-table-column prop="age" label="年龄" width="80" />
           <el-table-column prop="gender" label="性别" width="80" />
           <el-table-column prop="recommendationLevel" label="推荐等级" width="100">
             <template #default="{ row }">
               <el-tag :type="getRecommendationLevelType(row.recommendationLevel)">
-                {{ row.recommendationLevel }}
+                {{ getRecommendationLevelText(row.recommendationLevel) }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column prop="imageLevel" label="形象级别" width="100">
+          <el-table-column prop="imageLevel" label="形象" width="100">
             <template #default="{ row }">
               <el-tag :type="getImageLevelType(row.imageLevel)">
-                {{ row.imageLevel }}
+                {{ getImageLevelText(row.imageLevel) }}
               </el-tag>
             </template>
           </el-table-column>
@@ -162,10 +163,11 @@ const candidateList = ref<InterviewCandidate[]>([
     isReturnWorker: false,
     name: '李四',
     phone: '13900139000',
+    idCard: '440***********1234',
     age: 28,
     gender: '男',
-    recommendationLevel: 'A',
-    imageLevel: 'A',
+    recommendationLevel: '优先推荐',
+    imageLevel: '优秀',
     education: '高中',
     positionCategory: '普工',
     expectedLocation: '深圳市',
@@ -176,10 +178,11 @@ const candidateList = ref<InterviewCandidate[]>([
     isReturnWorker: true,
     name: '王五',
     phone: '13700137000',
+    idCard: '440***********5678',
     age: 32,
     gender: '男',
-    recommendationLevel: 'B',
-    imageLevel: 'B',
+    recommendationLevel: '一般',
+    imageLevel: '一般',
     education: '初中',
     positionCategory: '普工',
     expectedLocation: '深圳市',
@@ -206,7 +209,7 @@ const handleBack = () => {
 
 // 编辑
 const handleEdit = () => {
-  router.push(`/labor-company/interview/invitation/edit/${invitationDetail.value.id}`)
+  router.push(`/tenant/interview/invitation/edit/${invitationDetail.value.id}`)
 }
 
 // 删除
@@ -224,23 +227,31 @@ const handleDelete = () => {
 // 获取推荐等级类型
 const getRecommendationLevelType = (level: string) => {
   const typeMap: Record<string, any> = {
-    A: 'success',
-    B: 'primary',
-    C: 'warning',
-    D: 'danger'
+    '优先推荐': 'success',
+    '一般': 'primary',
+    '不建议': 'danger'
   }
   return typeMap[level] || 'info'
 }
 
-// 获取形象级别类型
+// 获取推荐等级文本
+const getRecommendationLevelText = (level: string) => {
+  return level || ''
+}
+
+// 获取形象类型
 const getImageLevelType = (level: string) => {
   const typeMap: Record<string, any> = {
-    A: 'success',
-    B: 'primary',
-    C: 'warning',
-    D: 'danger'
+    '优秀': 'success',
+    '一般': 'primary',
+    '其他': 'info'
   }
   return typeMap[level] || 'info'
+}
+
+// 获取形象文本
+const getImageLevelText = (level: string) => {
+  return level || ''
 }
 
 // 生命周期

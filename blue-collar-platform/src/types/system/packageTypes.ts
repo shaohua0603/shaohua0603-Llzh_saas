@@ -40,6 +40,8 @@ export interface Package {
   updatedAt: string
   createdBy: string
   updatedBy: string
+  menuIds?: number[]
+  menus?: any[]
 }
 
 /**
@@ -68,6 +70,7 @@ export interface PackageFormData {
   employeeAccountCount: number
   backgroundCheckWorkerCount: number
   status: PackageStatus
+  menuIds?: number[]
 }
 
 /**

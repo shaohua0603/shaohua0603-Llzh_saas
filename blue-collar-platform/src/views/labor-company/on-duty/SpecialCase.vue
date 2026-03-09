@@ -113,6 +113,12 @@
       @selection-change="handleSelectionChange"
       @global-search="handleGlobalSearch"
     >
+      <template #column-paymentType="{ row }">
+        <el-tag :type="row.paymentType === 'daily' ? 'warning' : 'success'">
+          {{ row.paymentType === 'daily' ? '日结' : '月结' }}
+        </el-tag>
+      </template>
+
       <template #column-caseType="{ row }">
         <el-tag :type="row.caseType === 'work_injury' ? 'danger' : 'info'">
           {{ row.caseType === 'work_injury' ? '工伤事故' : '一般情况' }}
@@ -136,63 +142,7 @@
       </template>
     </CommonTable>
 
-    <!-- 新增/编辑弹窗 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="700px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
-        <el-form-item label="工人姓名" prop="workerName">
-          <el-input v-model="formData.workerName" placeholder="请输入工人姓名" />
-        </el-form-item>
-        <el-form-item label="手机号" prop="phone">
-          <el-input v-model="formData.phone" placeholder="请输入手机号" />
-        </el-form-item>
-        <el-form-item label="特殊情况类型" prop="caseType">
-          <el-select v-model="formData.caseType" placeholder="请选择特殊情况类型" style="width: 100%">
-            <el-option label="一般情况" value="general" />
-            <el-option label="工伤事故" value="work_injury" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="情况标题" prop="title">
-          <el-input v-model="formData.title" placeholder="请输入情况标题" />
-        </el-form-item>
-        <el-form-item label="情况描述" prop="description">
-          <el-input v-model="formData.description" type="textarea" :rows="4" placeholder="请输入情况描述" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
 
-    <!-- 处理记录弹窗 -->
-    <el-dialog
-      v-model="processDialogVisible"
-      title="填写处理记录"
-      width="600px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="processFormRef" :model="processForm" :rules="processFormRules" label-width="100px">
-        <el-form-item label="处理情况" prop="content">
-          <el-input v-model="processForm.content" type="textarea" :rows="4" placeholder="请填写处理情况" />
-        </el-form-item>
-        <el-form-item label="处理结果" prop="result">
-          <el-select v-model="processForm.result" placeholder="请选择处理结果" style="width: 100%">
-            <el-option label="待处理" value="pending" />
-            <el-option label="处理中" value="processing" />
-            <el-option label="已处理" value="processed" />
-          </el-select>
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="processDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleProcessSubmit" :loading="processLoading">提交</el-button>
-      </template>
-    </el-dialog>
 
     <!-- 处理记录查看弹窗 -->
     <el-dialog v-model="recordsDialogVisible" title="处理记录" width="700px">
@@ -231,6 +181,9 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Download, Search, Refresh, Delete, ArrowDown } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
 
 // 搜索表单
 const filterExpanded = ref(false)
@@ -272,6 +225,7 @@ const toggleFilter = () => {
 const columns = [
   { prop: 'workerName', label: '姓名', minWidth: 100, sortable: true },
   { prop: 'phone', label: '手机号', minWidth: 120, sortable: true },
+  { prop: 'paymentType', label: '结算方式', minWidth: 100 },
   { prop: 'caseType', label: '特殊情况类型', minWidth: 120 },
   { prop: 'title', label: '情况标题', minWidth: 180 },
   { prop: 'description', label: '情况描述', minWidth: 200, showTooltip: true },
@@ -283,42 +237,7 @@ const columns = [
 // 表格引用
 const tableRef = ref()
 
-// 弹窗控制
-const dialogVisible = ref(false)
-const dialogTitle = ref('新增特殊情况')
-const submitLoading = ref(false)
-const formRef = ref()
-const formData = reactive({
-  id: '',
-  workerName: '',
-  phone: '',
-  caseType: '',
-  title: '',
-  description: ''
-})
 
-const formRules = {
-  workerName: [{ required: true, message: '请输入工人姓名', trigger: 'blur' }],
-  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
-  caseType: [{ required: true, message: '请选择特殊情况类型', trigger: 'change' }],
-  title: [{ required: true, message: '请输入情况标题', trigger: 'blur' }],
-  description: [{ required: true, message: '请输入情况描述', trigger: 'blur' }]
-}
-
-// 处理弹窗
-const processDialogVisible = ref(false)
-const processLoading = ref(false)
-const processFormRef = ref()
-const processForm = reactive({
-  id: '',
-  content: '',
-  result: 'processing'
-})
-
-const processFormRules = {
-  content: [{ required: true, message: '请填写处理情况', trigger: 'blur' }],
-  result: [{ required: true, message: '请选择处理结果', trigger: 'change' }]
-}
 
 // 处理记录查看弹窗
 const recordsDialogVisible = ref(false)
@@ -376,6 +295,7 @@ const fetchData = async () => {
         id: '1',
         workerName: '张三',
         phone: '13800138000',
+        paymentType: 'daily',
         caseType: 'general',
         title: '工资发放异常',
         description: '工人反映上个月工资未按时发放',
@@ -387,6 +307,7 @@ const fetchData = async () => {
         id: '2',
         workerName: '李四',
         phone: '13800138001',
+        paymentType: 'monthly',
         caseType: 'work_injury',
         title: '工作期间受伤',
         description: '工人在车间操作机器时手指受伤',
@@ -405,6 +326,7 @@ const fetchData = async () => {
         id: '3',
         workerName: '王五',
         phone: '13800138002',
+        paymentType: 'daily',
         caseType: 'general',
         title: '住宿问题反馈',
         description: '宿舍设施损坏需要维修',
@@ -480,28 +402,17 @@ const handleBatchDelete = async () => {
 
 // 新增
 const handleAdd = () => {
-  dialogTitle.value = '新增特殊情况'
-  formData.id = ''
-  formData.workerName = ''
-  formData.phone = ''
-  formData.caseType = ''
-  formData.title = ''
-  formData.description = ''
-  dialogVisible.value = true
+  router.push('/tenant/on-duty/special-case/form')
 }
 
 // 编辑
 const handleEdit = (row: any) => {
-  dialogTitle.value = '编辑特殊情况'
-  Object.assign(formData, row)
-  dialogVisible.value = true
+  router.push(`/tenant/on-duty/special-case/form/${row.id}`)
 }
 
 // 详情
 const handleDetail = (row: any) => {
-  dialogTitle.value = '特殊情况详情'
-  Object.assign(formData, row)
-  dialogVisible.value = true
+  router.push(`/tenant/on-duty/special-case/detail/${row.id}`)
 }
 
 // 删除
@@ -517,44 +428,9 @@ const handleDelete = async (row: any) => {
   }
 }
 
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      submitLoading.value = true
-      setTimeout(() => {
-        ElMessage.success(dialogTitle.value === '新增特殊情况' ? '新增成功' : '修改成功')
-        dialogVisible.value = false
-        submitLoading.value = false
-        fetchData()
-      }, 500)
-    }
-  })
-}
-
 // 处理
 const handleProcess = (row: any) => {
-  processForm.id = row.id
-  processForm.content = ''
-  processForm.result = 'processing'
-  processDialogVisible.value = true
-}
-
-// 提交处理记录
-const handleProcessSubmit = async () => {
-  if (!processFormRef.value) return
-  await processFormRef.value.validate((valid) => {
-    if (valid) {
-      processLoading.value = true
-      setTimeout(() => {
-        ElMessage.success('处理记录提交成功')
-        processDialogVisible.value = false
-        processLoading.value = false
-        fetchData()
-      }, 500)
-    }
-  })
+  router.push(`/tenant/on-duty/special-case/detail/${row.id}?mode=process`)
 }
 
 // 查看处理记录

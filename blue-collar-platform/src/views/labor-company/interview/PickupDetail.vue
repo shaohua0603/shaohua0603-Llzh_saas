@@ -140,7 +140,7 @@ const handleBack = () => {
 }
 
 const handleEdit = () => {
-  router.push(`/labor-company/interview/pickup/edit/${pickupDetail.value.id}`)
+  router.push(`/tenant/interview/pickup/edit/${pickupDetail.value.id}`)
 }
 
 const handleDelete = () => {

@@ -138,6 +138,7 @@ interface FactoryInfo {
   contactPerson: string
   contactPhone: string
   address: string
+  type: string // 租户类型：工厂或劳务公司
 }
 
 // 搜索
@@ -200,18 +201,20 @@ const loadFactoryList = async () => {
     //   name: queryForm.value.name,
     //   socialCreditCode: queryForm.value.socialCreditCode
     // })
-    // factoryList.value = response.data.list
-    // total.value = response.data.total
+    // 过滤出工厂类型的租户
+    // factoryList.value = response.data.list.filter(item => item.type === '工厂')
+    // total.value = factoryList.value.length
 
     // Mock数据
-    factoryList.value = [
+    const allTenants = [
       {
         id: 'factory1',
         name: '东莞长安工业区',
         socialCreditCode: '91440300MA5DXXXXXX',
         contactPerson: '张三',
         contactPhone: '13800138000',
-        address: '广东省东莞市长安镇工业区'
+        address: '广东省东莞市长安镇工业区',
+        type: '工厂'
       },
       {
         id: 'factory2',
@@ -219,7 +222,8 @@ const loadFactoryList = async () => {
         socialCreditCode: '91440300MA5DYYYYYY',
         contactPerson: '李四',
         contactPhone: '13900139000',
-        address: '广东省东莞市厚街镇工业区'
+        address: '广东省东莞市厚街镇工业区',
+        type: '工厂'
       },
       {
         id: 'factory3',
@@ -227,10 +231,23 @@ const loadFactoryList = async () => {
         socialCreditCode: '91440300MA5DZZZZZZ',
         contactPerson: '王五',
         contactPhone: '13700137000',
-        address: '广东省东莞市虎门镇工业区'
+        address: '广东省东莞市虎门镇工业区',
+        type: '工厂'
+      },
+      {
+        id: 'labor1',
+        name: '南通富民劳务服务有限公司',
+        socialCreditCode: '91320600MA12345678',
+        contactPerson: '赵六',
+        contactPhone: '13600136000',
+        address: '江苏省南通市崇川区',
+        type: '劳务公司'
       }
     ]
-    total.value = 3
+    
+    // 过滤出工厂类型的租户
+    factoryList.value = allTenants.filter(item => item.type === '工厂')
+    total.value = factoryList.value.length
   } catch (error) {
     ElMessage.error('获取工厂列表失败')
     console.error('API调用错误:', error)

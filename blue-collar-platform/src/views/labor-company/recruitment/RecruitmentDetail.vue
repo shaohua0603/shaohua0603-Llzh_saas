@@ -135,6 +135,10 @@
         <el-icon><Edit /></el-icon>
         编辑
       </el-button>
+      <el-button @click="handleShare">
+        <el-icon><Share /></el-icon>
+        分享
+      </el-button>
       <el-button type="danger" @click="handleDelete">
         <el-icon><Delete /></el-icon>
         删除
@@ -147,7 +151,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Edit, Delete, InfoFilled, Document, Coin, Clock, ArrowLeft } from '@element-plus/icons-vue'
+import { Edit, Delete, InfoFilled, Document, Coin, Clock, ArrowLeft, Share, ChatDotRound, ChatLineRound, Link } from '@element-plus/icons-vue'
 import CommonTable from '@/components/CommonTable.vue'
 import type { ColumnConfig } from '../../types/common-table'
 
@@ -243,7 +247,7 @@ const handleBack = () => {
 
 // 编辑
 const handleEdit = () => {
-  router.push(`/labor-company/recruitment/edit/${recruitmentDetail.value.id}`)
+  router.push(`/tenant/recruitment/edit/${recruitmentDetail.value.id}`)
 }
 
 // 删除
@@ -260,7 +264,7 @@ const handleDelete = () => {
 
 // 查看简历详情
 const handleResumeDetail = (row: any) => {
-  router.push(`/labor-company/recruitment/resume/${row.id}`)
+  router.push(`/tenant/recruitment/resume/${row.id}`)
 }
 
 // 简历分页变化
@@ -325,6 +329,43 @@ const getResumeStatusText = (status: string) => {
     rejected: '已拒绝'
   }
   return textMap[status] || status
+}
+
+// 分享招聘需求
+const handleShare = () => {
+  // 实现分享功能
+  const shareUrl = `http://localhost:5175/tenant/recruitment/detail/${recruitmentDetail.value.id}`
+  
+  ElMessageBox.alert(
+    `<div style="padding: 20px;">
+      <h3 style="margin-bottom: 16px;">分享到</h3>
+      <div style="margin-bottom: 16px;">
+        <p><strong>分享链接：</strong></p>
+        <input type="text" value="${shareUrl}" readonly style="width: 100%; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; font-size: 14px;" />
+      </div>
+      <div style="margin-bottom: 16px;">
+        <p>选择分享平台</p>
+        <div style="display: flex; gap: 16px; margin-top: 12px;">
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;">
+            📱 微信
+          </button>
+          <button type="button" style="width: 80px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;">
+            💬 QQ
+          </button>
+          <button type="button" style="width: 100px; padding: 8px; border: 1px solid #dcdfe6; border-radius: 4px; background-color: #fff; cursor: pointer; font-size: 14px;">
+            🔗 复制链接
+          </button>
+        </div>
+      </div>
+    </div>`,
+    '分享招聘需求',
+    {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: '关闭',
+      customClass: 'share-dialog',
+      showCancelButton: false
+    }
+  )
 }
 
 // 生命周期

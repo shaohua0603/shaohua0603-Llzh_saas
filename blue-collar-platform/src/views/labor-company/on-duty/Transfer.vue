@@ -68,10 +68,7 @@
         <el-icon><Download /></el-icon>
         导出
       </el-button>
-      <el-button type="info" @click="handlePrint">
-        <el-icon><Printer /></el-icon>
-        打印
-      </el-button>
+
     </div>
 
     <!-- 通用表格 -->
@@ -87,13 +84,19 @@
       :show-index="true"
       :show-actions="true"
       :stats-info="statsInfo"
-      action-column-width="280"
+      :action-column-width="280"
       table-id="transfer-table"
       @sort-change="handleSortChange"
       @selection-change="handleSelectionChange"
       @current-change="handleCurrentChange"
       @size-change="handleSizeChange"
     >
+      <template #column-paymentType="{ row }">
+        <el-tag :type="row.paymentType === 'daily' ? 'warning' : 'success'">
+          {{ row.paymentType === 'daily' ? '日结' : '月结' }}
+        </el-tag>
+      </template>
+
       <template #column-approvalStatus="{ row }">
         <el-tag :type="getApprovalStatusTag(row.approvalStatus)">
           {{ getApprovalStatusText(row.approvalStatus) }}
@@ -107,93 +110,12 @@
       <template #actions="{ row }">
         <el-button link type="primary" size="small" @click="handleDetail(row)">详情</el-button>
         <el-button link type="primary" size="small" @click="handleEdit(row)" :disabled="row.approvalStatus !== 'pending'">编辑</el-button>
-        <el-button link type="success" size="small" @click="handleSubmitApproval(row)" :disabled="row.approvalStatus !== 'pending'">提交审批</el-button>
+        <el-button link type="success" size="small" @click="handleApprove(row)" :disabled="row.approvalStatus === 'approved' || row.approvalStatus === 'rejected'">审核</el-button>
         <el-button link type="danger" size="small" @click="handleDelete(row)" :disabled="row.approvalStatus !== 'pending'">删除</el-button>
       </template>
     </CommonTable>
 
-    <!-- 新增/编辑弹窗 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="800px"
-      :close-on-click-modal="false"
-    >
-      <el-form ref="formRef" :model="formData" :rules="formRules" label-width="140px">
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="工人姓名" prop="workerName">
-              <el-input v-model="formData.workerName" placeholder="请输入工人姓名" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="手机号" prop="phone">
-              <el-input v-model="formData.phone" placeholder="请输入手机号" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="期望调岗日期" prop="expectedTransferDate">
-              <el-date-picker
-                v-model="formData.expectedTransferDate"
-                type="date"
-                placeholder="选择期望调岗日期"
-                value-format="YYYY-MM-DD"
-                style="width: 100%"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-divider content-position="left">原岗位信息</el-divider>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="原部门" prop="originalDepartment">
-              <el-input v-model="formData.originalDepartment" placeholder="请输入原部门" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="原岗位" prop="originalPosition">
-              <el-input v-model="formData.originalPosition" placeholder="请输入原岗位" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="原岗位直属领导" prop="originalLeader">
-              <el-input v-model="formData.originalLeader" placeholder="请输入原岗位直属领导" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-divider content-position="left">目标岗位信息</el-divider>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="目标部门" prop="targetDepartment">
-              <el-input v-model="formData.targetDepartment" placeholder="请输入目标部门" />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="目标岗位" prop="targetPosition">
-              <el-input v-model="formData.targetPosition" placeholder="请输入目标岗位" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="目标岗位直属组长" prop="targetLeader">
-              <el-input v-model="formData.targetLeader" placeholder="请输入目标岗位直属组长" />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item label="调岗原因" prop="transferReason">
-          <el-input v-model="formData.transferReason" type="textarea" :rows="4" placeholder="请输入调岗原因" />
-        </el-form-item>
-      </el-form>
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitLoading">确定</el-button>
-      </template>
-    </el-dialog>
+
   </div>
 </template>
 
@@ -201,7 +123,7 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Delete, Upload, Download, Printer, ArrowDown } from '@element-plus/icons-vue'
+import { Plus, Delete, Upload, Download, ArrowDown } from '@element-plus/icons-vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import CommonTable from '@/components/CommonTable.vue'
 
@@ -213,6 +135,7 @@ interface TransferRecord {
   id: string
   workerName: string
   phone: string
+  paymentType: 'daily' | 'monthly'
   expectedTransferDate: string
   originalDepartment: string
   originalPosition: string
@@ -236,6 +159,7 @@ interface ApprovalRecord {
 const columns = [
   { prop: 'workerName', label: '姓名', minWidth: 100, sortable: true },
   { prop: 'phone', label: '手机号', minWidth: 120, sortable: true },
+  { prop: 'paymentType', label: '结算方式', minWidth: 100 },
   { prop: 'expectedTransferDate', label: '期望调岗日期', minWidth: 140, sortable: true },
   { prop: 'originalDepartment', label: '原部门', minWidth: 120 },
   { prop: 'originalPosition', label: '原岗位', minWidth: 100 },
@@ -255,9 +179,6 @@ const total = ref(0)
 const currentPage = ref(1)
 const pageSize = ref(10)
 const selectedRows = ref<TransferRecord[]>([])
-const dialogVisible = ref(false)
-const submitLoading = ref(false)
-const dialogTitle = ref('新增调岗')
 const filterExpanded = ref(false)
 const statsInfo = ref<Array<{ label: string; value: string }>>([])
 
@@ -268,41 +189,13 @@ const searchForm = reactive({
   transferDate: [] as string[]
 })
 
-const formData = reactive<TransferRecord>({
-  id: '',
-  workerName: '',
-  phone: '',
-  expectedTransferDate: '',
-  originalDepartment: '',
-  originalPosition: '',
-  originalLeader: '',
-  targetDepartment: '',
-  targetPosition: '',
-  targetLeader: '',
-  transferReason: '',
-  approvalStatus: 'pending',
-  approvalRecords: []
-})
-
-const formRef = ref<FormInstance>()
-
-const formRules: FormRules = {
-  workerName: [{ required: true, message: '请输入工人姓名', trigger: 'blur' }],
-  phone: [{ required: true, message: '请输入手机号', trigger: 'blur' }],
-  expectedTransferDate: [{ required: true, message: '请选择期望调岗日期', trigger: 'change' }],
-  originalDepartment: [{ required: true, message: '请输入原部门', trigger: 'blur' }],
-  originalPosition: [{ required: true, message: '请输入原岗位', trigger: 'blur' }],
-  targetDepartment: [{ required: true, message: '请输入目标部门', trigger: 'blur' }],
-  targetPosition: [{ required: true, message: '请输入目标岗位', trigger: 'blur' }],
-  transferReason: [{ required: true, message: '请输入调岗原因', trigger: 'blur' }]
-}
-
 // Mock数据
 const mockData: TransferRecord[] = [
   {
     id: '1',
     workerName: '张三',
     phone: '13800138001',
+    paymentType: 'daily',
     expectedTransferDate: '2024-03-01',
     originalDepartment: '生产部',
     originalPosition: '操作工',
@@ -318,6 +211,7 @@ const mockData: TransferRecord[] = [
     id: '2',
     workerName: '李四',
     phone: '13800138002',
+    paymentType: 'monthly',
     expectedTransferDate: '2024-02-15',
     originalDepartment: '包装部',
     originalPosition: '包装工',
@@ -335,6 +229,7 @@ const mockData: TransferRecord[] = [
     id: '3',
     workerName: '王五',
     phone: '13800138003',
+    paymentType: 'daily',
     expectedTransferDate: '2024-02-20',
     originalDepartment: '组装部',
     originalPosition: '组装工',
@@ -352,6 +247,7 @@ const mockData: TransferRecord[] = [
     id: '4',
     workerName: '赵六',
     phone: '13800138004',
+    paymentType: 'monthly',
     expectedTransferDate: '2024-03-05',
     originalDepartment: '生产部',
     originalPosition: '操作工',
@@ -465,42 +361,21 @@ const handleExport = () => {
   ElMessage.info('导出功能开发中')
 }
 
-// 打印
-const handlePrint = () => {
-  ElMessage.info('打印功能开发中')
-}
+
 
 // 新增
 const handleAdd = () => {
-  dialogTitle.value = '新增调岗'
-  Object.assign(formData, {
-    id: '',
-    workerName: '',
-    phone: '',
-    expectedTransferDate: '',
-    originalDepartment: '',
-    originalPosition: '',
-    originalLeader: '',
-    targetDepartment: '',
-    targetPosition: '',
-    targetLeader: '',
-    transferReason: '',
-    approvalStatus: 'pending',
-    approvalRecords: []
-  })
-  dialogVisible.value = true
+  router.push('/tenant/on-duty/transfer-add')
 }
 
 // 编辑
 const handleEdit = (row: TransferRecord) => {
-  dialogTitle.value = '编辑调岗'
-  Object.assign(formData, { ...row })
-  dialogVisible.value = true
+  router.push(`/tenant/on-duty/transfer-edit/${row.id}`)
 }
 
 // 详情
 const handleDetail = (row: TransferRecord) => {
-  router.push(`/labor-company/on-duty/transfer-detail?id=${row.id}`)
+  router.push(`/tenant/on-duty/transfer-detail/${row.id}`)
 }
 
 // 删除
@@ -538,67 +413,15 @@ const handleBatchDelete = () => {
   }).catch(() => {})
 }
 
-// 提交表单
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  await formRef.value.validate((valid) => {
-    if (valid) {
-      submitLoading.value = true
-      setTimeout(() => {
-        if (formData.id) {
-          // 编辑
-          const index = mockData.findIndex(item => item.id === formData.id)
-          if (index > -1) {
-            mockData[index] = { ...formData }
-          }
-          ElMessage.success('编辑成功')
-        } else {
-          // 新增
-          mockData.unshift({
-            ...formData,
-            id: Date.now().toString()
-          })
-          ElMessage.success('新增成功')
-        }
-        submitLoading.value = false
-        dialogVisible.value = false
-        loadData()
-      }, 500)
-    }
-  })
-}
-
-// 提交审批
-const handleSubmitApproval = async (row: TransferRecord) => {
-  try {
-    await ElMessageBox.confirm('确定要提交审批吗？提交后将进入审批流程。', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    })
-
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
-
-    // 更新状态
-    const index = mockData.findIndex(item => item.id === row.id)
-    if (index > -1) {
-      mockData[index].approvalStatus = 'processing'
-      ElMessage.success('提交审批成功')
-      loadData()
-    }
-  } catch (error) {
-    if (error !== 'cancel') {
-      console.error('提交审批失败:', error)
-      ElMessage.error('提交审批失败')
-    }
-  }
-}
-
 // 查看审核记录
 const viewApprovalRecords = (row: TransferRecord) => {
   // 跳转到详情页面查看审批记录
-  router.push(`/labor-company/on-duty/transfer-detail?id=${row.id}`)
+  router.push(`/tenant/on-duty/transfer-detail/${row.id}`)
+}
+
+// 审核
+const handleApprove = (row: TransferRecord) => {
+  router.push(`/tenant/on-duty/transfer-approve/${row.id}`)
 }
 
 // 排序变化

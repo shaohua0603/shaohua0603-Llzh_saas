@@ -1,484 +1,458 @@
 <template>
-  <div class="attachment-container">
-    <!-- 工具栏 -->
-    <div class="toolbar">
-      <el-input
-        v-model="searchKeyword"
-        placeholder="搜索附件名称"
-        prefix-icon="Search"
-        clearable
-        style="width: 300px; margin-right: 16px"
-        @input="handleSearch"
-      />
-      <el-select
-        v-model="attachmentTypeFilter"
-        placeholder="附件类型"
-        clearable
-        style="width: 150px; margin-right: 16px"
-        @change="handleSearch"
-      >
-        <el-option label="全部" value="" />
-        <el-option label="图片" value="image" />
-        <el-option label="文件" value="file" />
-        <el-option label="视频" value="video" />
-        <el-option label="音频" value="audio" />
-        <el-option label="文档" value="document" />
-      </el-select>
-      <el-button type="primary" @click="handleAdd">
-        新增附件
-      </el-button>
-    </div>
-
-    <!-- 附件列表 -->
-    <el-table
-      v-loading="loading"
-      :data="tableData"
-      border
-      stripe
-      style="width: 100%; margin-top: 16px"
-    >
-      <el-table-column type="index" label="序号" width="60" />
-      <el-table-column prop="name" label="附件名称" min-width="200" />
-      <el-table-column prop="typeName" label="附件类型" width="100">
-        <template #default="scope">
-          <el-tag :type="getAttachmentTypeTag(scope.row.type)" size="small">
-            {{ scope.row.typeName }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="maxSize" label="附件大小" width="120">
-        <template #default="scope">
-          {{ scope.row.maxSize || '不限制' }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="required" label="是否必传" width="100">
-        <template #default="scope">
-          <el-tag :type="scope.row.required ? 'danger' : 'info'" size="small">
-            {{ scope.row.required ? '必传' : '可选' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="menuName" label="关联菜单" min-width="180" show-overflow-tooltip />
-      <el-table-column prop="templateName" label="附件模板" width="150">
-        <template #default="scope">
-          {{ scope.row.templateName || '-' }}
-        </template>
-      </el-table-column>
-      <el-table-column prop="createTime" label="创建时间" width="180" />
-      <el-table-column label="操作" width="180" fixed="right">
-        <template #default="scope">
-          <el-button size="small" type="primary" link @click.stop="handleEdit(scope.row)">
-            编辑
-          </el-button>
-          <el-button size="small" type="danger" link @click.stop="handleDelete(scope.row)">
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分页 -->
-    <div class="pagination">
-      <el-pagination
-        v-model:current-page="currentPage"
-        v-model:page-size="pageSize"
-        :page-sizes="[10, 20, 50, 100]"
-        :total="total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handleCurrentChange"
-      />
-    </div>
-
-    <!-- 新增/编辑对话框 -->
-    <el-dialog
-      v-model="dialogVisible"
-      :title="dialogTitle"
-      width="700px"
-      :close-on-click-modal="false"
-      @close="handleDialogClose"
-    >
-      <el-form
-        ref="formRef"
-        :model="formData"
-        :rules="formRules"
-        label-width="120px"
-        label-position="right"
-      >
-        <el-form-item label="附件名称" prop="name">
-          <el-input
-            v-model="formData.name"
-            placeholder="请输入附件名称"
-            maxlength="50"
-          />
-        </el-form-item>
-        
-        <el-form-item label="附件类型" prop="type">
-          <el-select
-            v-model="formData.type"
-            placeholder="请选择附件类型"
-            style="width: 100%"
-          >
-            <el-option label="图片" value="image" />
-            <el-option label="文件" value="file" />
-            <el-option label="视频" value="video" />
-            <el-option label="音频" value="audio" />
-            <el-option label="文档" value="document" />
-          </el-select>
-        </el-form-item>
-        
-        <el-row :gutter="20">
-          <el-col :span="12">
-            <el-form-item label="附件大小" prop="maxSize">
-              <el-input
-                v-model="formData.maxSize"
-                placeholder="如：10MB，不填则不限制"
-                maxlength="20"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="12">
-            <el-form-item label="是否必传" prop="required">
-              <el-switch
-                v-model="formData.required"
-                active-text="是"
-                inactive-text="否"
-              />
-            </el-form-item>
-          </el-col>
-        </el-row>
-        
-        <el-form-item label="关联菜单" prop="menuId">
-          <el-select
-            v-model="formData.menuId"
-            placeholder="请选择关联菜单"
-            style="width: 100%"
-            filterable
-          >
-            <el-option
-              v-for="menu in menuList"
-              :key="menu.id"
-              :label="menu.name"
-              :value="menu.id"
+  <div class="attachment-layout">
+    <!-- 左侧菜单树 -->
+    <div class="left-panel">
+      <el-card class="menu-tree-card">
+        <template #header>
+          <div class="card-header">
+            <span>菜单列表</span>
+            <el-input
+              v-model="menuSearchKeyword"
+              placeholder="搜索菜单"
+              prefix-icon="Search"
+              clearable
+              size="small"
+              style="width: 120px"
+              @input="handleMenuSearch"
             />
-          </el-select>
-        </el-form-item>
-        
-        <el-form-item label="允许格式" prop="accept">
+          </div>
+        </template>
+        <el-tree
+          ref="menuTreeRef"
+          :data="menuTreeData"
+          :props="treeProps"
+          :filter-node-method="filterMenuNode"
+          node-key="id"
+          highlight-current
+          :expand-on-click-node="false"
+          :default-expand-all="true"
+          @node-click="handleMenuNodeClick"
+        >
+          <template #default="{ node, data }">
+            <span class="custom-tree-node">
+              <el-icon v-if="data.icon">
+                <component :is="data.icon" />
+              </el-icon>
+              <span class="menu-label">{{ node.label }}</span>
+              <el-tag v-if="data.attachmentCount" size="small" type="info">
+                {{ data.attachmentCount }}
+              </el-tag>
+            </span>
+          </template>
+        </el-tree>
+      </el-card>
+    </div>
+
+    <!-- 右侧附件配置 -->
+    <div class="right-panel">
+      <el-card>
+        <template #header>
+          <div class="card-header">
+            <span>{{ selectedMenuName ? `【${selectedMenuName}】附件配置` : '请在左侧选择菜单' }}</span>
+          </div>
+        </template>
+
+        <!-- 查询条件 -->
+        <div class="search-bar" v-if="selectedMenuId">
           <el-input
-            v-model="formData.accept"
-            placeholder="如：.jpg,.jpeg,.png,.pdf，多个用逗号分隔"
-            maxlength="100"
-          />
-        </el-form-item>
-        
-        <el-form-item label="附件模板" prop="templateId">
-          <el-select
-            v-model="formData.templateId"
-            placeholder="请选择附件模板（可选）"
-            style="width: 100%"
+            v-model="searchForm.attachmentName"
+            placeholder="附件名称"
             clearable
-            filterable
+            style="width: 200px"
+            @input="handleSearch"
+          />
+          <el-select
+            v-model="searchForm.attachmentTypes"
+            placeholder="附件类型"
+            multiple
+            clearable
+            collapse-tags
+            collapse-tags-tooltip
+            style="width: 200px"
+            @change="handleSearch"
           >
-            <el-option
-              v-for="template in templateList"
-              :key="template.id"
-              :label="template.name"
-              :value="template.id"
-            />
+            <el-option label="图片" value="IMAGE" />
+            <el-option label="文件" value="FILE" />
+            <el-option label="视频" value="VIDEO" />
+            <el-option label="音频" value="AUDIO" />
+            <el-option label="文档" value="DOCUMENT" />
           </el-select>
-        </el-form-item>
-      </el-form>
-      
-      <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" :loading="submitting">
-          保存
-        </el-button>
-      </template>
-    </el-dialog>
+          <el-select
+            v-model="searchForm.required"
+            placeholder="是否必传"
+            clearable
+            style="width: 120px"
+            @change="handleSearch"
+          >
+            <el-option label="必传" :value="true" />
+            <el-option label="可选" :value="false" />
+          </el-select>
+          <el-button type="primary" @click="handleSearch">
+            <el-icon><Search /></el-icon>查询
+          </el-button>
+          <el-button @click="handleReset">
+            <el-icon><Refresh /></el-icon>重置
+          </el-button>
+        </div>
+
+        <!-- 功能按钮 -->
+        <div class="action-bar" v-if="selectedMenuId">
+          <el-button type="primary" :disabled="!selectedMenuId" @click="handleAdd">
+            <el-icon><Plus /></el-icon>新增
+          </el-button>
+          <el-button
+            type="danger"
+            :disabled="selectedRows.length === 0"
+            @click="handleBatchDelete"
+          >
+            <el-icon><Delete /></el-icon>批量删除
+          </el-button>
+        </div>
+
+        <!-- 表格 -->
+        <el-table
+          v-loading="loading"
+          :data="tableData"
+          @selection-change="handleSelectionChange"
+          v-if="selectedMenuId"
+        >
+          <el-table-column type="selection" width="50" />
+          <el-table-column prop="attachmentName" label="附件名称" min-width="150" />
+          <el-table-column prop="attachmentTypes" label="类型" width="150">
+            <template #default="{ row }">
+              <el-tag
+                v-for="type in (row.attachmentTypes || [])"
+                :key="type"
+                :type="getAttachmentTypeTag(type)"
+                size="small"
+                style="margin-right: 4px"
+              >
+                {{ getAttachmentTypeLabel(type) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="maxSize" label="大小限制" width="100">
+            <template #default="{ row }">
+              {{ row.maxSize ? `${row.maxSize}MB` : '不限制' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="required" label="必传" width="80">
+            <template #default="{ row }">
+              <el-tag :type="row.required ? 'danger' : 'info'" size="small">
+                {{ row.required ? '必传' : '可选' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="templateFileName" label="模板文件" min-width="150">
+            <template #default="{ row }">
+              {{ row.templateFileName || '-' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" width="80">
+            <template #default="{ row }">
+              <el-tag :type="row.status === 'enabled' ? 'success' : 'info'" size="small">
+                {{ row.status === 'enabled' ? '启用' : '禁用' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="sort" label="排序" width="80" />
+          <el-table-column label="操作" width="200" fixed="right">
+            <template #default="{ row }">
+              <el-button type="primary" link @click="handleEdit(row)">编辑</el-button>
+              <el-button type="primary" link @click="handleView(row)">详情</el-button>
+              <el-button
+                :type="row.status === 'enabled' ? 'warning' : 'success'"
+                link
+                @click="handleToggleStatus(row)"
+              >
+                {{ row.status === 'enabled' ? '禁用' : '启用' }}
+              </el-button>
+              <el-button type="danger" link @click="handleDelete(row)">删除</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <!-- 空状态提示 -->
+        <el-empty v-if="!selectedMenuId" description="请在左侧选择菜单" />
+        <el-empty v-if="selectedMenuId && tableData.length === 0 && !loading" description="暂无附件配置" />
+
+        <!-- 分页 -->
+        <div class="pagination" v-if="selectedMenuId && tableData.length > 0">
+          <el-pagination
+            v-model:current-page="currentPage"
+            v-model:page-size="pageSize"
+            :total="total"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
+          />
+        </div>
+      </el-card>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { Search, Refresh, Plus, Delete } from '@element-plus/icons-vue'
+import { attachmentConfigApi } from '@/api/attachmentConfigApi'
+import { getMenuTree } from '@/api/system/menuApi'
+import { AttachmentType, AttachmentTypeConfig, type AttachmentConfig } from '@/types/attachment'
 
-// 表格数据
+const router = useRouter()
+
+const menuSearchKeyword = ref('')
+const menuTreeRef = ref()
+const menuTreeData = ref<any[]>([])
+const selectedMenuId = ref<string>('')
+const selectedMenuName = ref<string>('')
+
+const treeProps = {
+  children: 'children',
+  label: 'menuName',
+  value: 'id'
+}
+
 const loading = ref(false)
-const tableData = ref<any[]>([])
+const tableData = ref<AttachmentConfig[]>([])
+const selectedRows = ref<AttachmentConfig[]>([])
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
-const searchKeyword = ref('')
-const attachmentTypeFilter = ref('')
 
-// 对话框
-const dialogVisible = ref(false)
-const dialogTitle = ref('')
-const submitting = ref(false)
-const formRef = ref()
-
-// 菜单列表
-const menuList = ref<any[]>([
-  { id: '1', name: '请假管理' },
-  { id: '2', name: '调岗管理' },
-  { id: '3', name: '离职管理' },
-  { id: '4', name: '报名管理' },
-  { id: '5', name: '工人入职' },
-  { id: '6', name: '合同签订' },
-  { id: '7', name: '简历管理' }
-])
-
-// 模板列表
-const templateList = ref<any[]>([
-  { id: '1', name: '身份证模板.pdf' },
-  { id: '2', name: '体检表模板.doc' },
-  { id: '3', name: '劳动合同模板.pdf' }
-])
-
-// 附件类型名称映射
-const typeNameMap: Record<string, string> = {
-  image: '图片',
-  file: '文件',
-  video: '视频',
-  audio: '音频',
-  document: '文档'
-}
-
-// 表单数据
-const formData = reactive({
-  id: '',
-  name: '',
-  type: '',
-  typeName: '',
-  maxSize: '',
-  required: false,
-  menuId: '',
-  menuName: '',
-  accept: '',
-  templateId: '',
-  templateName: ''
+const searchForm = reactive({
+  attachmentName: '',
+  attachmentTypes: [] as string[],
+  required: null as boolean | null
 })
 
-// 表单验证规则
-const formRules = {
-  name: [
-    { required: true, message: '请输入附件名称', trigger: 'blur' }
-  ],
-  type: [
-    { required: true, message: '请选择附件类型', trigger: 'change' }
-  ],
-  menuId: [
-    { required: true, message: '请选择关联菜单', trigger: 'change' }
-  ]
-}
+const loading = ref(false)
 
-// 获取附件类型标签
 const getAttachmentTypeTag = (type: string) => {
   const tags: Record<string, string> = {
-    image: 'success',
-    file: 'primary',
-    video: 'warning',
-    audio: 'danger',
-    document: 'info'
+    IMAGE: 'success',
+    FILE: 'primary',
+    VIDEO: 'warning',
+    AUDIO: 'danger',
+    DOCUMENT: 'info'
   }
   return tags[type] || 'info'
 }
 
-// 获取数据
-const fetchData = async () => {
+const getAttachmentTypeLabel = (type: string) => {
+  return AttachmentTypeConfig[type as AttachmentType]?.label || type
+}
+
+const loadMenuTree = async () => {
+  try {
+    const response = await getMenuTree({ menuStatus: 'enabled' })
+    if (response.data) {
+      const processMenu = (menus: any[]): any[] => {
+        return menus.map(menu => ({
+          ...menu,
+          children: menu.children ? processMenu(menu.children) : undefined
+        })).filter(item => item.menuType !== 'button')
+      }
+      menuTreeData.value = processMenu(response.data)
+    }
+  } catch (error) {
+    ElMessage.error('加载菜单失败')
+  }
+}
+
+const handleMenuNodeClick = (data: any) => {
+  selectedMenuId.value = String(data.id)
+  selectedMenuName.value = data.menuName
+  currentPage.value = 1
+  fetchAttachmentList()
+}
+
+const handleMenuSearch = () => {
+  menuTreeRef.value?.filter(menuSearchKeyword.value)
+}
+
+const filterMenuNode = (value: string, data: any) => {
+  if (!value) return true
+  return data.menuName?.includes(value)
+}
+
+const fetchAttachmentList = async () => {
+  if (!selectedMenuId.value) {
+    tableData.value = []
+    return
+  }
+  
   loading.value = true
   try {
-    // 模拟数据
-    await new Promise(resolve => setTimeout(resolve, 500))
-    tableData.value = [
-      {
-        id: '1',
-        name: '身份证照片',
-        type: 'image',
-        typeName: '图片',
-        maxSize: '5MB',
-        required: true,
-        menuId: '5',
-        menuName: '工人入职',
-        templateName: '-',
-        accept: '.jpg,.jpeg,.png',
-        createTime: '2024-01-01 10:00:00'
-      },
-      {
-        id: '2',
-        name: '体检报告',
-        type: 'document',
-        typeName: '文档',
-        maxSize: '10MB',
-        required: true,
-        menuId: '5',
-        menuName: '工人入职',
-        templateName: '体检表模板.doc',
-        accept: '.pdf,.doc,.docx',
-        createTime: '2024-01-01 10:00:00'
-      },
-      {
-        id: '3',
-        name: '劳动合同',
-        type: 'document',
-        typeName: '文档',
-        maxSize: '10MB',
-        required: true,
-        menuId: '6',
-        menuName: '合同签订',
-        templateName: '劳动合同模板.pdf',
-        accept: '.pdf',
-        createTime: '2024-01-01 10:00:00'
-      },
-      {
-        id: '4',
-        name: '请假证明材料',
-        type: 'file',
-        typeName: '文件',
-        maxSize: '20MB',
-        required: false,
-        menuId: '1',
-        menuName: '请假管理',
-        templateName: '-',
-        accept: '.jpg,.jpeg,.png,.pdf',
-        createTime: '2024-01-01 10:00:00'
-      }
-    ]
-    total.value = 4
+    const params = {
+      page: currentPage.value,
+      pageSize: pageSize.value,
+      menuId: selectedMenuId.value,
+      ...searchForm
+    }
+    const response = await attachmentConfigApi.getAttachmentConfigList(params)
+    tableData.value = response.data?.list || []
+    total.value = response.data?.total || 0
+  } catch (error) {
+    ElMessage.error('获取附件配置失败')
   } finally {
     loading.value = false
   }
 }
 
-// 搜索
 const handleSearch = () => {
   currentPage.value = 1
-  fetchData()
+  fetchAttachmentList()
 }
 
-// 新增
+const handleReset = () => {
+  searchForm.attachmentName = ''
+  searchForm.attachmentTypes = []
+  searchForm.required = null
+  handleSearch()
+}
+
 const handleAdd = () => {
-  dialogTitle.value = '新增附件配置'
-  Object.assign(formData, {
-    id: '',
-    name: '',
-    type: '',
-    typeName: '',
-    maxSize: '',
-    required: false,
-    menuId: '',
-    menuName: '',
-    accept: '',
-    templateId: '',
-    templateName: ''
+  router.push({
+    path: '/admin/attachment-config-create',
+    query: { menuId: selectedMenuId.value, menuName: selectedMenuName.value }
   })
-  dialogVisible.value = true
 }
 
-// 编辑
-const handleEdit = (row: any) => {
-  dialogTitle.value = '编辑附件配置'
-  Object.assign(formData, {
-    id: row.id,
-    name: row.name,
-    type: row.type,
-    typeName: row.typeName,
-    maxSize: row.maxSize,
-    required: row.required,
-    menuId: row.menuId,
-    menuName: row.menuName,
-    accept: row.accept,
-    templateId: row.templateId || '',
-    templateName: row.templateName || ''
+const handleEdit = (row: AttachmentConfig) => {
+  router.push({
+    path: '/admin/attachment-config-edit',
+    query: { id: row.id }
   })
-  dialogVisible.value = true
 }
 
-// 删除
-const handleDelete = async (row: any) => {
+const handleView = (row: AttachmentConfig) => {
+  router.push({
+    path: '/admin/attachment-config-view',
+    query: { id: row.id }
+  })
+}
+
+const handleDelete = async (row: AttachmentConfig) => {
   try {
-    await ElMessageBox.confirm(`确定要删除附件配置"${row.name}"吗？`, '提示', {
+    await ElMessageBox.confirm(`确定要删除附件配置"${row.attachmentName}"吗？`, '提示', {
       type: 'warning'
     })
+    await attachmentConfigApi.deleteAttachmentConfig(row.id)
     ElMessage.success('删除成功')
-    fetchData()
-  } catch {
-    // 用户取消
-  }
+    fetchAttachmentList()
+  } catch {}
 }
 
-// 提交
-const handleSubmit = async () => {
-  if (!formRef.value) return
-  
-  await formRef.value.validate(async (valid: boolean) => {
-    if (valid) {
-      submitting.value = true
-      try {
-        // 设置类型名称
-        formData.typeName = typeNameMap[formData.type] || formData.type
-        
-        // 获取菜单名称
-        const menu = menuList.value.find(m => m.id === formData.menuId)
-        if (menu) {
-          formData.menuName = menu.name
-        }
-        
-        // 获取模板名称
-        if (formData.templateId) {
-          const template = templateList.value.find(t => t.id === formData.templateId)
-          if (template) {
-            formData.templateName = template.name
-          }
-        }
-        
-        await new Promise(resolve => setTimeout(resolve, 1000))
-        ElMessage.success('保存成功')
-        dialogVisible.value = false
-        fetchData()
-      } finally {
-        submitting.value = false
-      }
-    }
-  })
+const handleBatchDelete = async () => {
+  try {
+    await ElMessageBox.confirm(`确定要删除选中的${selectedRows.value.length}条配置吗？`, '提示', {
+      type: 'warning'
+    })
+    const ids = selectedRows.value.map(row => row.id)
+    await attachmentConfigApi.batchDeleteAttachmentConfig(ids)
+    ElMessage.success('批量删除成功')
+    fetchAttachmentList()
+  } catch {}
 }
 
-// 对话框关闭
-const handleDialogClose = () => {
-  formRef.value?.resetFields()
+const handleToggleStatus = async (row: AttachmentConfig) => {
+  const newStatus = row.status === 'enabled' ? 'disabled' : 'enabled'
+  await attachmentConfigApi.updateAttachmentConfigStatus(row.id, newStatus)
+  ElMessage.success(`${newStatus === 'enabled' ? '启用' : '禁用'}成功`)
+  fetchAttachmentList()
 }
 
-// 分页大小变化
+const handleSelectionChange = (selection: AttachmentConfig[]) => {
+  selectedRows.value = selection
+}
+
+const handlePageChange = (page: number) => {
+  currentPage.value = page
+  fetchAttachmentList()
+}
+
 const handleSizeChange = (size: number) => {
   pageSize.value = size
-  fetchData()
+  currentPage.value = 1
+  fetchAttachmentList()
 }
 
-// 当前页变化
-const handleCurrentChange = (page: number) => {
-  currentPage.value = page
-  fetchData()
-}
-
-// 初始化
 onMounted(() => {
-  fetchData()
+  loadMenuTree()
 })
 </script>
 
 <style scoped>
-.attachment-container {
-  padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
+.attachment-layout {
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  height: calc(100vh - 140px);
+  background-color: #f5f7fa;
 }
 
-.toolbar {
+.left-panel {
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.menu-tree-card {
+  height: 100%;
+}
+
+.menu-tree-card :deep(.el-card__body) {
+  height: calc(100% - 60px);
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.custom-tree-node {
   display: flex;
-  justify-content: flex-start;
   align-items: center;
+  gap: 8px;
+  flex: 1;
+  padding-right: 8px;
+}
+
+.menu-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.right-panel {
+  flex: 1;
+  min-width: 0;
+}
+
+.right-panel :deep(.el-card__body) {
+  padding: 16px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.search-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.action-bar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .pagination {
@@ -487,28 +461,33 @@ onMounted(() => {
   margin-top: 16px;
 }
 
-/* 响应式设计 */
+@media screen and (max-width: 1200px) {
+  .left-panel {
+    width: 260px;
+  }
+}
+
 @media screen and (max-width: 768px) {
-  .attachment-container {
-    padding: 16px;
-  }
-  
-  .toolbar {
+  .attachment-layout {
     flex-direction: column;
-    align-items: flex-start;
+    height: auto;
   }
-  
-  .toolbar > * {
-    margin-bottom: 12px;
-    margin-right: 0 !important;
+
+  .left-panel {
+    width: 100%;
+    max-height: 300px;
   }
-  
-  :deep(.el-input) {
+
+  .right-panel {
+    width: 100%;
+  }
+
+  .search-bar {
+    flex-direction: column;
+  }
+
+  .search-bar > * {
     width: 100% !important;
-  }
-  
-  :deep(.el-table) {
-    font-size: 12px;
   }
 }
 </style>

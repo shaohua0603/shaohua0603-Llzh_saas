@@ -1,10 +1,11 @@
 <template>
   <el-dialog
-    v-model="visible"
+    :model-value="visible"
     :title="formData.id ? '编辑附件配置' : '新增附件配置'"
     width="800px"
     :close-on-click-modal="false"
     @close="handleClose"
+    @update:model-value="(value) => emit('update:visible', value)"
   >
     <el-form
       ref="formRef"
@@ -34,23 +35,17 @@
         />
       </el-form-item>
 
-      <el-form-item label="附件类型" prop="attachmentType">
-        <el-select
-          v-model="formData.attachmentType"
-          placeholder="请选择附件类型"
-          style="width: 100%"
-          @change="handleAttachmentTypeChange"
-        >
-          <el-option
+      <el-form-item label="附件类型" prop="attachmentTypes">
+        <el-checkbox-group v-model="formData.attachmentTypes">
+          <el-checkbox
             v-for="(config, type) in AttachmentTypeConfig"
             :key="type"
-            :label="config.label"
-            :value="type"
+            :label="type"
           >
             <el-icon><component :is="config.icon" /></el-icon>
             {{ config.label }}
-          </el-option>
-        </el-select>
+          </el-checkbox>
+        </el-checkbox-group>
       </el-form-item>
 
       <el-row :gutter="20">
@@ -106,7 +101,7 @@
       <el-form-item label="允许类型" prop="allowedTypes">
         <el-checkbox-group v-model="formData.allowedTypes">
           <el-checkbox
-            v-for="ext in currentTypeConfig?.allowedExtensions || []"
+            v-for="ext in allAllowedExtensions"
             :key="ext"
             :label="ext"
           >
@@ -137,23 +132,38 @@
       </el-row>
 
       <el-form-item label="附件模板" prop="templateFileId">
-        <el-select
-          v-model="formData.templateFileId"
-          placeholder="请选择附件模板(可选)"
-          clearable
-          filterable
-          style="width: 100%"
+        <el-upload
+          class="upload-demo"
+          :action="''"
+          :auto-upload="false"
+          :on-change="handleTemplateUpload"
+          :limit="1"
+          :file-list="templateFileList"
+          accept=".pdf,.doc,.docx"
         >
-          <el-option
-            v-for="template in templateList"
-            :key="template.id"
-            :label="template.name"
-            :value="template.id"
+          <el-button type="primary">
+            <el-icon><Upload /></el-icon>
+            上传模板文件
+          </el-button>
+          <template #tip>
+            <div class="el-upload__tip">
+              支持上传 PDF、Word 格式文件，单个文件不超过 20MB
+            </div>
+          </template>
+        </el-upload>
+        <div v-if="formData.templateFileName" class="template-info">
+          <el-icon><Document /></el-icon>
+          <span>{{ formData.templateFileName }}</span>
+          <el-button 
+            v-if="formData.templateFileUrl" 
+            type="primary" 
+            link 
+            size="small"
+            @click="handlePreview"
           >
-            <el-icon><Document /></el-icon>
-            {{ template.name }}
-          </el-option>
-        </el-select>
+            预览
+          </el-button>
+        </div>
       </el-form-item>
 
       <el-form-item label="附件说明" prop="description">
@@ -180,13 +190,15 @@
 <script setup lang="ts">
 import { ref, reactive, watch, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Document } from '@element-plus/icons-vue'
+import { Document, Upload } from '@element-plus/icons-vue'
 import { attachmentConfigApi } from '@/api/attachmentConfigApi'
 import { AttachmentType, AttachmentTypeConfig, type AttachmentConfigFormData } from '@/types/attachment'
 
 interface Props {
   visible: boolean
   formData: Partial<AttachmentConfigFormData>
+  menuId?: string
+  menuName?: string
   menuList: any[]
   templateList: any[]
 }
@@ -200,11 +212,12 @@ const emit = defineEmits<{
 
 const formRef = ref()
 const submitting = ref(false)
+const templateFileList = ref<any[]>([])
 
 const formData = reactive<AttachmentConfigFormData>({
   menuId: '',
   attachmentName: '',
-  attachmentType: AttachmentType.IMAGE,
+  attachmentTypes: [AttachmentType.IMAGE],
   maxSize: 10,
   required: false,
   allowedTypes: ['jpg', 'jpeg', 'png'],
@@ -222,7 +235,7 @@ const formRules = {
     { required: true, message: '请输入附件名称', trigger: 'blur' },
     { min: 2, max: 50, message: '附件名称长度在2-50个字符', trigger: 'blur' }
   ],
-  attachmentType: [
+  attachmentTypes: [
     { required: true, message: '请选择附件类型', trigger: 'change' }
   ],
   maxSize: [
@@ -236,7 +249,7 @@ const formRules = {
 
 const treeProps = {
   children: 'children',
-  label: 'name',
+  label: 'menuName',
   value: 'id'
 }
 
@@ -245,15 +258,61 @@ const menuTree = computed(() => {
 })
 
 const currentTypeConfig = computed(() => {
-  return AttachmentTypeConfig[formData.attachmentType]
+  if (!formData.attachmentTypes || formData.attachmentTypes.length === 0) {
+    return null
+  }
+  const configs = formData.attachmentTypes.map(type => AttachmentTypeConfig[type])
+  return configs
 })
+
+const allAllowedExtensions = computed(() => {
+  if (!formData.attachmentTypes || formData.attachmentTypes.length === 0) {
+    return []
+  }
+  const extensions = new Set<string>()
+  formData.attachmentTypes.forEach(type => {
+    const config = AttachmentTypeConfig[type]
+    if (config && config.allowedExtensions) {
+      config.allowedExtensions.forEach(ext => extensions.add(ext))
+    }
+  })
+  return Array.from(extensions)
+})
+
+watch(
+  () => formData.attachmentTypes,
+  (newTypes) => {
+    if (newTypes && newTypes.length > 0) {
+      const extensions = new Set<string>()
+      let maxSize = 0
+      let allowBatch = true
+      let allowPreview = true
+      
+      newTypes.forEach(type => {
+        const config = AttachmentTypeConfig[type]
+        if (config) {
+          config.allowedExtensions.forEach(ext => extensions.add(ext))
+          maxSize = Math.max(maxSize, config.maxSize)
+          allowBatch = allowBatch && config.supportBatchUpload
+          allowPreview = allowPreview && config.supportPreview
+        }
+      })
+      
+      formData.allowedTypes = Array.from(extensions)
+      formData.maxSize = maxSize || 10
+      formData.allowBatchUpload = allowBatch
+      formData.allowPreview = allowPreview
+    }
+  },
+  { immediate: true }
+)
 
 const buildMenuTree = (menuList: any[]) => {
   const tree: any[] = []
   const map = new Map()
 
   menuList.forEach(menu => {
-    map.set(menu.id, { ...menu, children: [] })
+    map.set(menu.id, { ...menu, id: String(menu.id), children: [] })
   })
 
   menuList.forEach(menu => {
@@ -303,8 +362,22 @@ const handleSubmit = async () => {
   })
 }
 
+const handleTemplateUpload = (file: any) => {
+  templateFileList.value = [file]
+  formData.templateFileId = file.uid
+  formData.templateFileName = file.name
+  formData.templateFileUrl = URL.createObjectURL(file.raw)
+}
+
+const handlePreview = () => {
+  if (formData.templateFileUrl) {
+    window.open(formData.templateFileUrl, '_blank')
+  }
+}
+
 const handleClose = () => {
   formRef.value?.resetFields()
+  templateFileList.value = []
   emit('update:visible', false)
 }
 
@@ -315,7 +388,7 @@ watch(
       Object.assign(formData, {
         menuId: '',
         attachmentName: '',
-        attachmentType: AttachmentType.IMAGE,
+        attachmentTypes: [AttachmentType.IMAGE],
         maxSize: 10,
         required: false,
         allowedTypes: ['jpg', 'jpeg', 'png'],
@@ -330,6 +403,7 @@ watch(
     }
   }
 )
+
 </script>
 
 <style scoped>
@@ -341,5 +415,22 @@ watch(
 
 :deep(.el-checkbox) {
   margin-right: 0;
+}
+
+:deep(.el-upload__tip) {
+  margin-top: 8px;
+  font-size: 12px;
+  color: #909399;
+}
+
+.template-info {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background-color: #f5f7fa;
+  border-radius: 4px;
+  border: 1px solid #e4e7ed;
 }
 </style>

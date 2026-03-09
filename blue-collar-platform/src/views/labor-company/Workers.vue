@@ -83,10 +83,6 @@
 
     <!-- 功能按钮区域 -->
     <div class="action-bar">
-      <el-button type="primary" @click="handleCreate">
-        <el-icon><Plus /></el-icon>
-        新增工人
-      </el-button>
       <el-button @click="handleExport">
         <el-icon><Download /></el-icon>
         导出
@@ -134,6 +130,12 @@
         <template #column-lifecycleStatus="{ row }">
           <el-tag :type="getStatusType(row.lifecycleStatus)">
             {{ getStatusText(row.lifecycleStatus) }}
+          </el-tag>
+        </template>
+
+        <template #column-paymentType="{ row }">
+          <el-tag :type="getPaymentType(row.paymentType)">
+            {{ row.paymentType }}
           </el-tag>
         </template>
 
@@ -208,6 +210,7 @@ interface WorkerItem {
   positionType: string
   positionName: string
   lifecycleStatus: string
+  paymentType: '日结' | '月结'
   entryDate?: string
 }
 
@@ -232,10 +235,7 @@ const selectedRows = ref<WorkerItem[]>([])
 
 const statusOptions: StatusOption[] = [
   { label: '全部', value: '' },
-  { label: '注册', value: 'REGISTERED' },
   { label: '接送', value: 'PICKUP' },
-  { label: '劳务运维人员', value: 'STAFF_LABOR' },
-  { label: '工厂正式人员', value: 'STAFF_FACTORY' },
   { label: '初次面试', value: 'FIRST_INTERVIEW' },
   { label: '合同签订', value: 'CONTRACT_SIGNED' },
   { label: '面试邀约', value: 'INTERVIEW_INVITATION' },
@@ -257,16 +257,14 @@ const tableColumns = computed(() => [
   { prop: 'productionLine', label: '产线', width: 120 },
   { prop: 'positionType', label: '岗位类别', width: 100 },
   { prop: 'positionName', label: '岗位名称', width: 120 },
+  { prop: 'paymentType', label: '结算方式', width: 100, sortable: true },
   { prop: 'lifecycleStatus', label: '工人状态', width: 120, sortable: true },
   { prop: 'entryDate', label: '入职日期', width: 120, sortable: true }
 ])
 
 const getStatusType = (status: string): string => {
   const typeMap: Record<string, string> = {
-    'REGISTERED': 'info',
     'PICKUP': 'warning',
-    'STAFF_LABOR': 'primary',
-    'STAFF_FACTORY': 'primary',
     'FIRST_INTERVIEW': 'warning',
     'CONTRACT_SIGNED': 'success',
     'INTERVIEW_INVITATION': 'warning',
@@ -279,10 +277,7 @@ const getStatusType = (status: string): string => {
 
 const getStatusText = (status: string): string => {
   const textMap: Record<string, string> = {
-    'REGISTERED': '注册',
     'PICKUP': '接送',
-    'STAFF_LABOR': '劳务运维人员',
-    'STAFF_FACTORY': '工厂正式人员',
     'FIRST_INTERVIEW': '初次面试',
     'CONTRACT_SIGNED': '合同签订',
     'INTERVIEW_INVITATION': '面试邀约',
@@ -291,6 +286,10 @@ const getStatusText = (status: string): string => {
     'RESIGNED': '离职'
   }
   return textMap[status] || '未知'
+}
+
+const getPaymentType = (paymentType: string): string => {
+  return paymentType === '日结' ? 'warning' : 'success'
 }
 
 const handleSearch = () => {
@@ -340,21 +339,18 @@ const handleSelectionChange = (selection: WorkerItem[]) => {
   selectedRows.value = selection
 }
 
-const handleCreate = () => {
-  router.push('/labor-company/workers/create')
-}
 
 const handleViewDetail = (row: WorkerItem) => {
   console.log('查看工人详情:', row.id)
-  router.push(`/labor-company/workers/${row.id}`)
+  router.push(`/tenant/workers/${row.id}`)
 }
 
 const handleEdit = (row: WorkerItem) => {
-  router.push(`/labor-company/workers/${row.id}/edit`)
+  router.push(`/tenant/workers/${row.id}/edit`)
 }
 
 const handleTransfer = (row: WorkerItem) => {
-  router.push(`/labor-company/workers/${row.id}/transfer`)
+  router.push(`/tenant/workers/${row.id}/transfer`)
 }
 
 const handleDelete = (row: WorkerItem) => {
@@ -448,6 +444,7 @@ const fetchWorkers = async () => {
         positionType: '普工',
         positionName: '操作工',
         lifecycleStatus: 'ENTERED',
+        paymentType: '月结',
         entryDate: '2023-01-15'
       },
       {
@@ -465,6 +462,7 @@ const fetchWorkers = async () => {
         positionType: '质检员',
         positionName: '质检员',
         lifecycleStatus: 'ENTERED',
+        paymentType: '日结',
         entryDate: '2023-03-20'
       },
       {
@@ -482,6 +480,7 @@ const fetchWorkers = async () => {
         positionType: '技术工',
         positionName: '焊工',
         lifecycleStatus: 'RESIGNED',
+        paymentType: '月结',
         entryDate: '2022-06-01'
       },
       {
@@ -499,6 +498,7 @@ const fetchWorkers = async () => {
         positionType: '普工',
         positionName: '包装工',
         lifecycleStatus: 'CONTRACT_SIGNED',
+        paymentType: '日结',
         entryDate: ''
       },
       {
@@ -516,7 +516,62 @@ const fetchWorkers = async () => {
         positionType: '操作工',
         positionName: '操作工',
         lifecycleStatus: 'FIRST_INTERVIEW',
+        paymentType: '月结',
         entryDate: ''
+      },
+      {
+        id: '6',
+        workerId: 'EMP006',
+        name: '孙八',
+        gender: '女',
+        age: 22,
+        phone: '134****8006',
+        idCard: '410106199805101234',
+        laborCompany: '南通富民劳务服务有限公司',
+        factoryName: '',
+        factoryArea: '',
+        productionLine: '',
+        positionType: '',
+        positionName: '',
+        lifecycleStatus: 'REGISTERED',
+        paymentType: '日结',
+        entryDate: ''
+      },
+      {
+        id: '7',
+        workerId: 'EMP007',
+        name: '周九',
+        gender: '男',
+        age: 35,
+        phone: '133****8007',
+        idCard: '410107198903151234',
+        laborCompany: '南通富民劳务服务有限公司',
+        factoryName: '',
+        factoryArea: '',
+        productionLine: '',
+        positionType: '管理员',
+        positionName: '劳务运维',
+        lifecycleStatus: 'STAFF_LABOR',
+        paymentType: '月结',
+        entryDate: '2023-01-01'
+      },
+      {
+        id: '8',
+        workerId: 'EMP008',
+        name: '吴十',
+        gender: '女',
+        age: 29,
+        phone: '132****8008',
+        idCard: '410108199108251234',
+        laborCompany: '南通富民劳务服务有限公司',
+        factoryName: '富士康科技集团',
+        factoryArea: 'A区',
+        productionLine: '',
+        positionType: '管理员',
+        positionName: '工厂正式员工',
+        lifecycleStatus: 'STAFF_FACTORY',
+        paymentType: '月结',
+        entryDate: '2022-09-15'
       }
     ]
 
@@ -625,7 +680,7 @@ onMounted(() => {
   border-radius: 4px;
   border-left: 4px solid #409eff;
   font-size: 14px;
-  color: #606266;
+  color: #f56c6c;
 }
 
 .table-stats p {
