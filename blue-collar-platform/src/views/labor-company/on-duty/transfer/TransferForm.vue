@@ -1,7 +1,15 @@
 <template>
   <div class="form-container">
-    <div class="form-content">
+    <div class="form-content" :class="{ 'with-sidebar': workerInfoVisible }">
       <el-card class="form-card" v-loading="loading">
+        <template #header>
+          <div class="card-header">
+            <el-button type="primary" link @click="toggleWorkerInfo" :disabled="!formData.workerName">
+              <el-icon><User /></el-icon>
+              查看工人信息
+            </el-button>
+          </div>
+        </template>
         <el-form ref="formRef" :model="formData" :rules="formRules" label-width="140px">
           <el-row :gutter="20">
             <el-col :span="12">
@@ -127,6 +135,13 @@
       @confirm="handleWorkerSelect"
       @cancel="showWorkerSelect = false"
     />
+    
+    <!-- 工人信息侧边栏 -->
+    <WorkerInfoSidebar
+      v-model:visible="workerInfoVisible"
+      :worker-name="formData.workerName"
+      :phone="formData.phone"
+    />
   </div>
 </template>
 
@@ -134,8 +149,9 @@
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-import { ArrowLeft, Check } from '@element-plus/icons-vue'
+import { ArrowLeft, Check, User } from '@element-plus/icons-vue'
 import WorkerSelectDialog from '@/components/WorkerSelectDialog.vue'
+import WorkerInfoSidebar from '@/components/WorkerInfoSidebar.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -144,6 +160,7 @@ const loading = ref(false)
 const submitLoading = ref(false)
 const showWorkerSelect = ref(false)
 const selectedWorkerId = ref<number | number[]>([])
+const workerInfoVisible = ref(false)
 
 const isEdit = computed(() => !!route.params.id)
 
@@ -299,6 +316,11 @@ const handleCancel = () => {
   router.push('/tenant/on-duty/transfer')
 }
 
+// 切换工人信息侧边栏
+const toggleWorkerInfo = () => {
+  workerInfoVisible.value = !workerInfoVisible.value
+}
+
 // 生命周期
 onMounted(() => {
   fetchTransferDetail()
@@ -353,5 +375,19 @@ onMounted(() => {
   .form-content {
     padding-bottom: 120px;
   }
+  
+  .form-content.with-sidebar {
+    margin-right: 0;
+  }
+}
+
+.form-content.with-sidebar {
+  margin-right: 480px;
+  transition: margin-right 0.3s ease;
+}
+
+.card-header {
+  display: flex;
+  justify-content: flex-end;
 }
 </style>

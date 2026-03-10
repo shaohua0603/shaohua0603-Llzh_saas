@@ -9,13 +9,22 @@
       
       <el-form :model="ruleForm" :rules="rules" ref="ruleFormRef" label-width="120px">
         <el-form-item label="规则名称" prop="name">
-          <el-input v-model="ruleForm.name" placeholder="请输入规则名称" />
+          <el-input 
+            v-model="ruleForm.name" 
+            placeholder="请输入规则名称" 
+            :disabled="ruleForm.type === 'PLATFORM_USER_REGISTRATION'"
+          />
         </el-form-item>
         <el-form-item label="规则类型" prop="type">
-          <el-select v-model="ruleForm.type" placeholder="请选择规则类型">
+          <el-select 
+            v-model="ruleForm.type" 
+            placeholder="请选择规则类型"
+            :disabled="ruleForm.type === 'PLATFORM_USER_REGISTRATION'"
+          >
             <el-option label="考勤" value="attendance" />
             <el-option label="人事" value="personnel" />
             <el-option label="可预支额度计算" value="advance" />
+            <el-option label="注册平台用户规则" value="PLATFORM_USER_REGISTRATION" />
           </el-select>
         </el-form-item>
         <el-form-item label="生效日期" prop="effectiveDate">
@@ -24,6 +33,7 @@
             type="date"
             placeholder="选择日期"
             style="width: 100%"
+            :disabled="ruleForm.type === 'PLATFORM_USER_REGISTRATION'"
           />
         </el-form-item>
         <el-form-item label="生效状态" prop="status">
@@ -35,6 +45,7 @@
             type="textarea"
             placeholder="请输入规则说明"
             rows="3"
+            :disabled="ruleForm.type === 'PLATFORM_USER_REGISTRATION'"
           />
         </el-form-item>
 
@@ -109,6 +120,36 @@
                 添加岗位
               </el-button>
             </el-form-item>
+          </el-collapse-item>
+        </el-collapse>
+
+        <!-- 注册平台用户规则配置 -->
+        <el-collapse v-if="ruleForm.type === 'PLATFORM_USER_REGISTRATION'">
+          <el-collapse-item title="注册平台用户规则配置">
+            <el-form-item label="规则说明">
+              <el-input
+                v-model="ruleForm.description"
+                type="textarea"
+                placeholder="租户新增的工人或正式员工将自动推送到平台验证是否为新用户，如果为新用户将自动完成注册，同时平台向租户定期结算拉新奖励"
+                rows="3"
+                readonly
+              />
+            </el-form-item>
+            <el-form-item label="启用状态">
+              <el-switch v-model="ruleForm.status" active-value="active" inactive-value="inactive" />
+            </el-form-item>
+            <el-alert
+              title="规则说明"
+              type="info"
+              :closable="false"
+              style="margin-top: 20px"
+            >
+              <template #default>
+                <p>1. 开启后，租户新增的工人或正式员工将自动推送到平台</p>
+                <p>2. 平台将验证用户是否为新用户，新用户将自动完成注册</p>
+                <p>3. 平台将向租户定期结算拉新奖励</p>
+              </template>
+            </el-alert>
           </el-collapse-item>
         </el-collapse>
       </el-form>
@@ -259,6 +300,14 @@ const mockData: RuleRecord[] = [
       { position: '操作工', positionId: 'pos1', wage: 20, allowance: 2 },
       { position: '质检员', positionId: 'pos2', wage: 30, allowance: 5 }
     ]
+  },
+  {
+    id: '4',
+    name: '注册平台用户规则',
+    type: 'PLATFORM_USER_REGISTRATION',
+    effectiveDate: '2024-01-01',
+    description: '租户新增的工人或正式员工将自动推送到平台验证是否为新用户，如果为新用户将自动完成注册，同时平台向租户定期结算拉新奖励',
+    status: 'inactive'
   }
 ]
 

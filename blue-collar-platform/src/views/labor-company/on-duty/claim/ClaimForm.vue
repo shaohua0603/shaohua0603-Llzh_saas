@@ -5,6 +5,10 @@
         <template #header>
           <div class="card-header">
             <span>{{ isEdit ? '编辑理赔' : '新增理赔' }}</span>
+            <el-button type="primary" link @click="toggleWorkerInfo" :disabled="!selectedWorkerName">
+              <el-icon><User /></el-icon>
+              查看工人信息
+            </el-button>
           </div>
         </template>
         <el-form
@@ -111,19 +115,30 @@
         {{ isEdit ? '保存' : '提交' }}
       </el-button>
     </div>
+    
+    <!-- 工人信息侧边栏 -->
+    <WorkerInfoSidebar
+      v-model:visible="workerInfoVisible"
+      :worker-name="selectedWorkerName"
+      :phone="formData.phone"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Check } from '@element-plus/icons-vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ArrowLeft, Check, User } from '@element-plus/icons-vue'
+import { useRouter, useRoute } from 'vue-router'
 import WorkerSelectDialog from '@/components/WorkerSelectDialog.vue'
+import WorkerInfoSidebar from '@/components/WorkerInfoSidebar.vue'
 
 const route = useRoute()
 const router = useRouter()
 const formRef = ref<any>(null)
+
+// 工人信息侧边栏
+const workerInfoVisible = ref(false)
 const loading = ref(false)
 
 const isEdit = computed(() => !!route.params.id)
@@ -135,7 +150,8 @@ const formData = reactive({
   amount: 0,
   reason: '',
   claimDate: '',
-  status: 'pending'
+  status: 'pending',
+  phone: ''
 })
 
 const rules = {
@@ -162,6 +178,7 @@ const handleWorkerSelect = (workers: any[]) => {
     const selectedWorker = workers[0]
     formData.workerId = selectedWorker.id
     selectedWorkerName.value = selectedWorker.name
+    formData.phone = selectedWorker.phone || ''
   }
   workerSelectDialogVisible.value = false
 }
@@ -229,6 +246,11 @@ const goBack = () => {
   router.push('/tenant/on-duty/claim')
 }
 
+// 切换工人信息侧边栏
+const toggleWorkerInfo = () => {
+  workerInfoVisible.value = !workerInfoVisible.value
+}
+
 // 生命周期
 onMounted(() => {
   fetchClaimDetail()
@@ -249,6 +271,11 @@ onMounted(() => {
   overflow-y: auto;
   padding: 16px;
   padding-bottom: 80px;
+}
+
+.form-content.with-sidebar {
+  margin-right: 480px;
+  transition: margin-right 0.3s ease;
 }
 
 .form-card {
@@ -292,6 +319,10 @@ onMounted(() => {
   
   .form-content {
     padding-bottom: 120px;
+  }
+  
+  .form-content.with-sidebar {
+    margin-right: 0;
   }
   
   .worker-select-container {

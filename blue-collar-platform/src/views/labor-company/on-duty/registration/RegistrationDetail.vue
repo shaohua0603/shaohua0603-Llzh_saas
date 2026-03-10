@@ -1,14 +1,20 @@
 <template>
   <div class="registration-detail">
-    <div class="detail-content">
+    <div class="detail-content" :class="{ 'with-sidebar': workerInfoVisible }">
       <!-- 业务基本信息 -->
       <el-card class="detail-card" shadow="never">
         <template #header>
           <div class="card-header">
             <span>基本信息</span>
-            <el-tag :type="getStatusType(registrationData.status)">
-              {{ getStatusText(registrationData.status) }}
-            </el-tag>
+            <div class="header-actions">
+              <el-tag :type="getStatusType(registrationData.status)">
+                {{ getStatusText(registrationData.status) }}
+              </el-tag>
+              <el-button type="primary" link @click="toggleWorkerInfo">
+                <el-icon><User /></el-icon>
+                查看工人信息
+              </el-button>
+            </div>
           </div>
         </template>
         <el-descriptions :column="2" border>
@@ -54,7 +60,14 @@
         />
       </el-card>
     </div>
-
+    
+    <!-- 工人信息侧边栏 -->
+    <WorkerInfoSidebar
+      v-model:visible="workerInfoVisible"
+      :worker-name="registrationData.workerName"
+      :phone="registrationData.phone"
+    />
+    
     <!-- 底部按钮栏 -->
     <div class="detail-footer">
       <el-button @click="goBack">
@@ -76,7 +89,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, Check } from '@element-plus/icons-vue'
+import { ArrowLeft, Check, User } from '@element-plus/icons-vue'
+import WorkerInfoSidebar from '@/components/WorkerInfoSidebar.vue'
 import { useRoute, useRouter } from 'vue-router'
 import ApprovalComponent from '@/components/ApprovalComponent.vue'
 import type { ApprovalRecord } from '@/types/approval-flow'
@@ -104,6 +118,9 @@ interface RegistrationRecord {
 // 响应式数据
 const route = useRoute()
 const router = useRouter()
+
+// 工人信息侧边栏
+const workerInfoVisible = ref(false)
 const registrationData = ref<RegistrationRecord>({
   id: '',
   workerName: '',
@@ -294,19 +311,24 @@ const goBack = () => {
   router.back()
 }
 
+// 切换工人信息侧边栏
+const toggleWorkerInfo = () => {
+  workerInfoVisible.value = !workerInfoVisible.value
+}
+
 // 生命周期
 onMounted(() => {
   loadRegistrationData()
   
-  // 如果是审核模式，自动滚动到审核组件
-  if (isApprovalMode.value) {
-    setTimeout(() => {
-      const approvalElement = document.querySelector('.approval-component')
-      if (approvalElement) {
-        approvalElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    }, 500)
-  }
+  // 移除自动滚动，让页面保持在顶部
+  // if (isApprovalMode.value) {
+  //   setTimeout(() => {
+  //     const approvalElement = document.querySelector('.approval-component')
+  //     if (approvalElement) {
+  //       approvalElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  //     }
+  //   }, 500)
+  // }
 })
 </script>
 
@@ -352,6 +374,23 @@ onMounted(() => {
   transition: left var(--transition-base);
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-content.with-sidebar {
+  margin-right: 480px;
+  transition: margin-right 0.3s ease;
+}
+
 /* 响应式适配 */
 @media screen and (max-width: 768px) {
   .detail-footer {
@@ -365,6 +404,10 @@ onMounted(() => {
   
   .detail-content {
     padding-bottom: 120px;
+  }
+  
+  .detail-content.with-sidebar {
+    margin-right: 0;
   }
 }
 </style>

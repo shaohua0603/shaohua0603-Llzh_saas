@@ -286,13 +286,13 @@ onMounted(() => {
   // 模拟获取数据
   // 在实际应用中，这里应该调用API获取调岗记录详情
   
-  // 自动滚动到审核组件
-  setTimeout(() => {
-    const approvalElement = document.querySelector('.approval-component')
-    if (approvalElement) {
-      approvalElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
-    }
-  }, 500)
+  // 移除自动滚动，让页面保持在顶部
+  // setTimeout(() => {
+  //   const approvalElement = document.querySelector('.approval-component')
+  //   if (approvalElement) {
+  //     approvalElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  //   }
+  // }, 500)
 })
 </script>
 

@@ -13,6 +13,7 @@
             <el-option label="考勤" value="attendance" />
             <el-option label="人事" value="personnel" />
             <el-option label="可预支额度计算" value="advance" />
+            <el-option label="注册平台用户规则" value="PLATFORM_USER_REGISTRATION" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -176,6 +177,15 @@ const mockData: RuleRecord[] = [
       { position: '普工', wage: 20, allowance: 2 },
       { position: '技工', wage: 30, allowance: 5 }
     ]
+  },
+  {
+    id: '4',
+    name: '注册平台用户规则',
+    type: 'PLATFORM_USER_REGISTRATION',
+    typeText: '注册平台用户规则',
+    effectiveDate: '2024-01-01',
+    description: '租户新增的工人或正式员工将自动推送到平台验证是否为新用户，如果为新用户将自动完成注册，同时平台向租户定期结算拉新奖励',
+    status: 'inactive'
   }
 ]
 

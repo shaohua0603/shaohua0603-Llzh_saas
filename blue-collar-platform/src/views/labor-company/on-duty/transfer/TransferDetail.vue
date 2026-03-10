@@ -1,10 +1,14 @@
 <template>
   <div class="detail-container">
-    <div class="detail-content">
+    <div class="detail-content" :class="{ 'with-sidebar': workerInfoVisible }">
       <el-card class="detail-card" v-loading="loading">
         <template #header>
           <div class="card-header">
             <h2>调岗详情</h2>
+            <el-button type="primary" link @click="toggleWorkerInfo">
+              <el-icon><User /></el-icon>
+              查看工人信息
+            </el-button>
           </div>
         </template>
         
@@ -76,6 +80,13 @@
         编辑
       </el-button>
     </div>
+    
+    <!-- 工人信息侧边栏 -->
+    <WorkerInfoSidebar
+      v-model:visible="workerInfoVisible"
+      :worker-name="formData.workerName"
+      :phone="formData.phone"
+    />
   </div>
 </template>
 
@@ -83,11 +94,15 @@
 import { ref, reactive, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { ArrowLeft, Edit } from '@element-plus/icons-vue'
+import { ArrowLeft, Edit, User } from '@element-plus/icons-vue'
+import WorkerInfoSidebar from '@/components/WorkerInfoSidebar.vue'
 
 const route = useRoute()
 const router = useRouter()
 const loading = ref(false)
+
+// 工人信息侧边栏
+const workerInfoVisible = ref(false)
 
 interface TransferRecord {
   id: string
@@ -208,6 +223,11 @@ const handleCancel = () => {
   router.push('/tenant/on-duty/transfer')
 }
 
+// 切换工人信息侧边栏
+const toggleWorkerInfo = () => {
+  workerInfoVisible.value = !workerInfoVisible.value
+}
+
 // 生命周期
 onMounted(() => {
   fetchTransferDetail()
@@ -285,6 +305,17 @@ onMounted(() => {
   transition: left var(--transition-base);
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-content.with-sidebar {
+  margin-right: 480px;
+  transition: margin-right 0.3s ease;
+}
+
 @media screen and (max-width: 768px) {
   .detail-footer {
     left: 0;
@@ -297,6 +328,10 @@ onMounted(() => {
   
   .detail-content {
     padding-bottom: 120px;
+  }
+  
+  .detail-content.with-sidebar {
+    margin-right: 0;
   }
 }
 </style>

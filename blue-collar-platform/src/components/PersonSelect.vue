@@ -9,16 +9,22 @@
         clearable
         @input="handleSearch"
       />
-      <el-select
-        v-if="source !== 'all'"
-        v-model="filterType"
-        placeholder="人员类型"
-        clearable
-        @change="handleSearch"
-      >
-        <el-option label="工人" value="worker" />
-        <el-option label="正式员工" value="employee" />
-      </el-select>
+      <div v-if="source !== 'all'" class="type-filter">
+        <el-button-group>
+          <el-button
+            :type="filterType === 'worker' ? 'primary' : 'default'"
+            @click="filterType = 'worker'; handleSearch()"
+          >
+            工人
+          </el-button>
+          <el-button
+            :type="filterType === 'employee' ? 'primary' : 'default'"
+            @click="filterType = 'employee'; handleSearch()"
+          >
+            正式员工
+          </el-button>
+        </el-button-group>
+      </div>
     </div>
 
     <!-- 人员列表 -->
@@ -145,7 +151,7 @@ const emit = defineEmits<{
 const tableRef = ref<TableInstance>()
 const loading = ref(false)
 const searchKeyword = ref('')
-const filterType = ref('')
+const filterType = ref(props.source !== 'all' ? props.source : '')
 const currentPage = ref(1)
 const pageSize = ref(10)
 const total = ref(0)
@@ -207,25 +213,34 @@ const displayColumns = computed(() => {
 const filteredPersonList = computed(() => {
   let list = personList.value
 
-  // 按来源过滤
-  if (props.source !== 'all') {
-    list = list.filter(person => person.type === props.source)
-  }
+  console.log('原始数据:', personList.value.length, '条')
+  console.log('source:', props.source)
+  console.log('filterType:', filterType.value)
 
   // 按类型过滤
   if (filterType.value) {
+    console.log('按类型过滤前:', list.length, '条')
     list = list.filter(person => person.type === filterType.value)
+    console.log('按类型过滤后:', list.length, '条')
+  } else if (props.source !== 'all') {
+    // 如果没有选择类型，按来源过滤
+    console.log('按来源过滤前:', list.length, '条')
+    list = list.filter(person => person.type === props.source)
+    console.log('按来源过滤后:', list.length, '条')
   }
 
   // 按关键词搜索
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
+    console.log('按关键词搜索前:', list.length, '条')
     list = list.filter(person =>
       person.name?.toLowerCase().includes(keyword) ||
       person.phone?.includes(keyword)
     )
+    console.log('按关键词搜索后:', list.length, '条')
   }
 
+  console.log('最终数据:', list.length, '条')
   return list
 })
 
@@ -247,8 +262,11 @@ const loadPersonList = async () => {
     const mockData = generateMockData()
     personList.value = mockData
     total.value = mockData.length
+    console.log('加载人员数据:', mockData.length, '条')
+    console.log('生成的数据:', mockData)
   } catch (error) {
     ElMessage.error('加载人员列表失败')
+    console.error('加载人员列表失败:', error)
   } finally {
     loading.value = false
   }
@@ -258,14 +276,16 @@ const loadPersonList = async () => {
 const generateMockData = () => {
   const data = []
   for (let i = 1; i <= 50; i++) {
+    const type = i % 2 === 0 ? 'worker' : 'employee'
     data.push({
       id: `person-${i}`,
       name: `人员${i}`,
       phone: `138${String(i).padStart(8, '0')}`,
       department: `部门${Math.ceil(i / 10)}`,
       position: `岗位${i % 5 + 1}`,
-      type: i % 2 === 0 ? 'worker' : 'employee'
+      type: type
     })
+    console.log(`生成人员${i}:`, type)
   }
   return data
 }
@@ -335,6 +355,7 @@ defineExpose({
 
 // 生命周期
 onMounted(() => {
+  console.log('PersonSelect mounted, loading data...')
   loadPersonList()
 })
 </script>
@@ -344,6 +365,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  position: relative;
 }
 
 /* 搜索区域 */
@@ -351,14 +373,22 @@ onMounted(() => {
   display: flex;
   gap: 12px;
   margin-bottom: 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.select-wrapper {
+  position: relative;
+  z-index: 1;
 }
 
 .search-area .el-input {
   flex: 1;
 }
 
-.search-area .el-select {
-  width: 150px;
+.type-filter {
+  display: flex;
+  align-items: center;
 }
 
 /* 人员列表 */

@@ -312,8 +312,8 @@ const fetchSpecialCaseDetail = async () => {
     ElMessage.error('获取特殊情况详情失败')
   } finally {
     loading.value = false
-    // 数据加载完成后，自动滚动到处理记录区域
-    scrollToProcessingSection()
+    // 移除自动滚动，让页面保持在顶部
+    // scrollToProcessingSection()
   }
 }
 

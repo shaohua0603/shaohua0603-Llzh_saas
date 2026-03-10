@@ -87,7 +87,7 @@
     <PersonSelectDialog
       v-model="showPersonSelectDialog"
       :multiple="true"
-      :source="'worker'"
+      :source="'all'"
       :selected-ids="formData.workerIds"
       @confirm="handleWorkerSelect"
     />

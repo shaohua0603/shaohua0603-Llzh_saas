@@ -5,6 +5,7 @@
     width="800px"
     :close-on-click-modal="false"
     @close="handleClose"
+    append-to-body
   >
     <PersonSelect
       ref="personSelectRef"

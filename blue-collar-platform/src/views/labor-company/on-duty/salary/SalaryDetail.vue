@@ -1,7 +1,16 @@
 <template>
   <div class="detail-container">
-    <div class="detail-content">
+    <div class="detail-content" :class="{ 'with-sidebar': workerInfoVisible }">
       <el-card class="detail-card" v-loading="loading">
+        <template #header>
+          <div class="card-header">
+            <span>工资详情</span>
+            <el-button type="primary" link @click="toggleWorkerInfo">
+              <el-icon><User /></el-icon>
+              查看工人信息
+            </el-button>
+          </div>
+        </template>
         <div v-if="detailData" class="content">
           <el-descriptions :column="1" border>
             <!-- 基本信息 -->
@@ -338,14 +347,22 @@
         发放
       </el-button>
     </div>
+    
+    <!-- 工人信息侧边栏 -->
+    <WorkerInfoSidebar
+      v-model:visible="workerInfoVisible"
+      :worker-name="detailData?.workerName"
+      :phone="detailData?.phone"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Edit, Money } from '@element-plus/icons-vue'
+import { ArrowLeft, Edit, Money, User } from '@element-plus/icons-vue'
 import { useRouter, useRoute } from 'vue-router'
+import WorkerInfoSidebar from '@/components/WorkerInfoSidebar.vue'
 
 // 类型定义
 interface SalaryRecord {
@@ -377,6 +394,9 @@ const router = useRouter()
 const route = useRoute()
 
 const loading = ref(false)
+
+// 工人信息侧边栏
+const workerInfoVisible = ref(false)
 const detailData = ref<SalaryRecord | null>(null)
 
 // 所有模拟数据
@@ -496,6 +516,11 @@ const goBack = () => {
   router.back()
 }
 
+// 切换工人信息侧边栏
+const toggleWorkerInfo = () => {
+  workerInfoVisible.value = !workerInfoVisible.value
+}
+
 // 生命周期
 onMounted(() => {
   allData.value = generateMockData()
@@ -569,6 +594,17 @@ onMounted(() => {
   transition: left var(--transition-base);
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-content.with-sidebar {
+  margin-right: 480px;
+  transition: margin-right 0.3s ease;
+}
+
 /* 响应式适配 */
 @media screen and (max-width: 768px) {
   .detail-footer {
@@ -581,7 +617,11 @@ onMounted(() => {
   }
   
   .detail-content {
-    padding-bottom: 120px; /* 为垂直排列的按钮栏留出更多空间 */
+    padding-bottom: 120px;
+  }
+  
+  .detail-content.with-sidebar {
+    margin-right: 0;
   }
   
   .detail-card {

@@ -1,7 +1,16 @@
 <template>
   <div class="detail-container">
-    <div class="detail-content">
+    <div class="detail-content" :class="{ 'with-sidebar': workerInfoVisible }">
       <el-card class="detail-card" v-loading="loading">
+        <template #header>
+          <div class="card-header">
+            <span>生活费详情</span>
+            <el-button type="primary" link @click="toggleWorkerInfo">
+              <el-icon><User /></el-icon>
+              查看工人信息
+            </el-button>
+          </div>
+        </template>
         <div v-if="detailData" class="content">
           <el-descriptions :column="2" border>
             <el-descriptions-item label="申请人">
@@ -84,6 +93,13 @@
       </el-button>
     </div>
     
+    <!-- 工人信息侧边栏 -->
+    <WorkerInfoSidebar
+      v-model:visible="workerInfoVisible"
+      :worker-name="detailData?.workerName"
+      :phone="detailData?.phone"
+    />
+    
     <!-- 发放对话框 -->
     <el-dialog
       v-model="issueDialogVisible"
@@ -135,7 +151,8 @@
 <script setup lang="ts">
 import { ref, reactive, onMounted, computed } from 'vue'
 import { ElMessage, ElDialog } from 'element-plus'
-import { ArrowLeft, Check, Money } from '@element-plus/icons-vue'
+import { ArrowLeft, Check, Money, User } from '@element-plus/icons-vue'
+import WorkerInfoSidebar from '@/components/WorkerInfoSidebar.vue'
 import { useRouter, useRoute } from 'vue-router'
 import { fetchLivingExpenseDetail, updateLivingExpenseStatus } from '@/api/livingExpense'
 import ApprovalComponent from '@/components/ApprovalComponent.vue'
@@ -163,6 +180,9 @@ const router = useRouter()
 const route = useRoute()
 
 const loading = ref(false)
+
+// 工人信息侧边栏
+const workerInfoVisible = ref(false)
 const detailData = ref<LivingExpenseRecord | null>(null)
 const approvalComponentRef = ref<any>(null)
 
@@ -324,19 +344,24 @@ const goBack = () => {
   router.back()
 }
 
+// 切换工人信息侧边栏
+const toggleWorkerInfo = () => {
+  workerInfoVisible.value = !workerInfoVisible.value
+}
+
 // 生命周期
 onMounted(() => {
   fetchDetail()
   
-  // 如果是审核模式，自动滚动到审核组件
-  if (isApproveMode.value) {
-    setTimeout(() => {
-      const approvalElement = document.querySelector('.approval-component')
-      if (approvalElement) {
-        approvalElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
-      }
-    }, 500)
-  }
+  // 移除自动滚动，让页面保持在顶部
+  // if (isApproveMode.value) {
+  //   setTimeout(() => {
+  //     const approvalElement = document.querySelector('.approval-component')
+  //     if (approvalElement) {
+  //       approvalElement.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  //     }
+  //   }, 500)
+  // }
 })
 </script>
 
@@ -396,6 +421,17 @@ onMounted(() => {
   transition: left var(--transition-base);
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-content.with-sidebar {
+  margin-right: 480px;
+  transition: margin-right 0.3s ease;
+}
+
 /* 响应式适配 */
 @media screen and (max-width: 768px) {
   .detail-footer {
@@ -408,7 +444,11 @@ onMounted(() => {
   }
   
   .detail-content {
-    padding-bottom: 120px; /* 为垂直排列的按钮栏留出更多空间 */
+    padding-bottom: 120px;
+  }
+  
+  .detail-content.with-sidebar {
+    margin-right: 0;
   }
   
   .detail-card {

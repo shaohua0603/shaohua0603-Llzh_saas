@@ -17,6 +17,7 @@
         <el-option label="节假日时薪倍数" value="HOLIDAY_MULTIPLIER" />
         <el-option label="起算日期" value="START_DATE" />
         <el-option label="可预支生活费比例" value="LIVING_EXPENSE_RATIO" />
+        <el-option label="注册平台用户规则" value="PLATFORM_USER_REGISTRATION" />
       </el-select>
       <el-select
         v-model="statusFilter"
@@ -131,6 +132,7 @@
             <el-option label="节假日时薪倍数" value="HOLIDAY_MULTIPLIER" />
             <el-option label="起算日期" value="START_DATE" />
             <el-option label="可预支生活费比例" value="LIVING_EXPENSE_RATIO" />
+            <el-option label="注册平台用户规则" value="PLATFORM_USER_REGISTRATION" />
           </el-select>
         </el-form-item>
         
@@ -185,6 +187,15 @@
           </template>
           <template v-else-if="formData.type === 'LIVING_EXPENSE_RATIO'">
             <el-input-number v-model="formData.livingExpenseRatio" :min="0" :max="100" :precision="0" placeholder="可预支生活费比例（%）" style="width: 100%" />
+          </template>
+          <template v-else-if="formData.type === 'PLATFORM_USER_REGISTRATION'">
+            <el-switch
+              v-model="formData.ruleValue"
+              active-value="true"
+              inactive-value="false"
+              active-text="开启"
+              inactive-text="关闭"
+            />
           </template>
           <template v-else>
             <el-input
@@ -255,7 +266,7 @@ const formData = reactive({
   typeName: '',
   effectiveDate: '',
   expireDate: '',
-  ruleValue: '',
+  ruleValue: 'false',
   factoryId: '',
   hourlyWage: 0,
   dailyHours: 8,
@@ -282,7 +293,7 @@ const formRules = {
 
 // 是否显示规则值
 const showRuleValue = computed(() => {
-  return ['ADVANCE_AMOUNT', 'HOURLY_WAGE', 'WORKING_HOURS', 'SHIFT_MULTIPLIER', 'HOLIDAY_MULTIPLIER', 'START_DATE', 'LIVING_EXPENSE_RATIO'].includes(formData.type)
+  return ['ADVANCE_AMOUNT', 'HOURLY_WAGE', 'WORKING_HOURS', 'SHIFT_MULTIPLIER', 'HOLIDAY_MULTIPLIER', 'START_DATE', 'LIVING_EXPENSE_RATIO', 'PLATFORM_USER_REGISTRATION'].includes(formData.type)
 })
 
 // 规则值标签
@@ -294,7 +305,8 @@ const ruleValueLabel = computed(() => {
     SHIFT_MULTIPLIER: '大班时薪倍数',
     HOLIDAY_MULTIPLIER: '节假日时薪倍数',
     START_DATE: '起算日期',
-    LIVING_EXPENSE_RATIO: '生活费比例'
+    LIVING_EXPENSE_RATIO: '生活费比例',
+    PLATFORM_USER_REGISTRATION: '注册开关'
   }
   return labels[formData.type] || '规则值'
 })
@@ -308,7 +320,8 @@ const ruleValueField = computed(() => {
     SHIFT_MULTIPLIER: 'shiftMultiplier',
     HOLIDAY_MULTIPLIER: 'holidayMultiplier',
     START_DATE: 'startDate',
-    LIVING_EXPENSE_RATIO: 'livingExpenseRatio'
+    LIVING_EXPENSE_RATIO: 'livingExpenseRatio',
+    PLATFORM_USER_REGISTRATION: 'ruleValue'
   }
   return fields[formData.type] || 'ruleValue'
 })
@@ -321,7 +334,8 @@ const typeNameMap: Record<string, string> = {
   SHIFT_MULTIPLIER: '大班时薪倍数',
   HOLIDAY_MULTIPLIER: '节假日时薪倍数',
   START_DATE: '起算日期',
-  LIVING_EXPENSE_RATIO: '可预支生活费比例'
+  LIVING_EXPENSE_RATIO: '可预支生活费比例',
+  PLATFORM_USER_REGISTRATION: '注册平台用户规则'
 }
 
 // 获取状态类型
@@ -403,9 +417,21 @@ const fetchData = async () => {
         shiftMultiplier: 1.5,
         status: 'expired',
         createTime: '2024-01-01 10:00:00'
+      },
+      {
+        id: '5',
+        name: '注册平台用户规则',
+        type: 'PLATFORM_USER_REGISTRATION',
+        typeName: '注册平台用户规则',
+        effectiveDate: '2024-01-01',
+        expireDate: '',
+        description: '开启后租户新增的工人或正式员工将自动推送到平台验证是否为新用户，如果为新用户将自动完成注册，同时平台向租户定期结算拉新奖励',
+        ruleValue: 'false',
+        status: 'inactive',
+        createTime: '2024-01-01 10:00:00'
       }
     ]
-    total.value = 4
+    total.value = 5
   } finally {
     loading.value = false
   }
@@ -427,7 +453,7 @@ const handleAdd = () => {
     typeName: '',
     effectiveDate: '',
     expireDate: '',
-    ruleValue: '',
+    ruleValue: 'false',
     factoryId: '',
     hourlyWage: 0,
     dailyHours: 8,

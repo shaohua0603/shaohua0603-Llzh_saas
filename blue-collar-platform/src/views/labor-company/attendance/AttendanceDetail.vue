@@ -1,12 +1,16 @@
 <template>
   <div class="detail-container">
     <!-- 内容区域 -->
-    <div class="detail-content">
+    <div class="detail-content" :class="{ 'with-sidebar': workerInfoVisible }">
       <!-- 基本信息 -->
       <el-card class="mb-4">
         <template #header>
           <div class="card-header">
             <span>考勤基本信息</span>
+            <el-button type="primary" link @click="toggleWorkerInfo">
+              <el-icon><User /></el-icon>
+              查看工人信息
+            </el-button>
           </div>
         </template>
         <div class="info-grid">
@@ -65,17 +69,28 @@
         删除
       </el-button>
     </div>
+    
+    <!-- 工人信息侧边栏 -->
+    <WorkerInfoSidebar
+      v-model:visible="workerInfoVisible"
+      :worker-name="attendanceInfo.workerName"
+      :phone="attendanceInfo.phone"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Edit, Delete } from '@element-plus/icons-vue'
+import { ArrowLeft, Edit, Delete, User } from '@element-plus/icons-vue'
 import { useRoute, useRouter } from 'vue-router'
+import WorkerInfoSidebar from '@/components/WorkerInfoSidebar.vue'
 
 const router = useRouter()
 const route = useRoute()
+
+// 工人信息侧边栏
+const workerInfoVisible = ref(false)
 
 // 考勤信息
 const attendanceInfo = ref({
@@ -134,6 +149,11 @@ const handleDelete = async () => {
 // 返回
 const goBack = () => {
   router.push('/tenant/attendance')
+}
+
+// 切换工人信息侧边栏
+const toggleWorkerInfo = () => {
+  workerInfoVisible.value = !workerInfoVisible.value
 }
 
 // 生命周期
@@ -214,6 +234,12 @@ onMounted(() => {
   color: #303133;
 }
 
+/* 侧边栏显示时的内容区域样式 */
+.detail-content.with-sidebar {
+  margin-right: 480px;
+  transition: margin-right 0.3s ease;
+}
+
 /* 响应式适配 */
 @media screen and (max-width: 768px) {
   .detail-footer {
@@ -227,6 +253,10 @@ onMounted(() => {
   
   .detail-content {
     padding-bottom: 120px;
+  }
+  
+  .detail-content.with-sidebar {
+    margin-right: 0;
   }
   
   .info-grid {

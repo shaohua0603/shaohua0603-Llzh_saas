@@ -1,10 +1,14 @@
 <template>
   <div class="form-container">
-    <div class="form-content">
+    <div class="form-content" :class="{ 'with-sidebar': workerInfoVisible }">
       <el-card>
         <template #header>
           <div class="card-header">
             <span>{{ isEdit ? '编辑奖惩' : '新增奖惩' }}</span>
+            <el-button type="primary" link @click="toggleWorkerInfo" :disabled="!formData.workerName">
+              <el-icon><User /></el-icon>
+              查看工人信息
+            </el-button>
           </div>
         </template>
         <el-form ref="formRef" :model="formData" :rules="formRules" label-width="120px">
@@ -89,6 +93,13 @@
         {{ isEdit ? '保存' : '提交' }}
       </el-button>
     </div>
+    
+    <!-- 工人信息侧边栏 -->
+    <WorkerInfoSidebar
+      v-model:visible="workerInfoVisible"
+      :worker-name="formData.workerName"
+      :phone="formData.phone"
+    />
   </div>
 </template>
 
@@ -96,13 +107,15 @@
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import { ArrowLeft, Check } from '@element-plus/icons-vue'
+import { ArrowLeft, Check, User } from '@element-plus/icons-vue'
+import WorkerInfoSidebar from '@/components/WorkerInfoSidebar.vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
 const formRef = ref<FormInstance>()
 const submitLoading = ref(false)
+const workerInfoVisible = ref(false)
 
 // 判断是否为编辑模式
 const isEdit = ref(false)
@@ -159,6 +172,11 @@ const handleSubmit = async () => {
 // 返回
 const goBack = () => {
   router.back()
+}
+
+// 切换工人信息侧边栏
+const toggleWorkerInfo = () => {
+  workerInfoVisible.value = !workerInfoVisible.value
 }
 
 // 生命周期
@@ -222,6 +240,11 @@ onMounted(() => {
   align-items: center;
 }
 
+.form-content.with-sidebar {
+  margin-right: 480px;
+  transition: margin-right 0.3s ease;
+}
+
 /* 响应式适配 */
 @media screen and (max-width: 768px) {
   .form-footer {
@@ -235,6 +258,10 @@ onMounted(() => {
   
   .form-content {
     padding-bottom: 120px;
+  }
+  
+  .form-content.with-sidebar {
+    margin-right: 0;
   }
 }
 </style>

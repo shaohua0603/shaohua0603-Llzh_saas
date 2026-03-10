@@ -1,11 +1,15 @@
 <template>
   <div class="entertainment-detail-container">
     <!-- 内容区域 -->
-    <div class="detail-content">
+    <div class="detail-content" :class="{ 'with-sidebar': workerInfoVisible }">
       <el-card shadow="never" class="detail-card">
         <template #header>
           <div class="card-header">
             <span class="card-title">{{ currentRecord?.title }}</span>
+            <el-button type="primary" link @click="toggleWorkerInfo" v-if="currentRecord?.workerName">
+              <el-icon><User /></el-icon>
+              查看工人信息
+            </el-button>
           </div>
         </template>
         
@@ -68,15 +72,23 @@
         删除
       </el-button>
     </div>
+    
+    <!-- 工人信息侧边栏 -->
+    <WorkerInfoSidebar
+      v-model:visible="workerInfoVisible"
+      :worker-name="currentRecord?.workerName"
+      :phone="currentRecord?.phone"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { ArrowLeft, Edit, Delete } from '@element-plus/icons-vue'
+import { ArrowLeft, Edit, Delete, User } from '@element-plus/icons-vue'
 import { useRouter, useRoute } from 'vue-router'
 import ShareComponent from '@/components/ShareComponent.vue'
+import WorkerInfoSidebar from '@/components/WorkerInfoSidebar.vue'
 
 // 类型定义
 interface EntertainmentRecord {
@@ -99,6 +111,9 @@ interface EntertainmentRecord {
 
 // 路由相关
 const router = useRouter()
+
+// 工人信息侧边栏
+const workerInfoVisible = ref(false)
 const route = useRoute()
 
 // 响应式数据
@@ -186,6 +201,11 @@ const goBack = () => {
   router.push('/tenant/on-duty/entertainment')
 }
 
+// 切换工人信息侧边栏
+const toggleWorkerInfo = () => {
+  workerInfoVisible.value = !workerInfoVisible.value
+}
+
 // 生命周期
 onMounted(() => {
   loadData()
@@ -248,6 +268,17 @@ onMounted(() => {
   transition: left var(--transition-base);
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.detail-content.with-sidebar {
+  margin-right: 480px;
+  transition: margin-right 0.3s ease;
+}
+
 /* 响应式适配 */
 @media screen and (max-width: 768px) {
   .detail-footer {
@@ -261,6 +292,10 @@ onMounted(() => {
   
   .detail-content {
     padding-bottom: 120px;
+  }
+  
+  .detail-content.with-sidebar {
+    margin-right: 0;
   }
 }
 </style>
